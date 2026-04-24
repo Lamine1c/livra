@@ -128,6 +128,11 @@ export default function NewOrderPage() {
     }));
 
     await supabase.from("order_items").insert(items);
+
+    // Envoi OTP WhatsApp (non-bloquant : on redirige même si ça échoue,
+    // le widget sur la page détail permettra de renvoyer)
+    await fetch(`/api/orders/${order.id}/send-otp`, { method: "POST" });
+
     router.push(`/dashboard/orders/${order.id}`);
   }
 

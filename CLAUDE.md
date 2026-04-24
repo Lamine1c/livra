@@ -25,22 +25,28 @@ src/
       orders/{new,[id]}/      # Order list, creation, detail
       clients/                # Client list
       settings/               # Profile settings
+  app/
+    api/orders/[id]/
+      send-otp/route.ts   # POST — génère OTP, stocke en DB, envoie WhatsApp
+      verify-otp/route.ts # POST { code } — vérifie OTP, passe commande en "confirmed"
   components/
     ui/          # Primitive UI: Button, Input, Select, Card, StatusBadge
     layout/      # Sidebar (client, nav + sign-out), Header
     dashboard/   # StatsCard
-    orders/      # OrdersTable, OrderStatusSelect (inline Supabase update)
+    orders/      # OrdersTable, OrderStatusSelect, OtpVerifyWidget
   lib/
     supabase/
       client.ts   # Browser Supabase client (createBrowserClient)
       server.ts   # Server Supabase client (createServerClient + cookies)
       middleware.ts  # Session refresh + auth redirect logic
+    whatsapp.ts   # generateOTP(), normalizeAlgerianPhone(), sendOtpWhatsApp()
     utils.ts      # cn(), formatCurrency() (DZD), formatDate(), generateReference(),
                   # ORDER_STATUS_LABELS/COLORS, WILAYAS map (01–58)
   types/index.ts  # Shared TS types: Order, Client, Product, OrderItem, Profile, DashboardStats
   middleware.ts   # Next.js middleware — delegates to lib/supabase/middleware.ts
 supabase/
   migrations/001_initial_schema.sql   # Full schema + RLS + trigger
+  migrations/002_otp_columns.sql      # Ajout otp_code, otp_expires_at, otp_verified_at sur orders
 ```
 
 ### Auth flow
@@ -73,14 +79,38 @@ Order status values: `pending` → `confirmed` → `processing` → `shipped` �
 - **Wilayas:** use the `WILAYAS` map in `utils.ts` (`"01"` → `"Adrar"`, …, `"58"` → `"El Meniaa"`). The code (01–58) is what is stored in the DB.
 - **Tailwind v4** is used — no `tailwind.config.js`; configuration is in CSS with `@theme` blocks if needed.
 
+## WhatsApp OTP flow
+
+### Variables d'environnement
+```
+WHATSAPP_ACCESS_TOKEN=          # Token permanent Meta (jamais le token temporaire)
+WHATSAPP_OTP_TEMPLATE_NAME=     # Nom du template approuvé, ou vide pour mode texte (dev)
+```
+
+### Flow
+1. Création commande → `POST /api/orders/[id]/send-otp` déclenché automatiquement
+2. OTP généré (6 chiffres, `crypto.randomInt`), stocké en clair avec expiry 10 min dans `orders.otp_code`
+3. Message envoyé à `normalizeAlgerianPhone(client.phone)` → format `213XXXXXXXXX`
+4. Widget `OtpVerifyWidget` affiché sur `/dashboard/orders/[id]` tant que `otp_verified_at IS NULL` et `status = 'pending'`
+5. `POST /api/orders/[id]/verify-otp` { code } → vérifie, met `status = 'confirmed'`, efface `otp_code`
+
+### Template Meta (production)
+Créer dans WhatsApp Business Manager > Message Templates :
+- **Catégorie :** UTILITY
+- **Langue :** Français (fr)
+- **Corps :** `Bonjour {{1}},\n\nVotre code de confirmation LIVRA est : *{{2}}*\n\nCe code expire dans 10 minutes. Ne le communiquez à personne.`
+- Paramètre 1 = prénom client, Paramètre 2 = code OTP
+
+### Mode développement
+Laisser `WHATSAPP_OTP_TEMPLATE_NAME` vide → message texte libre (fonctionne uniquement avec les numéros de test enregistrés dans Meta Developer Console).
+
+### Normalisation des numéros algériens
+`normalizeAlgerianPhone()` dans `lib/whatsapp.ts` gère : `0XXXXXXXXX` → `213XXXXXXXXX`, `+213XXXXXXXXX` → `213XXXXXXXXX`, `9 chiffres` → `213XXXXXXXXX`.
+
 ## Environment setup
 
-Copy `.env.example` to `.env.local` and fill in the three Supabase variables:
+Copy `.env.example` to `.env.local` and fill in all variables.
 
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-Run the migration `supabase/migrations/001_initial_schema.sql` in your Supabase SQL editor to create all tables, indexes, RLS policies, and the new-user trigger.
+Run migrations in order in your Supabase SQL editor:
+1. `supabase/migrations/001_initial_schema.sql` — tables, RLS, trigger
+2. `supabase/migrations/002_otp_columns.sql` — colonnes OTP sur orders

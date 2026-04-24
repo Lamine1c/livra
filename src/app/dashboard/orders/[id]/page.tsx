@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { OrderStatusSelect } from "@/components/orders/order-status-select";
+import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -34,6 +35,27 @@ export default async function OrderDetailPage({
             <StatusBadge status={o.status} />
             <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
           </div>
+
+          {/* OTP verification — affiché tant que la commande n'est pas vérifiée */}
+          {!o.otp_verified_at && o.status === "pending" && o.client && (
+            <Card>
+              <CardHeader>
+                <h2 className="font-semibold text-gray-900">
+                  Vérification WhatsApp
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Le client doit confirmer sa commande via le code reçu.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <OtpVerifyWidget
+                  orderId={o.id}
+                  clientPhone={o.client.phone}
+                  clientName={o.client.full_name}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-6 sm:grid-cols-2">
             <Card>
