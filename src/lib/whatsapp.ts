@@ -8,17 +8,19 @@ export function generateOTP(): string {
   return crypto.randomInt(100000, 999999).toString();
 }
 
-// Normalise un numéro algérien vers E.164 sans "+" (ex: 213XXXXXXXXX)
-export function normalizeAlgerianPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("213")) return digits;
+// Normalise vers E.164 sans "+" pour l'API WhatsApp.
+export function normalizePhoneNumber(phone: string): string {
+  const trimmed = phone.trim();
+  if (trimmed.startsWith("+")) return trimmed.slice(1).replace(/\D/g, "");
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.startsWith("00")) return digits.slice(2);
   if (digits.startsWith("0") && digits.length === 10) return "213" + digits.slice(1);
   if (digits.length === 9) return "213" + digits;
   return digits;
 }
 
 function maskedPhone(phone: string): string {
-  const normalized = normalizeAlgerianPhone(phone);
+  const normalized = normalizePhoneNumber(phone);
   return "+" + normalized.slice(0, 5) + "XXXXX" + normalized.slice(-2);
 }
 
@@ -35,7 +37,7 @@ export async function sendOtpWhatsApp(
 ): Promise<WhatsAppResult> {
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME;
-  const to = normalizeAlgerianPhone(phone);
+  const to = normalizePhoneNumber(phone);
 
   const body = templateName
     ? buildTemplatePayload(to, templateName, clientName, otp)
