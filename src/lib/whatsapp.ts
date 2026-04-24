@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const PHONE_NUMBER_ID = "1117086038154592";
+const PHONE_NUMBER_ID = "1081472725051661";
 const GRAPH_API_URL = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
 
 export function generateOTP(): string {
@@ -53,6 +53,8 @@ export async function sendOtpWhatsApp(
   });
 
   const data = await res.json();
+
+  console.log("[WhatsApp API]", { status: res.status, body: data });
 
   if (!res.ok) {
     const msg = data?.error?.message ?? "WhatsApp API error";
