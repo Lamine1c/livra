@@ -15,6 +15,8 @@ export interface Profile {
   full_name: string | null;
   store_name: string | null;
   phone: string | null;
+  yalidine_api_id: string | null;
+  yalidine_api_token: string | null;
   created_at: string;
   updated_at: string;
 }

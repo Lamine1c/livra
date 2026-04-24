@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { OrderStatusSelect } from "@/components/orders/order-status-select";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
+import { YalidineButton } from "@/components/orders/yalidine-button";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -56,6 +57,21 @@ export default async function OrderDetailPage({
               </CardContent>
             </Card>
           )}
+
+          {/* Livraison Yalidine */}
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-gray-900">Livraison Yalidine</h2>
+              {!o.tracking_number && (
+                <p className="text-sm text-gray-500">
+                  Créez le bon de livraison et obtenez le numéro de suivi en 1 clic.
+                </p>
+              )}
+            </CardHeader>
+            <CardContent>
+              <YalidineButton orderId={o.id} trackingNumber={o.tracking_number} />
+            </CardContent>
+          </Card>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <Card>

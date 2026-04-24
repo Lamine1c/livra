@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { SettingsForm } from "./settings-form";
+import { YalidineForm } from "./yalidine-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -26,6 +27,21 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent>
               <SettingsForm profile={profile} userEmail={user?.email ?? ""} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-gray-900">Connecter Yalidine Express</h2>
+              <p className="text-sm text-gray-500">
+                Vos credentials sont chiffrés et utilisés uniquement pour créer vos bons de livraison.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <YalidineForm
+                apiId={profile?.yalidine_api_id ?? null}
+                apiToken={profile?.yalidine_api_token ?? null}
+              />
             </CardContent>
           </Card>
         </div>
