@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { OrderStatusSelect } from "@/components/orders/order-status-select";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { YalidineButton } from "@/components/orders/yalidine-button";
+import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -58,7 +59,7 @@ export default async function OrderDetailPage({
             </Card>
           )}
 
-          {/* Livraison Yalidine */}
+          {/* Livraison Yalidine — création automatique */}
           <Card>
             <CardHeader>
               <h2 className="font-semibold text-gray-900">Livraison Yalidine</h2>
@@ -70,6 +71,23 @@ export default async function OrderDetailPage({
             </CardHeader>
             <CardContent>
               <YalidineButton orderId={o.id} trackingNumber={o.tracking_number} />
+            </CardContent>
+          </Card>
+
+          {/* Suivi de livraison — saisie manuelle */}
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-gray-900">Suivi de livraison</h2>
+              <p className="text-sm text-gray-500">
+                Entrez le numéro de suivi si vous utilisez un autre transporteur.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ManualTrackingForm
+                orderId={o.id}
+                initialTracking={o.tracking_number}
+                initialCarrier={o.carrier}
+              />
             </CardContent>
           </Card>
 
@@ -104,12 +122,6 @@ export default async function OrderDetailPage({
                   <span className="text-gray-500">Date</span>
                   <span>{formatDate(o.created_at)}</span>
                 </div>
-                {o.tracking_number && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">N° suivi</span>
-                    <span className="font-mono">{o.tracking_number}</span>
-                  </div>
-                )}
                 {o.notes && (
                   <div className="pt-2 border-t border-gray-100">
                     <p className="text-gray-500">Notes</p>

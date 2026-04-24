@@ -66,6 +66,7 @@ export interface Order {
   delivery_fee: number;
   notes: string | null;
   tracking_number: string | null;
+  carrier: string | null;
   otp_code: string | null;
   otp_expires_at: string | null;
   otp_verified_at: string | null;

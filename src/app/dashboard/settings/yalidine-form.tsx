@@ -46,31 +46,31 @@ export function YalidineForm({ apiId, apiToken }: YalidineFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-        Retrouvez votre API ID et votre Token sur{" "}
+        Connectez votre compte Yalidine en 2 minutes. Trouvez ces informations dans votre espace Yalidine →{" "}
         <a
           href="https://yalidine.app/dev"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-0.5 font-medium text-emerald-600 hover:underline"
         >
-          yalidine.app/dev
+          Développement
           <ExternalLink className="ml-0.5 h-3 w-3" />
         </a>
       </div>
 
       <Input
         id="yalidine-api-id"
-        label="API ID"
-        placeholder="Votre API ID Yalidine"
+        label="Identifiant Yalidine"
+        placeholder="Votre identifiant Yalidine"
         value={id}
         onChange={(e) => setId(e.target.value)}
         autoComplete="off"
       />
       <Input
         id="yalidine-api-token"
-        label="Token"
+        label="Clé secrète Yalidine"
         type="password"
-        placeholder="Votre Token Yalidine"
+        placeholder="Votre clé secrète Yalidine"
         value={token}
         onChange={(e) => setToken(e.target.value)}
         autoComplete="off"
