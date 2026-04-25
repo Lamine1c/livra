@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { OrderStatusSelect } from "@/components/orders/order-status-select";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
@@ -12,6 +11,10 @@ import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
 import { DeleteOrderButton } from "@/components/orders/delete-order-button";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
+
+const DC = "rounded-xl border border-[#252525] bg-[#161618] md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden";
+const DCH = "px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100";
+const DCB = "px-4 py-4 md:px-6";
 
 export default async function OrderDetailPage({
   params,
@@ -32,124 +35,178 @@ export default async function OrderDetailPage({
   const o = order as Order;
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto">
+    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
       <Header title={`Commande ${o.reference}`} />
-      <main className="flex-1 p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+        <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
+
+          {/* Ligne 1 : badge statut + boutons Modifier / Supprimer */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <StatusBadge status={o.status} />
             <div className="flex items-center gap-2">
               <Link
                 href={`/dashboard/orders/${o.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#252525] md:border-gray-300 px-3 py-1.5 text-sm font-medium text-[#F0EDE8] md:text-gray-700 hover:bg-[#1e1e20] md:hover:bg-gray-50 transition-colors"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 Modifier
               </Link>
               <DeleteOrderButton orderId={o.id} />
-              <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
             </div>
           </div>
 
-          {/* OTP verification — affiché tant que la commande n'est pas vérifiée */}
+          {/* Ligne 2 : select statut — pleine largeur mobile */}
+          <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
+
+          {/* OTP */}
           {!o.otp_verified_at && o.status === "pending" && o.client && (
-            <Card>
-              <CardHeader>
-                <h2 className="font-semibold text-gray-900">
+            <div className={DC}>
+              <div className={DCH}>
+                <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
                   Vérification WhatsApp
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#8A8780] md:text-gray-500">
                   Le client doit confirmer sa commande via le code reçu.
                 </p>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className={DCB}>
                 <OtpVerifyWidget
                   orderId={o.id}
                   clientPhone={o.client.phone}
                   clientName={o.client.full_name}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-          {/* Livraison Yalidine — création automatique */}
-          <Card>
-            <CardHeader>
-              <h2 className="font-semibold text-gray-900">Livraison Yalidine</h2>
+          {/* Yalidine */}
+          <div className={DC}>
+            <div className={DCH}>
+              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
+                Livraison Yalidine
+              </h2>
               {!o.tracking_number && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#8A8780] md:text-gray-500">
                   Créez le bon de livraison et obtenez le numéro de suivi en 1 clic.
                 </p>
               )}
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className={DCB}>
               <YalidineButton orderId={o.id} trackingNumber={o.tracking_number} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Suivi de livraison — saisie manuelle */}
-          <Card>
-            <CardHeader>
-              <h2 className="font-semibold text-gray-900">Suivi de livraison</h2>
-              <p className="text-sm text-gray-500">
+          {/* Suivi manuel */}
+          <div className={DC}>
+            <div className={DCH}>
+              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
+                Suivi de livraison
+              </h2>
+              <p className="text-sm text-[#8A8780] md:text-gray-500">
                 Entrez le numéro de suivi si vous utilisez un autre transporteur.
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className={DCB}>
               <ManualTrackingForm
                 orderId={o.id}
                 initialTracking={o.tracking_number}
                 initialCarrier={o.carrier}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <h2 className="font-semibold text-gray-900">Client</h2>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="font-medium text-gray-900">
+          {/* Client + Informations */}
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+            <div className={DC}>
+              <div className={DCH}>
+                <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Client</h2>
+              </div>
+              <div className={`${DCB} space-y-2 text-sm`}>
+                <p className="font-medium text-[#F0EDE8] md:text-gray-900">
                   {o.client?.full_name}
                 </p>
-                <p className="text-gray-600">{o.client?.phone}</p>
-                <p className="text-gray-600">{o.client?.address}</p>
-                <p className="text-gray-600">
+                <p className="text-[#8A8780] md:text-gray-600">{o.client?.phone}</p>
+                <p className="text-[#8A8780] md:text-gray-600">{o.client?.address}</p>
+                <p className="text-[#8A8780] md:text-gray-600">
                   {o.client?.commune},{" "}
                   {WILAYAS[o.client?.wilaya ?? ""] ?? o.client?.wilaya}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <h2 className="font-semibold text-gray-900">Informations</h2>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
+            <div className={DC}>
+              <div className={DCH}>
+                <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
+                  Informations
+                </h2>
+              </div>
+              <div className={`${DCB} space-y-2 text-sm`}>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Référence</span>
-                  <span className="font-mono font-medium">{o.reference}</span>
+                  <span className="text-[#8A8780] md:text-gray-500">Référence</span>
+                  <span className="font-mono font-medium text-[#F0EDE8] md:text-gray-900">
+                    {o.reference}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Date</span>
-                  <span>{formatDate(o.created_at)}</span>
+                  <span className="text-[#8A8780] md:text-gray-500">Date</span>
+                  <span className="text-[#F0EDE8] md:text-gray-900">
+                    {formatDate(o.created_at)}
+                  </span>
                 </div>
                 {o.notes && (
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-gray-500">Notes</p>
-                    <p className="mt-1 text-gray-700">{o.notes}</p>
+                  <div className="pt-2 border-t border-[#252525] md:border-gray-100">
+                    <p className="text-[#8A8780] md:text-gray-500">Notes</p>
+                    <p className="mt-1 text-[#F0EDE8] md:text-gray-700">{o.notes}</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <h2 className="font-semibold text-gray-900">Articles</h2>
-            </CardHeader>
-            <CardContent className="p-0">
+          {/* Articles */}
+          <div className={DC}>
+            <div className={DCH}>
+              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Articles</h2>
+            </div>
+
+            {/* Mobile : liste verticale */}
+            <div className="md:hidden divide-y divide-[#252525]">
+              {o.items?.map((item) => (
+                <div key={item.id} className="flex items-start justify-between px-4 py-3 gap-3">
+                  <p className="text-sm text-[#F0EDE8] flex-1 min-w-0 truncate">
+                    {item.product_name}
+                  </p>
+                  <p className="text-sm text-[#8A8780] shrink-0 whitespace-nowrap text-right">
+                    {item.quantity} × {formatCurrency(item.unit_price)}
+                    <br />
+                    <span className="font-semibold text-[#F0EDE8]">
+                      = {formatCurrency(item.total_price)}
+                    </span>
+                  </p>
+                </div>
+              ))}
+              <div className="px-4 py-3 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#8A8780]">Sous-total</span>
+                  <span className="font-medium text-[#F0EDE8]">
+                    {formatCurrency(o.total_amount - o.delivery_fee)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#8A8780]">Livraison</span>
+                  <span className="font-medium text-[#F0EDE8]">
+                    {formatCurrency(o.delivery_fee)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm font-bold pt-2 border-t border-[#252525]">
+                  <span className="text-[#F0EDE8]">Total</span>
+                  <span className="text-emerald-400">{formatCurrency(o.total_amount)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop : tableau classique */}
+            <div className="hidden md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -162,12 +219,8 @@ export default async function OrderDetailPage({
                 <tbody className="divide-y divide-gray-100">
                   {o.items?.map((item) => (
                     <tr key={item.id}>
-                      <td className="px-6 py-3 text-gray-900">
-                        {item.product_name}
-                      </td>
-                      <td className="px-6 py-3 text-right text-gray-600">
-                        {item.quantity}
-                      </td>
+                      <td className="px-6 py-3 text-gray-900">{item.product_name}</td>
+                      <td className="px-6 py-3 text-right text-gray-600">{item.quantity}</td>
                       <td className="px-6 py-3 text-right text-gray-600">
                         {formatCurrency(item.unit_price)}
                       </td>
@@ -204,8 +257,9 @@ export default async function OrderDetailPage({
                   </tr>
                 </tfoot>
               </table>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>

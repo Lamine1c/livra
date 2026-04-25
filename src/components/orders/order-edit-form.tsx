@@ -6,7 +6,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { Order, OrderItem } from "@/types";
 
@@ -23,6 +22,10 @@ function toLines(items: OrderItem[]): OrderLine[] {
     unit_price: i.unit_price,
   }));
 }
+
+const DC = "rounded-xl border border-[#252525] bg-[#161618] md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden";
+const DCH = "px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100";
+const DCB = "px-4 py-4 md:px-6";
 
 export function OrderEditForm({ order }: { order: Order }) {
   const router = useRouter();
@@ -102,86 +105,101 @@ export function OrderEditForm({ order }: { order: Order }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <h2 className="font-semibold text-gray-900">Articles</h2>
-        </CardHeader>
-        <CardContent className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+
+      {/* Articles */}
+      <div className={DC}>
+        <div className={DCH}>
+          <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Articles</h2>
+        </div>
+        <div className={`${DCB} space-y-4`}>
           {lines.map((line, i) => (
-            <div key={i} className="flex gap-3 items-end">
-              <div className="flex-1">
-                <Input
-                  label={i === 0 ? "Produit" : undefined}
-                  placeholder="Nom du produit"
-                  value={line.product_name}
-                  onChange={(e) => updateLine(i, "product_name", e.target.value)}
-                  required
-                />
+            <div key={i} className="space-y-2">
+              {/* Ligne 1 : produit full-width + bouton suppression */}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Input
+                    label="Produit"
+                    placeholder="Nom du produit"
+                    value={line.product_name}
+                    onChange={(e) => updateLine(i, "product_name", e.target.value)}
+                    required
+                  />
+                </div>
+                {lines.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeLine(i)}
+                    className="mb-0.5 rounded-lg p-1.5 text-[#8A8780] hover:bg-[#252525] hover:text-red-400 md:text-gray-400 md:hover:bg-red-50 md:hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <div className="w-20">
-                <Input
-                  label={i === 0 ? "Qté" : undefined}
-                  type="number"
-                  min={1}
-                  value={line.quantity}
-                  onChange={(e) =>
-                    updateLine(i, "quantity", parseInt(e.target.value) || 1)
-                  }
-                  required
-                />
+              {/* Ligne 2 : qté (1/3) + prix (2/3) + total affiché */}
+              <div className="flex gap-2 items-end">
+                <div className="w-1/3">
+                  <Input
+                    label="Qté"
+                    type="number"
+                    min={1}
+                    value={line.quantity}
+                    onChange={(e) =>
+                      updateLine(i, "quantity", parseInt(e.target.value) || 1)
+                    }
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    label="Prix unitaire"
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={line.unit_price}
+                    onChange={(e) =>
+                      updateLine(i, "unit_price", parseFloat(e.target.value) || 0)
+                    }
+                    required
+                  />
+                </div>
+                <div className="shrink-0 pb-0.5 text-right min-w-[76px]">
+                  <p className="text-[10px] uppercase tracking-wide text-[#8A8780] md:text-gray-400 mb-0.5">
+                    Total
+                  </p>
+                  <p className="text-sm font-semibold text-[#F0EDE8] md:text-gray-900">
+                    {formatCurrency(line.quantity * line.unit_price)}
+                  </p>
+                </div>
               </div>
-              <div className="w-32">
-                <Input
-                  label={i === 0 ? "Prix unitaire" : undefined}
-                  type="number"
-                  min={0}
-                  step={100}
-                  value={line.unit_price}
-                  onChange={(e) =>
-                    updateLine(i, "unit_price", parseFloat(e.target.value) || 0)
-                  }
-                  required
-                />
-              </div>
-              <div className="w-28 pb-0.5">
-                <p className="text-sm font-medium text-gray-700">
-                  {formatCurrency(line.quantity * line.unit_price)}
-                </p>
-              </div>
-              {lines.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeLine(i)}
-                  className="mb-0.5 rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
             </div>
           ))}
+
           <button
             type="button"
             onClick={addLine}
-            className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+            className="flex items-center gap-2 text-sm font-medium text-emerald-500 hover:text-emerald-400 md:text-emerald-600 md:hover:text-emerald-700"
           >
             <Plus className="h-4 w-4" />
             Ajouter un article
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <h2 className="font-semibold text-gray-900">Résumé</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Résumé */}
+      <div className={DC}>
+        <div className={DCH}>
+          <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Résumé</h2>
+        </div>
+        <div className={`${DCB} space-y-4`}>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Sous-total</span>
-            <span className="font-medium">{formatCurrency(subtotal)}</span>
+            <span className="text-[#8A8780] md:text-gray-500">Sous-total</span>
+            <span className="font-medium text-[#F0EDE8] md:text-gray-900">
+              {formatCurrency(subtotal)}
+            </span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm text-gray-500">Frais de livraison</span>
+            <span className="text-sm text-[#8A8780] md:text-gray-500">Frais de livraison</span>
             <div className="w-36">
               <Input
                 type="number"
@@ -192,9 +210,9 @@ export function OrderEditForm({ order }: { order: Order }) {
               />
             </div>
           </div>
-          <div className="flex justify-between border-t border-gray-100 pt-3 font-semibold">
-            <span>Total</span>
-            <span className="text-emerald-600">{formatCurrency(total)}</span>
+          <div className="flex justify-between border-t border-[#252525] md:border-gray-100 pt-3 font-semibold">
+            <span className="text-[#F0EDE8] md:text-gray-900">Total</span>
+            <span className="text-emerald-400 md:text-emerald-600">{formatCurrency(total)}</span>
           </div>
           <Input
             label="Notes (optionnel)"
@@ -202,11 +220,13 @@ export function OrderEditForm({ order }: { order: Order }) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
+        <p className="rounded-lg border border-red-800/30 bg-red-900/20 px-4 py-3 text-sm text-red-400 md:border-0 md:bg-red-50 md:text-red-600">
+          {error}
+        </p>
       )}
 
       <div className="flex gap-3 justify-end">

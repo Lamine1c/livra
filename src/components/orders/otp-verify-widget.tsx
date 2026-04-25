@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, RotateCcw, CheckCircle2, Loader2 } from "lucide-react";
+import { MessageCircle, RotateCcw, CheckCircle2, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface OtpVerifyWidgetProps {
@@ -125,6 +125,20 @@ export function OtpVerifyWidget({
   }
 
   if (phase === "error") {
+    const isActivationPending =
+      errorMsg.includes("Account not registered") || errorMsg.includes("133010");
+
+    if (isActivationPending) {
+      return (
+        <div className="flex items-start gap-3 rounded-xl border border-[#252525] bg-[#161618] p-4">
+          <Info className="h-5 w-5 shrink-0 mt-0.5 text-[#8A8780]" />
+          <p className="text-sm text-[#8A8780]">
+            WhatsApp en cours d'activation — disponible sous 24-48h.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
         <MessageCircle className="h-8 w-8 text-red-400" />
