@@ -34,7 +34,7 @@ export default async function OrderDetailPage({
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
       <Header title={`Commande ${o.reference}`} rightContent={<OrderActionsMenu orderId={o.id} />} />
-      <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+      <main className="flex-1 overflow-x-hidden pt-5 px-4 pb-4 md:p-6">
         <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
 
           <OrderStatusRow orderId={o.id} currentStatus={o.status} />

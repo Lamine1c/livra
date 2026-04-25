@@ -18,7 +18,7 @@ const navItems = [
   { href: "/dashboard", label: "Tableau de bord", shortLabel: "Accueil", icon: LayoutDashboard },
   { href: "/dashboard/orders", label: "Commandes", shortLabel: "Commandes", icon: ShoppingCart },
   { href: "/dashboard/clients", label: "Clients", shortLabel: "Clients", icon: Users },
-  { href: "/dashboard/settings", label: "Paramètres", shortLabel: "Réglages", icon: Settings },
+  { href: "/dashboard/settings", label: "Réglages", shortLabel: "Réglages", icon: Settings },
 ];
 
 export function Sidebar() {

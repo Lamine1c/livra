@@ -36,7 +36,7 @@ export default async function ClientDetailPage({
     <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
       <Header title={client.full_name} />
 
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 pt-5 px-4 pb-24 md:p-6">
         <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
 
           {/* Informations + supprimer */}

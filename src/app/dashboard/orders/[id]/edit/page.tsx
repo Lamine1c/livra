@@ -23,7 +23,7 @@ export default async function OrderEditPage({
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
       <Header title={`Modifier ${(order as Order).reference}`} />
-      <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+      <main className="flex-1 overflow-x-hidden pt-5 px-4 pb-24 md:p-6">
         <div className="mx-auto max-w-3xl">
           <OrderEditForm order={order as Order} />
         </div>
