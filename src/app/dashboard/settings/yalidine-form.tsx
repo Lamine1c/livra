@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,18 +44,13 @@ export function YalidineForm({ apiId, apiToken }: YalidineFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-        Connectez votre compte Yalidine en 2 minutes. Trouvez ces informations dans votre espace Yalidine →{" "}
-        <a
-          href="https://yalidine.app/dev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 font-medium text-emerald-600 hover:underline"
-        >
-          Développement
-          <ExternalLink className="ml-0.5 h-3 w-3" />
-        </a>
-      </div>
+      <button
+        type="button"
+        onClick={() => window.open("https://yalidine.app", "_blank")}
+        className="text-[#10B981] text-[13px] bg-transparent border-0 cursor-pointer p-0 hover:underline"
+      >
+        Où trouver mes identifiants ?
+      </button>
 
       <Input
         id="yalidine-api-id"

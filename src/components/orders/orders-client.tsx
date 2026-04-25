@@ -120,7 +120,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                   className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                     active
                       ? "bg-[#10B981] text-white"
-                      : "bg-[#161618] text-[#8A8780] border border-[#252525] md:bg-white md:text-gray-600 md:border-gray-200 hover:text-[#F0EDE8] md:hover:bg-gray-100"
+                      : "bg-[#2A2A2E] text-[#A8A5A0] border border-[#333] md:bg-white md:text-gray-600 md:border-gray-200 hover:text-[#F0EDE8] md:hover:bg-gray-100"
                   }`}
                 >
                   {f.label}{count > 0 ? ` (${count})` : ""}
@@ -130,12 +130,6 @@ export function OrdersClient({ orders }: OrdersClientProps) {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setSelectMode(true)}
-              className="md:hidden text-sm text-[#8A8780] hover:text-[#F0EDE8]"
-            >
-              Sélectionner
-            </button>
             <Link href="/dashboard/orders/new">
               <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 whitespace-nowrap">
                 <Plus className="h-4 w-4" />
@@ -143,6 +137,12 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 <span className="sm:hidden">Nouvelle</span>
               </span>
             </Link>
+            <button
+              onClick={() => setSelectMode(true)}
+              className="md:hidden text-sm text-[#8A8780] hover:text-[#F0EDE8]"
+            >
+              Sélectionner
+            </button>
           </div>
         </div>
       )}

@@ -36,10 +36,10 @@ export default async function SettingsPage() {
           <div className="rounded-xl border border-[#252525] bg-[#161618] md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden">
             <div className="px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100">
               <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
-                Connecter Yalidine Express
+                Connecte ton Yalidine
               </h2>
               <p className="text-xs md:text-sm text-[#8A8780] md:text-gray-500 mt-0.5">
-                Vos credentials sont chiffrés et utilisés uniquement pour créer vos bons de livraison.
+                On s&apos;occupe du reste — tes identifiants sont chiffrés et jamais partagés.
               </p>
             </div>
             <div className="px-4 py-4 md:px-6">
