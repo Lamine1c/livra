@@ -102,7 +102,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
       {/* ── Desktop header ───────────────────────────────────── */}
       <div className="hidden md:block">
         <Header
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <main className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6">
+      <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4 md:space-y-6">
         {/* ── Stats — 2×2 mobile, 4-col desktop ──────────────── */}
         <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
           {STATS_CONFIG.map(({ key, label, icon: Icon, mobileCls, desktopCls }) => (

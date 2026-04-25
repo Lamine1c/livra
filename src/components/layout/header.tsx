@@ -10,8 +10,8 @@ interface HeaderProps {
 export function Header({ title, subtitle, rightContent }: HeaderProps) {
   return (
     <header
-      className="dashboard-header flex min-h-14 md:min-h-16 items-end justify-between border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6 pb-3 md:pb-4"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      className="flex h-auto items-center justify-between gap-3 border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6 pb-3 md:pb-4"
+      style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
     >
       <div>
         <h1 className="text-base md:text-lg font-semibold text-[#F0EDE8] md:text-gray-900">

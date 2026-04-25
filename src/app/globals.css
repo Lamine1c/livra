@@ -22,10 +22,6 @@ body {
   overscroll-behavior-y: contain;
 }
 
-.dashboard-header {
-  padding-top: env(safe-area-inset-top);
-}
-
 * {
   box-sizing: border-box;
 }

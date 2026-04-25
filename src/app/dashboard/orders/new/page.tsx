@@ -149,9 +149,9 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
       <Header title="Nouvelle commande" />
-      <main className="flex-1 pt-5 px-4 pb-40 md:p-6">
+      <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-4 md:space-y-6">
 
           {/* Client */}

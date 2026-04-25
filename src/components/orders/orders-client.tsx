@@ -95,7 +95,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
   }
 
   return (
-    <main className="flex-1 overflow-x-hidden p-4 md:p-6 space-y-4">
+    <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
 
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
