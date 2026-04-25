@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -7,6 +9,7 @@ import { OrderStatusSelect } from "@/components/orders/order-status-select";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { YalidineButton } from "@/components/orders/yalidine-button";
 import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
+import { DeleteOrderButton } from "@/components/orders/delete-order-button";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -33,9 +36,19 @@ export default async function OrderDetailPage({
       <Header title={`Commande ${o.reference}`} />
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-3xl space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <StatusBadge status={o.status} />
-            <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/dashboard/orders/${o.id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Modifier
+              </Link>
+              <DeleteOrderButton orderId={o.id} />
+              <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
+            </div>
           </div>
 
           {/* OTP verification — affiché tant que la commande n'est pas vérifiée */}

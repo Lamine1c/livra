@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { WILAYAS, formatDate } from "@/lib/utils";
@@ -31,9 +32,10 @@ export default async function ClientsPage() {
         ) : (
           <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {(clients as Client[]).map((client) => (
-              <div
+              <Link
                 key={client.id}
-                className="rounded-xl border border-[#252525] bg-[#161618] p-4 md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm"
+                href={`/dashboard/clients/${client.id}`}
+                className="rounded-xl border border-[#252525] bg-[#161618] p-4 md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm block hover:border-emerald-500/50 transition-colors"
               >
                 <p className="font-semibold text-[#F0EDE8] md:text-gray-900">
                   {client.full_name}
@@ -54,7 +56,7 @@ export default async function ClientsPage() {
                 <p className="mt-3 text-xs text-[#8A8780]/70 md:text-gray-400">
                   Depuis le {formatDate(client.created_at)}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}

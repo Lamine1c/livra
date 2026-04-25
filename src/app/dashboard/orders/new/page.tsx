@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,10 @@ export default function NewOrderPage() {
     address: "",
   });
   const [useExistingClient, setUseExistingClient] = useState(true);
+  const [editingClient, setEditingClient] = useState(false);
+  const [editClientForm, setEditClientForm] = useState({
+    full_name: "", phone: "", wilaya: "", commune: "", address: "",
+  });
   const [lines, setLines] = useState<OrderLine[]>([
     { product_name: "", quantity: 1, unit_price: 0 },
   ]);
@@ -82,6 +86,18 @@ export default function NewOrderPage() {
     if (!user) return;
 
     let finalClientId = clientId;
+
+    if (useExistingClient && editingClient && clientId) {
+      const { error: updateErr } = await supabase
+        .from("clients")
+        .update(editClientForm)
+        .eq("id", clientId);
+      if (updateErr) {
+        setError("Erreur lors de la mise à jour du client.");
+        setLoading(false);
+        return;
+      }
+    }
 
     if (!useExistingClient) {
       const { data: created, error: clientError } = await supabase
@@ -165,17 +181,105 @@ export default function NewOrderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {useExistingClient ? (
-                <Select
-                  label="Choisir un client"
-                  options={clients.map((c) => ({
-                    value: c.id,
-                    label: `${c.full_name} — ${c.phone}`,
-                  }))}
-                  placeholder="Sélectionner un client"
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                  required
-                />
+                <>
+                  <Select
+                    label="Choisir un client"
+                    options={clients.map((c) => ({
+                      value: c.id,
+                      label: `${c.full_name} — ${c.phone}`,
+                    }))}
+                    placeholder="Sélectionner un client"
+                    value={clientId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setClientId(id);
+                      setEditingClient(false);
+                      const found = clients.find((c) => c.id === id);
+                      if (found) {
+                        setEditClientForm({
+                          full_name: found.full_name,
+                          phone: found.phone,
+                          wilaya: found.wilaya,
+                          commune: found.commune,
+                          address: found.address,
+                        });
+                      }
+                    }}
+                    required
+                  />
+                  {clientId && (
+                    <div>
+                      {!editingClient ? (
+                        <button
+                          type="button"
+                          onClick={() => setEditingClient(true)}
+                          className="flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Modifier les infos du client
+                        </button>
+                      ) : (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-emerald-800">
+                              Modifier le client
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setEditingClient(false)}
+                              className="text-emerald-600 hover:text-emerald-800"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <Input
+                              label="Nom complet"
+                              value={editClientForm.full_name}
+                              onChange={(e) =>
+                                setEditClientForm((p) => ({ ...p, full_name: e.target.value }))
+                              }
+                            />
+                            <Input
+                              label="Téléphone"
+                              value={editClientForm.phone}
+                              onChange={(e) =>
+                                setEditClientForm((p) => ({ ...p, phone: e.target.value }))
+                              }
+                            />
+                            <Select
+                              label="Wilaya"
+                              options={WILAYA_OPTIONS}
+                              value={editClientForm.wilaya}
+                              onChange={(e) =>
+                                setEditClientForm((p) => ({ ...p, wilaya: e.target.value }))
+                              }
+                            />
+                            <Input
+                              label="Commune"
+                              value={editClientForm.commune}
+                              onChange={(e) =>
+                                setEditClientForm((p) => ({ ...p, commune: e.target.value }))
+                              }
+                            />
+                            <div className="sm:col-span-2">
+                              <Input
+                                label="Adresse"
+                                value={editClientForm.address}
+                                onChange={(e) =>
+                                  setEditClientForm((p) => ({ ...p, address: e.target.value }))
+                                }
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-emerald-700">
+                            Ces modifications seront enregistrées à la création de la commande.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
