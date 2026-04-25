@@ -28,15 +28,23 @@ export function Sidebar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const el = document.querySelector(".scroll-container");
-    if (!el) return;
     let last = 0;
     const handler = () => {
-      setScrolled(el.scrollTop > last && el.scrollTop > 10);
-      last = el.scrollTop;
+      const current = window.scrollY;
+      setScrolled(current > last && current > 10);
+      last = current;
     };
-    el.addEventListener("scroll", handler, { passive: true });
-    return () => el.removeEventListener("scroll", handler);
+    const handler2 = () => {
+      const current = window.scrollY;
+      setScrolled(current > last && current > 10);
+      last = current;
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    document.addEventListener("scroll", handler2, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handler);
+      document.removeEventListener("scroll", handler2);
+    };
   }, []);
 
   async function handleSignOut() {

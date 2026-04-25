@@ -58,7 +58,7 @@ export function ClientsClient({ clients }: ClientsClientProps) {
 
   if (!clients.length) {
     return (
-      <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+      <main className="flex-1 pt-4 px-4 pb-40 md:p-6">
         <EmptyClients />
       </main>
     );
