@@ -7,12 +7,18 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <header className="flex h-14 md:h-16 items-center justify-between border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6">
       <div>
-        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        <h1 className="text-base md:text-lg font-semibold text-[#F0EDE8] md:text-gray-900">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-xs md:text-sm text-[#8A8780] md:text-gray-500">
+            {subtitle}
+          </p>
+        )}
       </div>
-      <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100">
+      <button className="rounded-lg p-2 text-[#8A8780] md:text-gray-500 hover:bg-[#1e1e20] md:hover:bg-gray-100 transition-colors">
         <Bell className="h-5 w-5" />
       </button>
     </header>

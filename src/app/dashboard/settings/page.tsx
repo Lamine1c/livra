@@ -1,14 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { SettingsForm } from "./settings-form";
 import { YalidineForm } from "./yalidine-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -17,33 +14,42 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto">
+    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
       <Header title="Paramètres" />
-      <main className="flex-1 p-6">
-        <div className="mx-auto max-w-2xl space-y-6">
-          <Card>
-            <CardHeader>
-              <h2 className="font-semibold text-gray-900">Profil marchand</h2>
-            </CardHeader>
-            <CardContent>
-              <SettingsForm profile={profile} userEmail={user?.email ?? ""} />
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <h2 className="font-semibold text-gray-900">Connecter Yalidine Express</h2>
-              <p className="text-sm text-gray-500">
+      <main className="flex-1 p-4 md:p-6">
+        <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
+
+          {/* Profil marchand */}
+          <div className="rounded-xl border border-[#252525] bg-[#161618] md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden">
+            <div className="px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100">
+              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
+                Profil marchand
+              </h2>
+            </div>
+            <div className="px-4 py-4 md:px-6">
+              <SettingsForm profile={profile} userEmail={user?.email ?? ""} />
+            </div>
+          </div>
+
+          {/* Yalidine */}
+          <div className="rounded-xl border border-[#252525] bg-[#161618] md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden">
+            <div className="px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100">
+              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
+                Connecter Yalidine Express
+              </h2>
+              <p className="text-xs md:text-sm text-[#8A8780] md:text-gray-500 mt-0.5">
                 Vos credentials sont chiffrés et utilisés uniquement pour créer vos bons de livraison.
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-4 md:px-6">
               <YalidineForm
                 apiId={profile?.yalidine_api_id ?? null}
                 apiToken={profile?.yalidine_api_token ?? null}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
