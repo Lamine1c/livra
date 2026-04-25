@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { WILAYAS } from "@/lib/utils";
 import { Client } from "@/types";
+import { useToast, Toast } from "@/components/ui/toast";
 
 const WILAYA_OPTIONS = Object.entries(WILAYAS).map(([code, name]) => ({
   value: code,
@@ -27,12 +28,11 @@ export function ClientEditForm({ client }: { client: Client }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const { message, showToast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSaved(false);
     setLoading(true);
 
     const { error: err } = await supabase
@@ -46,12 +46,13 @@ export function ClientEditForm({ client }: { client: Client }) {
       return;
     }
 
-    setSaved(true);
+    showToast("Modifications enregistrées");
     setLoading(false);
     router.refresh();
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
@@ -92,11 +93,6 @@ export function ClientEditForm({ client }: { client: Client }) {
       {error && (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
       )}
-      {saved && (
-        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          Modifications enregistrées.
-        </p>
-      )}
 
       <div className="flex gap-3 justify-end">
         <Button type="submit" disabled={loading}>
@@ -104,5 +100,7 @@ export function ClientEditForm({ client }: { client: Client }) {
         </Button>
       </div>
     </form>
+    <Toast message={message} />
+    </>
   );
 }

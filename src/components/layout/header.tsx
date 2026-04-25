@@ -1,11 +1,13 @@
 import { Bell } from "lucide-react";
+import { ReactNode } from "react";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  rightContent?: ReactNode;
 }
 
-export function Header({ title, subtitle }: HeaderProps) {
+export function Header({ title, subtitle, rightContent }: HeaderProps) {
   return (
     <header className="flex h-14 md:h-16 items-center justify-between border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6">
       <div>
@@ -18,9 +20,13 @@ export function Header({ title, subtitle }: HeaderProps) {
           </p>
         )}
       </div>
-      <button className="rounded-lg p-2 text-[#8A8780] md:text-gray-500 hover:bg-[#1e1e20] md:hover:bg-gray-100 transition-colors">
-        <Bell className="h-5 w-5" />
-      </button>
+      {rightContent !== undefined ? (
+        rightContent
+      ) : (
+        <button className="rounded-lg p-2 text-[#8A8780] md:text-gray-500 hover:bg-[#1e1e20] md:hover:bg-gray-100 transition-colors">
+          <Bell className="h-5 w-5" />
+        </button>
+      )}
     </header>
   );
 }

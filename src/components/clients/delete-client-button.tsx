@@ -4,77 +4,108 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { useToast, Toast } from "@/components/ui/toast";
+
+type SheetState = "closed" | "loading" | "has-orders" | "confirm" | "deleting";
 
 export function DeleteClientButton({ clientId }: { clientId: string }) {
-  const [confirm, setConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [sheet, setSheet] = useState<SheetState>("closed");
   const router = useRouter();
   const supabase = createClient();
+  const { message, showToast } = useToast();
 
-  async function handleDelete() {
-    setLoading(true);
-
+  async function openSheet() {
+    setSheet("loading");
     const { count } = await supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
       .eq("client_id", clientId);
+    setSheet(count && count > 0 ? "has-orders" : "confirm");
+  }
 
-    if (count && count > 0) {
-      setError(
-        `Ce client a ${count} commande${count > 1 ? "s" : ""} associée${count > 1 ? "s" : ""}. Supprimez-les d'abord.`
-      );
-      setLoading(false);
-      setConfirm(false);
-      return;
-    }
-
+  async function handleDelete() {
+    setSheet("deleting");
     await supabase.from("clients").delete().eq("id", clientId);
+    showToast("Client supprimé");
+    await new Promise((r) => setTimeout(r, 1000));
     router.push("/dashboard/clients");
   }
 
-  if (error) {
-    return (
-      <div className="space-y-2">
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
-        <Button variant="ghost" size="sm" onClick={() => setError("")}>
-          OK
-        </Button>
-      </div>
-    );
-  }
-
-  if (confirm) {
-    return (
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-[#8A8780] md:text-gray-600">
-          Confirmer la suppression ?
-        </span>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDelete}
-          disabled={loading}
-        >
-          {loading ? "Suppression..." : "Supprimer"}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setConfirm(false)}
-          disabled={loading}
-        >
-          Annuler
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <Button variant="outline" size="sm" onClick={() => setConfirm(true)}>
-      <Trash2 className="h-4 w-4" />
-      Supprimer
-    </Button>
+    <>
+      <button
+        onClick={openSheet}
+        className="flex items-center gap-1.5 rounded-lg border border-[#252525] md:border-gray-200 px-3 py-1.5 text-sm font-medium text-[#F87171] hover:bg-[#1e1e20] md:hover:bg-red-50 transition-colors"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        Supprimer
+      </button>
+
+      {sheet !== "closed" && (
+        <div className="fixed inset-0 z-[60] flex items-end">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => {
+              if (sheet !== "deleting" && sheet !== "loading") setSheet("closed");
+            }}
+          />
+          <div className="relative w-full rounded-t-[16px] bg-[#1A1A1C] pb-safe">
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="h-[3px] w-8 rounded-full bg-[#444]" />
+            </div>
+
+            {sheet === "loading" && (
+              <div className="flex justify-center px-5 pb-8 pt-5">
+                <div className="h-5 w-5 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" />
+              </div>
+            )}
+
+            {sheet === "has-orders" && (
+              <div className="px-5 pb-6 pt-4 space-y-3">
+                <p className="font-semibold text-[#F0EDE8]">
+                  Ce client a des commandes associées
+                </p>
+                <p className="text-sm text-[#8A8780]">
+                  Supprimez d'abord ses commandes pour pouvoir le supprimer.
+                </p>
+                <button
+                  onClick={() => setSheet("closed")}
+                  className="mt-2 w-full rounded-xl bg-[#252525] px-4 py-3.5 text-sm font-semibold text-[#8A8780]"
+                >
+                  Compris — revenir
+                </button>
+              </div>
+            )}
+
+            {(sheet === "confirm" || sheet === "deleting") && (
+              <div className="px-5 pb-6 pt-4 space-y-3">
+                <p className="font-semibold text-[#F0EDE8]">
+                  Supprimer ce client ?
+                </p>
+                <p className="text-sm text-[#8A8780]">
+                  Cette action est irréversible.
+                </p>
+                <button
+                  onClick={handleDelete}
+                  disabled={sheet === "deleting"}
+                  className="mt-2 w-full rounded-xl border border-[#F87171] bg-[#2D1010] px-4 py-3.5 text-sm font-semibold text-[#F87171] disabled:opacity-50 transition-opacity"
+                >
+                  {sheet === "deleting" ? "Suppression…" : "Supprimer définitivement"}
+                </button>
+                <button
+                  onClick={() => setSheet("closed")}
+                  disabled={sheet === "deleting"}
+                  className="w-full rounded-xl bg-[#252525] px-4 py-3.5 text-sm font-semibold text-[#8A8780]"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Toast message={message} />
+    </>
   );
 }

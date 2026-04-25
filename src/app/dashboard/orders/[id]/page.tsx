@@ -1,14 +1,11 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
-import { StatusBadge } from "@/components/ui/badge";
-import { OrderStatusSelect } from "@/components/orders/order-status-select";
+import { OrderActionsMenu } from "@/components/orders/order-actions-menu";
+import { OrderStatusRow } from "@/components/orders/order-status-row";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { YalidineButton } from "@/components/orders/yalidine-button";
 import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
-import { DeleteOrderButton } from "@/components/orders/delete-order-button";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -36,27 +33,11 @@ export default async function OrderDetailPage({
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
-      <Header title={`Commande ${o.reference}`} />
+      <Header title={`Commande ${o.reference}`} rightContent={<OrderActionsMenu orderId={o.id} />} />
       <main className="flex-1 overflow-x-hidden p-4 md:p-6">
         <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
 
-          {/* Ligne 1 : badge statut + boutons Modifier / Supprimer */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <StatusBadge status={o.status} />
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/dashboard/orders/${o.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#252525] md:border-gray-300 px-3 py-1.5 text-sm font-medium text-[#F0EDE8] md:text-gray-700 hover:bg-[#1e1e20] md:hover:bg-gray-50 transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Modifier
-              </Link>
-              <DeleteOrderButton orderId={o.id} />
-            </div>
-          </div>
-
-          {/* Ligne 2 : select statut — pleine largeur mobile */}
-          <OrderStatusSelect orderId={o.id} currentStatus={o.status} />
+          <OrderStatusRow orderId={o.id} currentStatus={o.status} />
 
           {/* OTP */}
           {!o.otp_verified_at && o.status === "pending" && o.client && (

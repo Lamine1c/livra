@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { Order, OrderItem } from "@/types";
+import { useToast, Toast } from "@/components/ui/toast";
 
 interface OrderLine {
   product_name: string;
@@ -40,6 +41,7 @@ export function OrderEditForm({ order }: { order: Order }) {
   const [notes, setNotes] = useState(order.notes ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { message, showToast } = useToast();
 
   const subtotal = lines.reduce((sum, l) => sum + l.quantity * l.unit_price, 0);
   const total = subtotal + deliveryFee;
@@ -100,11 +102,14 @@ export function OrderEditForm({ order }: { order: Order }) {
       return;
     }
 
+    showToast("Modifications enregistrées");
+    await new Promise((r) => setTimeout(r, 1200));
     router.push(`/dashboard/orders/${order.id}`);
     router.refresh();
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
 
       {/* Articles */}
@@ -238,5 +243,7 @@ export function OrderEditForm({ order }: { order: Order }) {
         </Button>
       </div>
     </form>
+    <Toast message={message} />
+    </>
   );
 }
