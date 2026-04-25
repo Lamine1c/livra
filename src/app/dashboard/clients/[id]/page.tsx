@@ -33,10 +33,10 @@ export default async function ClientDetailPage({
     .order("created_at", { ascending: false });
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
       <Header title={client.full_name} />
 
-      <main className="flex-1 pt-5 px-4 pb-24 md:p-6">
+      <main className="flex-1 pt-5 px-4 pb-40 md:p-6">
         <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
 
           {/* Informations + supprimer */}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -12,7 +13,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", shortLabel: "Accueil", icon: LayoutDashboard },
@@ -25,6 +25,19 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const el = document.querySelector(".scroll-container");
+    if (!el) return;
+    let last = 0;
+    const handler = () => {
+      setScrolled(el.scrollTop > last && el.scrollTop > 10);
+      last = el.scrollTop;
+    };
+    el.addEventListener("scroll", handler, { passive: true });
+    return () => el.removeEventListener("scroll", handler);
+  }, []);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -104,8 +117,9 @@ export function Sidebar() {
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-medium transition-colors",
-                    active ? "text-emerald-400" : "text-[#8A8780]"
+                    "text-[10px] font-medium transition-all duration-200",
+                    active ? "text-emerald-400" : "text-[#8A8780]",
+                    scrolled ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-4"
                   )}
                 >
                   {shortLabel}

@@ -16,7 +16,7 @@ export default async function ClientsPage() {
   const list = (clients as Client[]) ?? [];
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
       <Header
         title="Clients"
         subtitle={`${list.length} client${list.length > 1 ? "s" : ""}`}

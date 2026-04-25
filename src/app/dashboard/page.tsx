@@ -102,7 +102,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
       {/* ── Desktop header ───────────────────────────────────── */}
       <div className="hidden md:block">
         <Header

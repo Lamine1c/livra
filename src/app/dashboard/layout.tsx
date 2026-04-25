@@ -9,7 +9,7 @@ export default function DashboardLayout({
     <div className="flex h-screen overflow-hidden bg-[#0D0D0D] md:bg-gray-50">
       <Sidebar />
       {/* pb-16 on mobile = space for fixed bottom nav */}
-      <div className="flex flex-1 flex-col overflow-hidden pb-16 md:pb-0">
+      <div className="scroll-container flex flex-1 flex-col overflow-y-auto pb-16 md:pb-0">
         {children}
       </div>
     </div>

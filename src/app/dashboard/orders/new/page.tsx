@@ -149,9 +149,9 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-auto bg-[#0D0D0D] md:bg-transparent">
+    <div className="flex flex-1 flex-col bg-[#0D0D0D] md:bg-transparent">
       <Header title="Nouvelle commande" />
-      <main className="flex-1 pt-5 px-4 pb-24 md:p-6">
+      <main className="flex-1 pt-5 px-4 pb-40 md:p-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-4 md:space-y-6">
 
           {/* Client */}
@@ -371,11 +371,12 @@ export default function NewOrderPage() {
                     <div className="w-1/3">
                       <Input
                         label="Qté"
-                        type="number"
-                        min={1}
-                        value={line.quantity}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={line.quantity === 0 ? "" : String(line.quantity)}
                         onChange={(e) =>
-                          updateLine(i, "quantity", parseInt(e.target.value) || 1)
+                          updateLine(i, "quantity", parseInt(e.target.value) || 0)
                         }
                         required
                       />
@@ -383,10 +384,10 @@ export default function NewOrderPage() {
                     <div className="flex-1">
                       <Input
                         label="Prix unitaire"
-                        type="number"
-                        min={0}
-                        step={100}
-                        value={line.unit_price}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={line.unit_price === 0 ? "" : String(line.unit_price)}
                         onChange={(e) =>
                           updateLine(i, "unit_price", parseFloat(e.target.value) || 0)
                         }
@@ -434,10 +435,10 @@ export default function NewOrderPage() {
                 </span>
                 <div className="w-36">
                   <Input
-                    type="number"
-                    min={0}
-                    step={100}
-                    value={deliveryFee}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={deliveryFee === 0 ? "" : String(deliveryFee)}
                     onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
                   />
                 </div>

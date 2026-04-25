@@ -11,7 +11,7 @@ const variantClasses = {
   secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
   destructive: "bg-red-600 text-white hover:bg-red-700",
   ghost: "text-gray-700 hover:bg-gray-100",
-  outline: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+  outline: "border border-[#444] md:border-gray-300 text-[#F0EDE8] md:text-gray-700 hover:bg-[#1e1e20] md:hover:bg-gray-50",
 };
 
 const sizeClasses = {

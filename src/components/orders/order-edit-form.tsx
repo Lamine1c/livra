@@ -146,11 +146,12 @@ export function OrderEditForm({ order }: { order: Order }) {
                 <div className="w-1/3">
                   <Input
                     label="Qté"
-                    type="number"
-                    min={1}
-                    value={line.quantity}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={line.quantity === 0 ? "" : String(line.quantity)}
                     onChange={(e) =>
-                      updateLine(i, "quantity", parseInt(e.target.value) || 1)
+                      updateLine(i, "quantity", parseInt(e.target.value) || 0)
                     }
                     required
                   />
@@ -158,10 +159,10 @@ export function OrderEditForm({ order }: { order: Order }) {
                 <div className="flex-1">
                   <Input
                     label="Prix unitaire"
-                    type="number"
-                    min={0}
-                    step={100}
-                    value={line.unit_price}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={line.unit_price === 0 ? "" : String(line.unit_price)}
                     onChange={(e) =>
                       updateLine(i, "unit_price", parseFloat(e.target.value) || 0)
                     }
@@ -207,10 +208,10 @@ export function OrderEditForm({ order }: { order: Order }) {
             <span className="text-sm text-[#8A8780] md:text-gray-500">Frais de livraison</span>
             <div className="w-36">
               <Input
-                type="number"
-                min={0}
-                step={100}
-                value={deliveryFee}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={deliveryFee === 0 ? "" : String(deliveryFee)}
                 onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
               />
             </div>

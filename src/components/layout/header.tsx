@@ -9,7 +9,9 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, rightContent }: HeaderProps) {
   return (
-    <header className="flex h-14 md:h-16 items-center justify-between border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6">
+    <header
+      className="dashboard-header flex min-h-14 md:min-h-16 items-end justify-between border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6 pb-3 md:pb-4"
+    >
       <div>
         <h1 className="text-base md:text-lg font-semibold text-[#F0EDE8] md:text-gray-900">
           {title}
