@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShoppingCart, Users, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
+import { ScrollMain } from "@/components/layout/scroll-main";
 import { OrdersTable } from "@/components/orders/orders-table";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
@@ -209,7 +210,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
         <div className="md:hidden grid grid-cols-2 gap-[18px]">
@@ -332,7 +333,7 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-      </main>
+      </ScrollMain>
     </div>
   );
 }
