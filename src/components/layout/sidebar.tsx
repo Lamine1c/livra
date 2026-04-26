@@ -121,7 +121,7 @@ export function Sidebar() {
                 >
                   <Icon
                     className="h-[18px] w-[18px] transition-colors"
-                    style={{ color: active ? "#10B981" : "#8A8780" }}
+                    style={{ color: active ? "#F5F0E8" : "#8A8780" }}
                   />
                 </div>
                 <span

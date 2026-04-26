@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Plus, ShoppingBag, Trash2, Check } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { Plus, ShoppingBag } from "lucide-react";
 import { Order, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,11 +19,6 @@ const MUTED        = "rgba(245,240,232,0.4)";
 const cardNeumorphic = {
   background: BG,
   boxShadow: `-6px -6px 14px ${SHADOW_LIGHT}, 6px 6px 14px ${SHADOW_DARK}`,
-};
-
-const cardNeumorphicGlow = {
-  background: BG,
-  boxShadow: `-6px -6px 14px ${SHADOW_LIGHT}, 6px 6px 14px ${SHADOW_DARK}, 0 0 25px rgba(16,185,129,0.3)`,
 };
 
 const pillNeumorphic = {
@@ -64,12 +57,6 @@ interface OrdersClientProps {
 
 export function OrdersClient({ orders }: OrdersClientProps) {
   const [activeFilter, setActiveFilter] = useState("");
-  const [selectMode, setSelectMode] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
-  const [bulkDeleting, setBulkDeleting] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
 
   const filtered = useMemo(() => {
     if (!activeFilter) return orders;
@@ -91,122 +78,65 @@ export function OrdersClient({ orders }: OrdersClientProps) {
     return c;
   }, [orders]);
 
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function exitSelectMode() {
-    setSelectMode(false);
-    setSelected(new Set());
-  }
-
-  async function handleBulkDelete() {
-    setBulkDeleting(true);
-    const ids = Array.from(selected);
-    for (const id of ids) {
-      await supabase.from("order_items").delete().eq("order_id", id);
-    }
-    await supabase.from("orders").delete().in("id", ids);
-    setBulkDeleting(false);
-    setBulkSheetOpen(false);
-    exitSelectMode();
-    router.refresh();
-  }
-
   return (
     <main
-      className={`w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 ${selectMode && selected.size > 0 ? 'pb-64' : 'pb-44'} md:p-6 space-y-4`}
+      className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-44 md:p-6 space-y-4"
       style={{ background: BG }}
     >
 
-      {/* Filtre pills + Sélectionner + Nouvelle commande */}
-      {selectMode ? (
-        <div className="flex items-center justify-between py-0.5">
-          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 700 }}>
-            {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
-          </p>
-          <button
-            onClick={exitSelectMode}
-            className="text-sm font-medium rounded-[10px] px-3 py-1.5 transition-transform active:scale-[0.97]"
-            style={{
-              color: "rgba(245,240,232,0.65)",
-              background: BG,
-              boxShadow: `-3px -3px 7px ${SHADOW_LIGHT}, 3px 3px 7px ${SHADOW_DARK}`,
-            }}
-          >
-            Annuler
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-webkit-scrollbar:hidden]">
-            {FILTERS.map((f) => {
-              const active = activeFilter === f.value;
-              const count = counts[f.value] ?? 0;
-              return (
-                <span key={f.value || "all"} className="contents">
-                  {/* Mobile pill — neumorphique */}
-                  <button
-                    onClick={() => setActiveFilter(f.value)}
-                    className="md:hidden shrink-0 whitespace-nowrap rounded-[12px] px-4 py-2 text-sm font-medium transition-all"
-                    style={active
-                      ? { ...pillNeumorphicActive, color: EMERALD }
-                      : { ...pillNeumorphic, color: "rgba(245,240,232,0.6)" }
-                    }
-                  >
-                    {f.label}{count > 0 ? ` (${count})` : ""}
-                  </button>
+      {/* Filtre pills + Nouvelle commande */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-webkit-scrollbar:hidden]">
+          {FILTERS.map((f) => {
+            const active = activeFilter === f.value;
+            const count = counts[f.value] ?? 0;
+            return (
+              <span key={f.value || "all"} className="contents">
+                {/* Mobile pill — neumorphique */}
+                <button
+                  onClick={() => setActiveFilter(f.value)}
+                  className="md:hidden shrink-0 whitespace-nowrap rounded-[12px] px-4 py-2 text-sm font-medium transition-all"
+                  style={active
+                    ? { ...pillNeumorphicActive, color: OFF_WHITE }
+                    : { ...pillNeumorphic, color: "rgba(245,240,232,0.6)" }
+                  }
+                >
+                  {f.label}{count > 0 ? ` (${count})` : ""}
+                </button>
 
-                  {/* Desktop pill — style original */}
-                  <button
-                    onClick={() => setActiveFilter(f.value)}
-                    className={`hidden md:inline-flex shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active
-                        ? "bg-[#10B981] text-white"
-                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
-                    }`}
-                  >
-                    {f.label}{count > 0 ? ` (${count})` : ""}
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <Link href="/dashboard/orders/new">
-              <span
-                className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold whitespace-nowrap transition-transform active:scale-[0.97]"
-                style={{
-                  background: EMERALD,
-                  color: OFF_WHITE,
-                  boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.4), inset 0 -2px 0 0 rgba(0,80,50,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.2), 0 4px 12px rgba(16,185,129,0.4), 0 1px 3px rgba(0,0,0,0.3)`,
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Nouvelle commande</span>
-                <span className="sm:hidden">Nouvelle</span>
+                {/* Desktop pill — style original */}
+                <button
+                  onClick={() => setActiveFilter(f.value)}
+                  className={`hidden md:inline-flex shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-[#10B981] text-white"
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {f.label}{count > 0 ? ` (${count})` : ""}
+                </button>
               </span>
-            </Link>
-            <button
-              onClick={() => setSelectMode(true)}
-              className="md:hidden text-sm font-medium rounded-[10px] px-3 py-1.5 transition-transform active:scale-[0.97]"
+            );
+          })}
+        </div>
+
+        <div className="flex items-center shrink-0">
+          <Link href="/dashboard/orders/new">
+            <span
+              className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold whitespace-nowrap transition-transform active:scale-[0.97]"
               style={{
-                color: "rgba(245,240,232,0.65)",
-                background: BG,
-                boxShadow: `-3px -3px 7px ${SHADOW_LIGHT}, 3px 3px 7px ${SHADOW_DARK}`,
+                background: EMERALD,
+                color: OFF_WHITE,
+                boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 0 rgba(0,80,50,0.4), 0 2px 6px rgba(0,0,0,0.35)`,
               }}
             >
-              Sélectionner
-            </button>
-          </div>
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nouvelle commande</span>
+              <span className="sm:hidden">Nouvelle</span>
+            </span>
+          </Link>
         </div>
-      )}
+      </div>
 
       {/* Mobile — liste de cards */}
       <div className="w-full md:hidden space-y-3">
@@ -216,47 +146,27 @@ export function OrdersClient({ orders }: OrdersClientProps) {
           filtered.map((order) => {
             const name = order.client?.full_name ?? "—";
             const ms = MOBILE_STATUS[order.status];
-            const isSelected = selected.has(order.id);
             return (
-              <div
+              <Link
                 key={order.id}
-                onClick={() =>
-                  selectMode
-                    ? toggleSelect(order.id)
-                    : router.push(`/dashboard/orders/${order.id}`)
-                }
-                className="w-full flex items-center gap-3 rounded-[18px] cursor-pointer transition-all active:scale-[0.99]"
+                href={`/dashboard/orders/${order.id}`}
+                className="w-full flex items-center gap-3 rounded-[18px] transition-all active:scale-[0.99]"
                 style={{
-                  ...(isSelected ? cardNeumorphicGlow : cardNeumorphic),
+                  ...cardNeumorphic,
                   padding: "14px 14px",
                 }}
               >
-                {selectMode ? (
-                  <div
-                    className="rounded-full flex items-center justify-center shrink-0"
-                    style={{
-                      width: 24, height: 24,
-                      background: BG,
-                      boxShadow: isSelected
-                        ? `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}, inset 0 0 10px rgba(16,185,129,0.5)`
-                        : `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}`,
-                    }}
-                  >
-                    {isSelected && <Check className="h-3.5 w-3.5" style={{ color: EMERALD }} strokeWidth={3} />}
-                  </div>
-                ) : (
-                  <div
-                    className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
-                    style={{
-                      width: 40, height: 40, fontSize: 14,
-                      color: EMERALD,
-                      background: BG,
-                      boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
-                    }}
-                  >
-                    {name[0]?.toUpperCase()}
-                  </div>
-                )}
+                <div
+                  className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
+                  style={{
+                    width: 40, height: 40, fontSize: 14,
+                    color: OFF_WHITE,
+                    background: BG,
+                    boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
+                  }}
+                >
+                  {name[0]?.toUpperCase()}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }} className="truncate leading-tight">
                     {name}
@@ -282,7 +192,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })
         )}
@@ -300,83 +210,6 @@ export function OrdersClient({ orders }: OrdersClientProps) {
           </Card>
         )}
       </div>
-
-      {/* Barre de sélection bulk */}
-      {selectMode && selected.size > 0 && (
-        <div
-          className="fixed bottom-24 left-4 right-4 z-40 flex items-center justify-between rounded-[16px] px-4 py-3 md:bottom-6 md:left-auto md:right-6"
-          style={cardNeumorphic}
-        >
-          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
-            {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
-          </p>
-          <button
-            onClick={() => setBulkSheetOpen(true)}
-            className="flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold transition-transform active:scale-[0.97]"
-            style={{
-              background: BG,
-              color: "#F87171",
-              boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 0 8px rgba(248,113,113,0.15)`,
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Supprimer
-          </button>
-        </div>
-      )}
-
-      {/* Bulk delete bottom sheet */}
-      {bulkSheetOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => !bulkDeleting && setBulkSheetOpen(false)}
-          />
-          <div
-            className="relative w-full rounded-t-[24px] pb-[env(safe-area-inset-bottom,8px)]"
-            style={{ background: BG }}
-          >
-            <div className="flex justify-center pt-3 pb-1">
-              <div
-                className="h-[3px] w-10 rounded-full"
-                style={{ background: "rgba(245,240,232,0.2)" }}
-              />
-            </div>
-            <div className="px-5 pb-6 pt-4 space-y-3">
-              <p style={{ fontSize: 16, color: OFF_WHITE, fontWeight: 600 }}>
-                Supprimer {selected.size} commande{selected.size > 1 ? "s" : ""} ?
-              </p>
-              <p style={{ fontSize: 13, color: MUTED }}>
-                Cette action est irréversible.
-              </p>
-              <button
-                onClick={handleBulkDelete}
-                disabled={bulkDeleting}
-                className="mt-2 w-full rounded-[14px] px-4 py-3.5 text-sm font-semibold disabled:opacity-50 transition-transform active:scale-[0.98]"
-                style={{
-                  background: BG,
-                  color: "#F87171",
-                  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}, inset 0 0 12px rgba(248,113,113,0.2)`,
-                }}
-              >
-                {bulkDeleting ? "Suppression…" : "Supprimer définitivement"}
-              </button>
-              <button
-                onClick={() => setBulkSheetOpen(false)}
-                disabled={bulkDeleting}
-                className="w-full rounded-[14px] px-4 py-3.5 text-sm font-semibold transition-transform active:scale-[0.98]"
-                style={{
-                  background: BG,
-                  color: MUTED,
-                  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}`,
-                }}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
@@ -405,7 +238,7 @@ function EmptyOrders() {
         style={{
           background: EMERALD,
           color: OFF_WHITE,
-          boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.4), inset 0 -2px 0 0 rgba(0,80,50,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.2), 0 4px 12px rgba(16,185,129,0.4), 0 1px 3px rgba(0,0,0,0.3)`,
+          boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 0 rgba(0,80,50,0.4), 0 2px 6px rgba(0,0,0,0.35)`,
         }}
       >
         + Nouvelle commande

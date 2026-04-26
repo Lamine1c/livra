@@ -196,12 +196,11 @@ export default async function DashboardPage() {
             Voici votre journée
           </p>
         </div>
-        {/* Avatar neumorphique — même fond que la page, lettre émeraude */}
         <div
           className="flex items-center justify-center rounded-full shrink-0"
           style={{
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
-            color: EMERALD,
+            color: OFF_WHITE,
             background: BG,
             boxShadow: `-5px -5px 13px ${SHADOW_LIGHT}, 5px 5px 13px ${SHADOW_DARK}`,
           }}
@@ -287,7 +286,7 @@ export default async function DashboardPage() {
                       className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
                       style={{
                         width: 40, height: 40, fontSize: 14,
-                        color: EMERALD,
+                        color: OFF_WHITE,
                         background: BG,
                         boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
                       }}
