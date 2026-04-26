@@ -91,7 +91,7 @@ export function Sidebar() {
 
       {/* ── Mobile bottom navigation bar ────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#161618] border-t border-[#252525]">
-        <div className="flex items-center justify-around px-1 pt-2 pb-safe">
+        <div className="flex items-center justify-around px-1 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
           {navItems.map(({ href, shortLabel, icon: Icon }) => {
             const active =
               href === "/dashboard"
