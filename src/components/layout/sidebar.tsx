@@ -28,17 +28,21 @@ export function Sidebar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    console.log('[NavScroll] useEffect triggered, pathname:', pathname);
+
     let scrollTarget: HTMLElement | null = null;
     let attached = false;
     let observer: MutationObserver | null = null;
 
     const handleScroll = () => {
       if (!scrollTarget) return;
+      console.log('[NavScroll] scroll event, scrollTop:', scrollTarget.scrollTop);
       setScrolled(scrollTarget.scrollTop > 0);
     };
 
     const tryAttach = (): boolean => {
       const main = document.querySelector('main') as HTMLElement | null;
+      console.log('[NavScroll] main found?', !!main, 'scrollHeight:', main?.scrollHeight, 'clientHeight:', main?.clientHeight);
       if (main) {
         if (attached && scrollTarget) {
           scrollTarget.removeEventListener("scroll", handleScroll);
@@ -46,6 +50,7 @@ export function Sidebar() {
         scrollTarget = main;
         main.addEventListener("scroll", handleScroll, { passive: true });
         attached = true;
+        console.log('[NavScroll] listener attached to main');
         handleScroll();
         return true;
       }
@@ -56,6 +61,7 @@ export function Sidebar() {
 
     if (!tryAttach()) {
       observer = new MutationObserver(() => {
+        console.log('[NavScroll] DOM mutation detected, retrying attach');
         if (tryAttach()) {
           observer?.disconnect();
           observer = null;
