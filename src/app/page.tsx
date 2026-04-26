@@ -101,7 +101,7 @@ export default function HomePage() {
       </section>
 
       <footer className="mt-8 sm:mt-16 border-t border-gray-200 py-6 sm:py-8 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} LIVRA. Tous droits réservés.
+        © {new Date().getFullYear()} Godzii Media — 9516-1998 Québec Inc. — Tous droits réservés
       </footer>
     </main>
   );
