@@ -10,14 +10,43 @@ import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { OrdersTable } from "@/components/orders/orders-table";
 
-const MOBILE_STATUS: Record<OrderStatus, { label: string; cls: string }> = {
-  pending:    { label: "En attente", cls: "bg-orange-500/15 text-orange-400" },
-  confirmed:  { label: "Confirmée",  cls: "bg-blue-500/15 text-blue-400" },
-  processing: { label: "En cours",   cls: "bg-blue-500/15 text-blue-400" },
-  shipped:    { label: "En cours",   cls: "bg-blue-500/15 text-blue-400" },
-  delivered:  { label: "Livrée",     cls: "bg-emerald-500/15 text-emerald-400" },
-  cancelled:  { label: "Annulée",    cls: "bg-red-500/15 text-red-400" },
-  returned:   { label: "Retournée",  cls: "bg-[#252525] text-[#8A8780]" },
+// ── Neumorphic palette ────────────────────────────────────────
+const BG           = "#1a1b1f";
+const SHADOW_LIGHT = "#212227";
+const SHADOW_DARK  = "#131417";
+const EMERALD      = "#10B981";
+const OFF_WHITE    = "#F5F0E8";
+const MUTED        = "rgba(245,240,232,0.4)";
+
+const cardNeumorphic = {
+  background: BG,
+  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}`,
+};
+
+const cardNeumorphicGlow = {
+  background: BG,
+  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 20px rgba(16,185,129,0.25)`,
+};
+
+const pillNeumorphic = {
+  background: BG,
+  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}`,
+};
+
+const pillNeumorphicActive = {
+  background: BG,
+  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.2)`,
+};
+
+// ── Status dots ───────────────────────────────────────────────
+const MOBILE_STATUS: Record<OrderStatus, { label: string; dot: string }> = {
+  pending:    { label: "En attente", dot: "#F59E0B" },
+  confirmed:  { label: "Confirmée",  dot: "#3B82F6" },
+  processing: { label: "En cours",   dot: "#3B82F6" },
+  shipped:    { label: "En cours",   dot: "#3B82F6" },
+  delivered:  { label: "Livrée",     dot: EMERALD },
+  cancelled:  { label: "Annulée",    dot: "#F87171" },
+  returned:   { label: "Retournée",  dot: "#8A8896" },
 };
 
 const FILTERS: { label: string; value: string }[] = [
@@ -29,9 +58,9 @@ const FILTERS: { label: string; value: string }[] = [
   { label: "Annulées",   value: "cancelled" },
 ];
 
-function avatarColor(name: string): string {
-  const p = ["bg-violet-500", "bg-blue-500", "bg-emerald-500", "bg-orange-500", "bg-rose-500", "bg-amber-500"];
-  return p[name.toUpperCase().charCodeAt(0) % p.length];
+function avatarLetterColor(name: string): string {
+  const colors = ["#A78BFA", "#60A5FA", "#34D399", "#FB923C", "#FB7185", "#FBBF24"];
+  return colors[name.toUpperCase().charCodeAt(0) % colors.length];
 }
 
 interface OrdersClientProps {
@@ -95,15 +124,18 @@ export function OrdersClient({ orders }: OrdersClientProps) {
   }
 
   return (
-    <main className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
+    <main
+      className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4"
+      style={{ background: BG }}
+    >
 
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
         <div className="flex items-center justify-between py-0.5">
-          <p className="text-sm font-medium text-[#F0EDE8]">
+          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
             {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
           </p>
-          <button onClick={exitSelectMode} className="text-sm text-[#8A8780]">
+          <button onClick={exitSelectMode} style={{ fontSize: 14, color: MUTED }}>
             Annuler
           </button>
         </div>
@@ -114,24 +146,45 @@ export function OrdersClient({ orders }: OrdersClientProps) {
               const active = activeFilter === f.value;
               const count = counts[f.value] ?? 0;
               return (
-                <button
-                  key={f.value || "all"}
-                  onClick={() => setActiveFilter(f.value)}
-                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-[#10B981] text-white"
-                      : "bg-[#2A2A2E] text-[#A8A5A0] border border-[#333] md:bg-white md:text-gray-600 md:border-gray-200 hover:text-[#F0EDE8] md:hover:bg-gray-100"
-                  }`}
-                >
-                  {f.label}{count > 0 ? ` (${count})` : ""}
-                </button>
+                <span key={f.value || "all"} className="contents">
+                  {/* Mobile pill — neumorphique */}
+                  <button
+                    onClick={() => setActiveFilter(f.value)}
+                    className="md:hidden shrink-0 whitespace-nowrap rounded-[12px] px-4 py-2 text-sm font-medium transition-all"
+                    style={active
+                      ? { ...pillNeumorphicActive, color: EMERALD }
+                      : { ...pillNeumorphic, color: "rgba(245,240,232,0.6)" }
+                    }
+                  >
+                    {f.label}{count > 0 ? ` (${count})` : ""}
+                  </button>
+
+                  {/* Desktop pill — style original */}
+                  <button
+                    onClick={() => setActiveFilter(f.value)}
+                    className={`hidden md:inline-flex shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-[#10B981] text-white"
+                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {f.label}{count > 0 ? ` (${count})` : ""}
+                  </button>
+                </span>
               );
             })}
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/dashboard/orders/new">
-              <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 whitespace-nowrap">
+              <span
+                className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold whitespace-nowrap transition-transform active:scale-[0.97]"
+                style={{
+                  background: EMERALD,
+                  color: OFF_WHITE,
+                  boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 1px 0 0 rgba(255,255,255,0.15)`,
+                }}
+              >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Nouvelle commande</span>
                 <span className="sm:hidden">Nouvelle</span>
@@ -139,7 +192,8 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             </Link>
             <button
               onClick={() => setSelectMode(true)}
-              className="md:hidden text-sm text-[#8A8780] hover:text-[#F0EDE8]"
+              className="md:hidden text-sm transition-colors"
+              style={{ color: "rgba(245,240,232,0.5)" }}
             >
               Sélectionner
             </button>
@@ -148,7 +202,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       )}
 
       {/* Mobile — liste de cards */}
-      <div className="w-full md:hidden space-y-2">
+      <div className="w-full md:hidden space-y-3">
         {filtered.length === 0 ? (
           <EmptyOrders />
         ) : (
@@ -156,6 +210,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             const name = order.client?.full_name ?? "—";
             const ms = MOBILE_STATUS[order.status];
             const isSelected = selected.has(order.id);
+            const letterColor = avatarLetterColor(name);
             return (
               <div
                 key={order.id}
@@ -164,46 +219,62 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                     ? toggleSelect(order.id)
                     : router.push(`/dashboard/orders/${order.id}`)
                 }
-                className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-colors cursor-pointer ${
-                  isSelected
-                    ? "border-emerald-500/50 bg-[#0A2A14]"
-                    : "border-[#252525] bg-[#161618] active:opacity-70"
-                }`}
+                className="w-full flex items-center gap-3 rounded-[18px] cursor-pointer transition-all active:scale-[0.99]"
+                style={{
+                  ...(isSelected ? cardNeumorphicGlow : cardNeumorphic),
+                  padding: "14px 14px",
+                }}
               >
                 {selectMode ? (
                   <div
-                    className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      isSelected
-                        ? "border-[#10B981] bg-[#0A2A14]"
-                        : "border-[#333] bg-transparent"
-                    }`}
+                    className="rounded-full flex items-center justify-center shrink-0"
+                    style={{
+                      width: 24, height: 24,
+                      background: BG,
+                      boxShadow: isSelected
+                        ? `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}, inset 0 0 6px rgba(16,185,129,0.3)`
+                        : `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}`,
+                    }}
                   >
-                    {isSelected && <Check className="h-3 w-3 text-[#10B981]" />}
+                    {isSelected && <Check className="h-3 w-3" style={{ color: EMERALD }} strokeWidth={3} />}
                   </div>
                 ) : (
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 ${avatarColor(name)}`}
+                    className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
+                    style={{
+                      width: 40, height: 40, fontSize: 14,
+                      color: letterColor,
+                      background: BG,
+                      boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
+                    }}
                   >
                     {name[0]?.toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[#F0EDE8] font-medium text-sm leading-tight truncate">
+                  <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }} className="truncate leading-tight">
                     {name}
                   </p>
-                  <p className="text-[#8A8780] text-xs font-mono mt-0.5">
+                  <p style={{ fontSize: 11, color: MUTED }} className="font-mono mt-0.5">
                     {order.reference}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <p className="text-[#F0EDE8] text-sm font-semibold">
+                  <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 600 }}>
                     {formatCurrency(order.total_amount)}
                   </p>
-                  <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full leading-none ${ms.cls}`}
-                  >
-                    {ms.label}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      style={{
+                        display: "inline-block", width: 6, height: 6,
+                        borderRadius: "50%", background: ms.dot,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: 11, color: "rgba(245,240,232,0.55)", fontWeight: 500 }}>
+                      {ms.label}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -226,13 +297,24 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 
       {/* Barre de sélection bulk */}
       {selectMode && selected.size > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 flex items-center justify-between border-t border-[#333] bg-[#1E1E20] px-4 py-3 md:bottom-0">
-          <p className="text-sm text-[#F0EDE8]">
+        <div
+          className="fixed bottom-16 left-4 right-4 z-40 flex items-center justify-between rounded-[16px] px-4 py-3 md:bottom-6 md:left-auto md:right-6"
+          style={{
+            ...cardNeumorphic,
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
             {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
           </p>
           <button
             onClick={() => setBulkSheetOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-[#F87171] bg-[#2D1010] px-4 py-2 text-sm font-medium text-[#F87171]"
+            className="flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold transition-transform active:scale-[0.97]"
+            style={{
+              background: BG,
+              color: "#F87171",
+              boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 0 8px rgba(248,113,113,0.15)`,
+            }}
           >
             <Trash2 className="h-4 w-4" />
             Supprimer
@@ -247,26 +329,44 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             className="absolute inset-0 bg-black/60"
             onClick={() => !bulkDeleting && setBulkSheetOpen(false)}
           />
-          <div className="relative w-full rounded-t-[16px] bg-[#1A1A1C] pb-safe">
+          <div
+            className="relative w-full rounded-t-[24px] pb-[env(safe-area-inset-bottom,8px)]"
+            style={{ background: BG }}
+          >
             <div className="flex justify-center pt-3 pb-1">
-              <div className="h-[3px] w-8 rounded-full bg-[#444]" />
+              <div
+                className="h-[3px] w-10 rounded-full"
+                style={{ background: "rgba(245,240,232,0.2)" }}
+              />
             </div>
             <div className="px-5 pb-6 pt-4 space-y-3">
-              <p className="font-semibold text-[#F0EDE8]">
+              <p style={{ fontSize: 16, color: OFF_WHITE, fontWeight: 600 }}>
                 Supprimer {selected.size} commande{selected.size > 1 ? "s" : ""} ?
               </p>
-              <p className="text-sm text-[#8A8780]">Cette action est irréversible.</p>
+              <p style={{ fontSize: 13, color: MUTED }}>
+                Cette action est irréversible.
+              </p>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleting}
-                className="mt-2 w-full rounded-xl border border-[#F87171] bg-[#2D1010] px-4 py-3.5 text-sm font-semibold text-[#F87171] disabled:opacity-50"
+                className="mt-2 w-full rounded-[14px] px-4 py-3.5 text-sm font-semibold disabled:opacity-50 transition-transform active:scale-[0.98]"
+                style={{
+                  background: BG,
+                  color: "#F87171",
+                  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}, inset 0 0 12px rgba(248,113,113,0.2)`,
+                }}
               >
                 {bulkDeleting ? "Suppression…" : "Supprimer définitivement"}
               </button>
               <button
                 onClick={() => setBulkSheetOpen(false)}
                 disabled={bulkDeleting}
-                className="w-full rounded-xl bg-[#252525] px-4 py-3.5 text-sm font-semibold text-[#8A8780]"
+                className="w-full rounded-[14px] px-4 py-3.5 text-sm font-semibold transition-transform active:scale-[0.98]"
+                style={{
+                  background: BG,
+                  color: MUTED,
+                  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}`,
+                }}
               >
                 Annuler
               </button>
@@ -281,18 +381,29 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 function EmptyOrders() {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#1E1E20]">
-        <ShoppingBag className="h-6 w-6 text-[#8A8780]" />
+      <div
+        className="flex h-14 w-14 items-center justify-center rounded-[14px]"
+        style={{
+          background: BG,
+          boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}`,
+        }}
+      >
+        <ShoppingBag className="h-6 w-6" style={{ color: "rgba(245,240,232,0.5)" }} />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium text-[#F0EDE8]">Aucune commande</p>
-        <p className="mt-1 text-xs text-[#8A8780]">
+        <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>Aucune commande</p>
+        <p style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
           Créez votre première commande pour commencer.
         </p>
       </div>
       <Link
         href="/dashboard/orders/new"
-        className="rounded-[10px] bg-[#10B981] px-4 py-2.5 text-sm font-medium text-white"
+        className="rounded-[12px] px-4 py-2.5 text-sm font-semibold transition-transform active:scale-[0.97]"
+        style={{
+          background: EMERALD,
+          color: OFF_WHITE,
+          boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 1px 0 0 rgba(255,255,255,0.15)`,
+        }}
       >
         + Nouvelle commande
       </Link>
