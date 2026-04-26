@@ -90,8 +90,14 @@ export function Sidebar() {
       </aside>
 
       {/* ── Mobile bottom navigation bar ────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#161618] border-t border-[#252525]">
-        <div className="flex items-center justify-around px-1 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        style={{
+          background: "#1a1b1f",
+          boxShadow: "-5px -5px 12px #212227, 5px 5px 12px #131417",
+        }}
+      >
+        <div className="flex items-center justify-around px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
           {navItems.map(({ href, shortLabel, icon: Icon }) => {
             const active =
               href === "/dashboard"
@@ -104,24 +110,28 @@ export function Sidebar() {
                 className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px]"
               >
                 <div
-                  className={cn(
-                    "flex items-center justify-center w-10 h-7 rounded-full transition-colors",
-                    active ? "bg-emerald-500/15" : "bg-transparent"
-                  )}
+                  className="flex items-center justify-center w-10 h-7 rounded-[10px] transition-colors"
+                  style={
+                    active
+                      ? {
+                          background: "#1a1b1f",
+                          boxShadow:
+                            "inset 2px 2px 4px #131417, inset -2px -2px 4px #212227, inset 0 0 8px rgba(16,185,129,0.15)",
+                        }
+                      : undefined
+                  }
                 >
                   <Icon
-                    className={cn(
-                      "h-5 w-5 transition-colors",
-                      active ? "text-emerald-400" : "text-[#8A8780]"
-                    )}
+                    className="h-5 w-5 transition-colors"
+                    style={{ color: active ? "#10B981" : "#8A8780" }}
                   />
                 </div>
                 <span
                   className={cn(
                     "text-[10px] font-medium transition-all duration-200",
-                    active ? "text-emerald-400" : "text-[#8A8780]",
                     scrolled ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-4"
                   )}
+                  style={{ color: active ? "#10B981" : "#8A8780" }}
                 >
                   {shortLabel}
                 </span>

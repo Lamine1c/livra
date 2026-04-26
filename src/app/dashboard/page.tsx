@@ -7,12 +7,39 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { Order, OrderStatus } from "@/types";
 
-function avatarColor(name: string): string {
-  const palette = [
-    "bg-violet-500", "bg-blue-500", "bg-emerald-500",
-    "bg-orange-500", "bg-rose-500", "bg-amber-500",
-  ];
-  return palette[name.toUpperCase().charCodeAt(0) % palette.length];
+// ── Neumorphic palette ────────────────────────────────────────
+const BG           = "#1a1b1f";
+const SHADOW_LIGHT = "#212227";
+const SHADOW_DARK  = "#131417";
+const EMERALD      = "#10B981";
+const OFF_WHITE    = "#F5F0E8";
+
+// ── Card styles — outset (en relief) ─────────────────────────
+const cardNeumorphic = {
+  background: BG,
+  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}`,
+};
+
+const cardNeumorphicGlow = {
+  background: BG,
+  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 30px rgba(16,185,129,0.25)`,
+};
+
+// ── Icon box styles — inset (creusé) ──────────────────────────
+const iconBoxInset = {
+  background: BG,
+  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}`,
+};
+
+const iconBoxInsetGlow = {
+  background: BG,
+  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.15)`,
+};
+
+// Couleur de la lettre de l'avatar (fond neumorphique = lettre colorée)
+function avatarLetterColor(name: string): string {
+  const colors = ["#A78BFA", "#60A5FA", "#34D399", "#FB923C", "#FB7185", "#FBBF24"];
+  return colors[name.toUpperCase().charCodeAt(0) % colors.length];
 }
 
 const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
@@ -20,44 +47,18 @@ const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
   confirmed:  { color: "#60A5FA", label: "Confirmée" },
   processing: { color: "#60A5FA", label: "En cours" },
   shipped:    { color: "#60A5FA", label: "En cours" },
-  delivered:  { color: "#10B981", label: "Livrée" },
+  delivered:  { color: EMERALD,   label: "Livrée" },
   cancelled:  { color: "#F87171", label: "Annulée" },
   returned:   { color: "#8A8896", label: "Retournée" },
 };
 
+// Config stats desktop (inchangée)
 const STATS_CONFIG = [
   { key: "orders",  label: "Commandes",  icon: ShoppingCart, desktopCls: "text-emerald-600" },
   { key: "pending", label: "En attente", icon: Clock,        desktopCls: "text-yellow-600" },
   { key: "clients", label: "Clients",    icon: Users,        desktopCls: "text-blue-600" },
   { key: "revenue", label: "CA total",   icon: TrendingUp,   desktopCls: "text-emerald-600" },
 ];
-
-const card3D = {
-  background: "linear-gradient(180deg, #262932 0%, #181A22 100%)",
-  border: "1px solid rgba(245,240,232,0.08)",
-  boxShadow: [
-    "inset 0 1.5px 0 0 rgba(245,240,232,0.15)",
-    "inset 0 -1px 0 0 rgba(0,0,0,0.6)",
-    "inset 1.5px 0 0 0 rgba(245,240,232,0.06)",
-    "0 12px 24px rgba(0,0,0,0.5)",
-    "0 4px 8px rgba(0,0,0,0.4)",
-    "0 1px 2px rgba(0,0,0,0.3)",
-  ].join(", "),
-};
-
-const card3DGlow = {
-  background: "linear-gradient(180deg, #262932 0%, #181A22 100%)",
-  border: "1px solid rgba(16,185,129,0.25)",
-  boxShadow: [
-    "0 0 32px rgba(16,185,129,0.25)",
-    "inset 0 1.5px 0 0 rgba(245,240,232,0.15)",
-    "inset 0 -1px 0 0 rgba(0,0,0,0.6)",
-    "inset 1.5px 0 0 0 rgba(16,185,129,0.1)",
-    "0 12px 24px rgba(0,0,0,0.5)",
-    "0 4px 8px rgba(0,0,0,0.4)",
-    "0 1px 2px rgba(0,0,0,0.3)",
-  ].join(", "),
-};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -114,10 +115,12 @@ export default async function DashboardPage() {
     revenue: formatCurrency(totalRevenue),
   };
 
+  const MUTED = "rgba(245,240,232,0.4)";
+
   const revenueDeltaColor =
     yesterdayRevenue === 0
-      ? todayRevenue > 0 ? "#10B981" : "#5A5B65"
-      : todayRevenue >= yesterdayRevenue ? "#10B981" : "#5A5B65";
+      ? todayRevenue > 0 ? EMERALD : MUTED
+      : todayRevenue >= yesterdayRevenue ? EMERALD : MUTED;
 
   const mobileStats = [
     {
@@ -126,11 +129,9 @@ export default async function DashboardPage() {
       Icon: ShoppingCart,
       value: orders.length,
       delta: todayCount > 0 ? `+${todayCount} aujourd'hui` : "Aucune aujourd'hui",
-      deltaColor: todayCount > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
-      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
-      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
-      iconColor: "#F5F0E8",
+      deltaColor: todayCount > 0 ? EMERALD : MUTED,
+      iconStyle: iconBoxInset,
+      iconColor: OFF_WHITE,
       glow: false,
     },
     {
@@ -140,10 +141,8 @@ export default async function DashboardPage() {
       value: pendingOrders.length,
       delta: "À traiter",
       deltaColor: "#F59E0B",
-      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
-      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
-      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
-      iconColor: "#F5F0E8",
+      iconStyle: iconBoxInset,
+      iconColor: OFF_WHITE,
       glow: false,
     },
     {
@@ -152,11 +151,9 @@ export default async function DashboardPage() {
       Icon: CheckCircle,
       value: deliveredOrders.length,
       delta: todayDelivered > 0 ? `+${todayDelivered} aujourd'hui` : "Aucune aujourd'hui",
-      deltaColor: todayDelivered > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
-      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
-      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
-      iconColor: "#F5F0E8",
+      deltaColor: todayDelivered > 0 ? EMERALD : MUTED,
+      iconStyle: iconBoxInset,
+      iconColor: OFF_WHITE,
       glow: false,
     },
     {
@@ -171,10 +168,8 @@ export default async function DashboardPage() {
             ? `+${formatCurrency(todayRevenue - yesterdayRevenue)} vs hier`
             : `-${formatCurrency(yesterdayRevenue - todayRevenue)} vs hier`,
       deltaColor: revenueDeltaColor,
-      iconBg: "linear-gradient(180deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.08) 100%)",
-      iconBoxShadow: "inset 0 1px 0 0 rgba(16,185,129,0.3), 0 0 12px rgba(16,185,129,0.15)",
-      iconBorder: "0.5px solid rgba(16,185,129,0.3)",
-      iconColor: "#10B981",
+      iconStyle: iconBoxInsetGlow,
+      iconColor: EMERALD,
       glow: true,
     },
   ];
@@ -182,7 +177,7 @@ export default async function DashboardPage() {
   return (
     <div
       className="flex flex-1 flex-col min-h-0 md:bg-transparent"
-      style={{ background: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(16,185,129,0.08) 0%, transparent 50%), radial-gradient(ellipse 140% 100% at 50% 0%, #232733 0%, #15171F 35%, #0A0B10 100%)` }}
+      style={{ background: BG }}
     >
 
       {/* ── Desktop header ───────────────────────────────────── */}
@@ -200,46 +195,47 @@ export default async function DashboardPage() {
       >
         <div>
           <p style={{ fontSize: 12, color: "#8A8896", lineHeight: 1 }}>Bonjour 👋</p>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#F5F0E8", lineHeight: 1.15, marginTop: 4 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: OFF_WHITE, lineHeight: 1.15, marginTop: 4 }}>
             {firstName || "Bienvenue"}
           </h1>
-          <p style={{ fontSize: 12, color: "#5A5B65", marginTop: 4, lineHeight: 1 }}>
+          <p style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1 }}>
             Voici votre journée
           </p>
         </div>
+        {/* Avatar neumorphique — même fond que la page, lettre émeraude */}
         <div
-          className="flex items-center justify-center rounded-full font-bold shrink-0"
+          className="flex items-center justify-center rounded-full shrink-0"
           style={{
-            width: 36, height: 36, fontSize: 14,
-            color: "#FFFFFF",
-            background: "#10B981",
-            boxShadow: "0 0 12px rgba(16,185,129,0.2)",
+            width: 48, height: 48, fontSize: 18, fontWeight: 500,
+            color: EMERALD,
+            background: BG,
+            boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-2 px-4 pb-40 md:p-6 space-y-6 md:space-y-6">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-40 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
-        <div className="md:hidden grid grid-cols-2 gap-[14px]">
-          {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconBg, iconBoxShadow, iconBorder, iconColor, glow }) => (
+        <div className="md:hidden grid grid-cols-2 gap-[18px]">
+          {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconStyle, iconColor, glow }) => (
             <div
               key={key}
-              className="rounded-2xl flex flex-col gap-2"
-              style={{ ...(glow ? card3DGlow : card3D), padding: 18 }}
+              className="rounded-[18px] flex flex-col gap-2"
+              style={{ ...(glow ? cardNeumorphicGlow : cardNeumorphic), padding: 18 }}
             >
               <div
-                className="flex items-center justify-center shrink-0"
-                style={{ width: 36, height: 36, background: iconBg, borderRadius: 10, boxShadow: iconBoxShadow, border: iconBorder }}
+                className="flex items-center justify-center shrink-0 rounded-[11px]"
+                style={{ width: 36, height: 36, ...iconStyle }}
               >
                 <Icon style={{ width: 16, height: 16, color: iconColor }} />
               </div>
-              <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6A6B75" }}>
+              <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(245,240,232,0.42)" }}>
                 {label}
               </p>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#F5F0E8", lineHeight: 1 }}>
+              <p style={{ fontSize: 30, fontWeight: 700, color: OFF_WHITE, lineHeight: 1 }}>
                 {value}
               </p>
               <p style={{ fontSize: 11, color: deltaColor, lineHeight: 1 }}>
@@ -268,16 +264,16 @@ export default async function DashboardPage() {
 
         {/* ── Mobile — Dernières commandes ─────────────────────── */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between mb-3">
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#F5F0E8" }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: OFF_WHITE }}>
               Dernières commandes
             </h2>
-            <Link href="/dashboard/orders" style={{ fontSize: 13, color: "#10B981" }}>
+            <Link href="/dashboard/orders" style={{ fontSize: 13, color: EMERALD }}>
               Voir tout →
             </Link>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={card3D}>
+          <div className="rounded-[18px] overflow-hidden" style={{ ...cardNeumorphic, padding: 6 }}>
             {recentOrders.length === 0 ? (
               <div className="py-12 text-center">
                 <p style={{ fontSize: 14, color: "#8A8896" }}>Aucune commande pour l&apos;instant.</p>
@@ -287,33 +283,40 @@ export default async function DashboardPage() {
                 const name = order.client?.full_name ?? "—";
                 const dot = STATUS_DOT[order.status];
                 const isLast = idx === recentOrders.length - 1;
+                const letterColor = avatarLetterColor(name);
                 return (
                   <Link
                     key={order.id}
                     href={`/dashboard/orders/${order.id}`}
-                    className="w-full flex items-center gap-3 px-4 active:opacity-60 transition-opacity"
+                    className="w-full flex items-center gap-3 px-3 active:opacity-60 transition-opacity"
                     style={{
-                      paddingTop: 14,
-                      paddingBottom: 14,
+                      paddingTop: 12,
+                      paddingBottom: 12,
                       ...(!isLast && { borderBottom: "0.5px solid rgba(245,240,232,0.05)" }),
                     }}
                   >
+                    {/* Avatar neumorphique avec lettre colorée */}
                     <div
-                      className={`flex items-center justify-center rounded-xl text-white font-bold shrink-0 ${avatarColor(name)}`}
-                      style={{ width: 36, height: 36, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.2)" }}
+                      className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
+                      style={{
+                        width: 36, height: 36, fontSize: 14,
+                        color: letterColor,
+                        background: BG,
+                        boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
+                      }}
                     >
                       {name.slice(0, 1).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, color: "#F5F0E8", fontWeight: 500 }} className="truncate leading-tight">
+                      <p style={{ fontSize: 13, color: OFF_WHITE, fontWeight: 500 }} className="truncate leading-tight">
                         {name}
                       </p>
-                      <p style={{ fontSize: 11, color: "#5A5B65" }} className="font-mono mt-0.5">
+                      <p style={{ fontSize: 11, color: MUTED }} className="font-mono mt-0.5">
                         {order.reference}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <p style={{ fontSize: 13, color: "#F5F0E8", fontWeight: 700 }}>
+                      <p style={{ fontSize: 13, color: OFF_WHITE, fontWeight: 700 }}>
                         {formatCurrency(order.total_amount)}
                       </p>
                       <div className="flex items-center gap-1">
