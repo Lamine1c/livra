@@ -28,13 +28,48 @@ export function Sidebar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const main = document.querySelector('main[class*="overflow-y-auto"]') as HTMLElement | null;
-    if (!main) return;
-    const handleScroll = () => setScrolled(main.scrollTop > 0);
-    main.addEventListener("scroll", handleScroll, { passive: true });
+    let scrollTarget: HTMLElement | null = null;
+    let attached = false;
+    let observer: MutationObserver | null = null;
+
+    const handleScroll = () => {
+      if (!scrollTarget) return;
+      setScrolled(scrollTarget.scrollTop > 0);
+    };
+
+    const tryAttach = (): boolean => {
+      const main = document.querySelector('main') as HTMLElement | null;
+      if (main) {
+        if (attached && scrollTarget) {
+          scrollTarget.removeEventListener("scroll", handleScroll);
+        }
+        scrollTarget = main;
+        main.addEventListener("scroll", handleScroll, { passive: true });
+        attached = true;
+        handleScroll();
+        return true;
+      }
+      return false;
+    };
+
     setScrolled(false);
-    handleScroll();
-    return () => main.removeEventListener("scroll", handleScroll);
+
+    if (!tryAttach()) {
+      observer = new MutationObserver(() => {
+        if (tryAttach()) {
+          observer?.disconnect();
+          observer = null;
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    return () => {
+      observer?.disconnect();
+      if (attached && scrollTarget) {
+        scrollTarget.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, [pathname]);
 
   async function handleSignOut() {
