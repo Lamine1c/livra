@@ -33,14 +33,14 @@ export function Header({ title, subtitle, rightContent }: HeaderProps) {
         <button
           className="md:rounded-lg md:p-2 md:text-gray-500 md:hover:bg-gray-100 md:transition-colors"
           style={{
-            width: 38, height: 38,
+            width: 40, height: 40,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 11,
+            borderRadius: 12,
             background: '#1a1b1f',
-            boxShadow: '-3px -3px 7px #212227, 3px 3px 7px #131417',
+            boxShadow: '-4px -4px 9px #212227, 4px 4px 9px #131417',
           }}
         >
-          <Bell className="h-[18px] w-[18px]" style={{ color: 'rgba(245,240,232,0.7)' }} />
+          <Bell className="h-[18px] w-[18px]" style={{ color: 'rgba(245,240,232,0.85)' }} />
         </button>
       )}
     </header>

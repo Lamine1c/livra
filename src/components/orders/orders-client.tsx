@@ -35,7 +35,7 @@ const pillNeumorphic = {
 
 const pillNeumorphicActive = {
   background: BG,
-  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}`,
+  boxShadow: `inset 4px 4px 8px ${SHADOW_DARK}, inset -4px -4px 8px ${SHADOW_LIGHT}`,
 };
 
 // ── Status dots ───────────────────────────────────────────────
@@ -125,14 +125,14 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 
   return (
     <main
-      className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4"
+      className={`w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 ${selectMode && selected.size > 0 ? 'pb-56' : 'pb-40'} md:p-6 space-y-4`}
       style={{ background: BG }}
     >
 
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
         <div className="flex items-center justify-between py-0.5">
-          <p style={{ fontSize: 14, color: EMERALD, fontWeight: 600 }}>
+          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 700 }}>
             {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
           </p>
           <button
@@ -190,7 +190,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 style={{
                   background: EMERALD,
                   color: OFF_WHITE,
-                  boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.3), inset 0 -1.5px 0 0 rgba(0,0,0,0.25), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+                  boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.45), inset 0 -2px 0 0 rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,255,255,0.15), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
                 }}
               >
                 <Plus className="h-4 w-4" />

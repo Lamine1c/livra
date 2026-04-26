@@ -32,9 +32,10 @@ export function Sidebar() {
     if (!main) return;
     const handleScroll = () => setScrolled(main.scrollTop > 0);
     main.addEventListener("scroll", handleScroll, { passive: true });
+    setScrolled(false);
     handleScroll();
     return () => main.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [pathname]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -91,7 +92,7 @@ export function Sidebar() {
         style={{
           bottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
           background: "#1a1b1f",
-          boxShadow: "-6px -6px 14px #212227, 6px 6px 14px #131417",
+          boxShadow: "-4px -4px 10px #212227, 4px 4px 10px #131417",
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">
