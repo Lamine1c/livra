@@ -95,7 +95,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
+    <main className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
 
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
@@ -148,7 +148,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       )}
 
       {/* Mobile — liste de cards */}
-      <div className="md:hidden space-y-2">
+      <div className="w-full md:hidden space-y-2">
         {filtered.length === 0 ? (
           <EmptyOrders />
         ) : (

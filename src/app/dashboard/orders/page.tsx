@@ -16,7 +16,7 @@ export default async function OrdersPage() {
   const list = (orders as Order[]) ?? [];
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
+    <div className="w-full flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
       <Header title="Commandes" />
       <OrdersClient orders={list} />
     </div>

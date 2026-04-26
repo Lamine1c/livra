@@ -114,3 +114,25 @@ Copy `.env.example` to `.env.local` and fill in all variables.
 Run migrations in order in your Supabase SQL editor:
 1. `supabase/migrations/001_initial_schema.sql` — tables, RLS, trigger
 2. `supabase/migrations/002_otp_columns.sql` — colonnes OTP sur orders
+
+---
+
+## Règles Claude Code — LIVRA Mobile
+
+### Palette dark mode
+- bg global : #0D0D0D
+- cards : #161618, border : #252525
+- text primary : #F0EDE8, text secondary : #8A8780, text muted : #B8B5B0
+- accent : #10B981, danger : #F87171
+
+### Règles de travail obligatoires
+1. Lire chaque fichier EN ENTIER avant toute modification
+2. Après tout changement CSS/Tailwind, lister mentalement tous les 
+   classNames et vérifier qu'aucun élément ne dépasse 100vw sur 390px
+3. tsc propre ≠ layout correct — vérifier la logique visuelle mobile
+4. Toute card mobile : w-full + overflow-hidden
+   Enfants : flex-1 min-w-0 (texte) + shrink-0 (montants/actions)
+5. Tout <main> scrollable : overflow-y-auto overflow-x-hidden 
+   overscroll-contain [-webkit-overflow-scrolling:touch] pb-40
+6. Architecture scroll iOS : layout h-dvh overflow-hidden,
+   pages flex flex-1 flex-col min-h-0, main gère son propre scroll
