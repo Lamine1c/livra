@@ -33,17 +33,28 @@ const STATS_CONFIG = [
 ];
 
 const card3D = {
-  background: "#1A1C24",
-  border: "0.5px solid #2D2F3A",
-  boxShadow:
-    "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 -1px 0 0 rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.4)",
+  background: "linear-gradient(180deg, #1E2129 0%, #16181F 100%)",
+  border: "0.5px solid rgba(245,240,232,0.06)",
+  boxShadow: [
+    "inset 0 1px 0 0 rgba(245,240,232,0.08)",
+    "inset 0 -1px 0 0 rgba(0,0,0,0.5)",
+    "inset 1px 0 0 0 rgba(245,240,232,0.03)",
+    "0 8px 16px rgba(0,0,0,0.4)",
+    "0 2px 4px rgba(0,0,0,0.3)",
+  ].join(", "),
 };
 
 const card3DGlow = {
-  background: "#1A1C24",
-  border: "0.5px solid #2D2F3A",
-  boxShadow:
-    "0 0 20px rgba(16,185,129,0.12), 0 1px 0 0 rgba(255,255,255,0.05) inset, 0 -1px 0 0 rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.4)",
+  background: "linear-gradient(180deg, #1E2129 0%, #16181F 100%)",
+  border: "0.5px solid rgba(16,185,129,0.15)",
+  boxShadow: [
+    "0 0 24px rgba(16,185,129,0.18)",
+    "inset 0 1px 0 0 rgba(245,240,232,0.08)",
+    "inset 0 -1px 0 0 rgba(0,0,0,0.5)",
+    "inset 1px 0 0 0 rgba(245,240,232,0.03)",
+    "0 8px 16px rgba(0,0,0,0.4)",
+    "0 2px 4px rgba(0,0,0,0.3)",
+  ].join(", "),
 };
 
 export default async function DashboardPage() {
@@ -114,8 +125,8 @@ export default async function DashboardPage() {
       value: orders.length,
       delta: todayCount > 0 ? `+${todayCount} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayCount > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "#1A1B25",
-      iconColor: "#60A5FA",
+      iconBg: "rgba(245,240,232,0.05)",
+      iconColor: "#F5F0E8",
       glow: false,
     },
     {
@@ -125,8 +136,8 @@ export default async function DashboardPage() {
       value: pendingOrders.length,
       delta: "À traiter",
       deltaColor: "#F59E0B",
-      iconBg: "#1A1B25",
-      iconColor: "#FB923C",
+      iconBg: "rgba(245,240,232,0.05)",
+      iconColor: "#F5F0E8",
       glow: false,
     },
     {
@@ -136,8 +147,8 @@ export default async function DashboardPage() {
       value: deliveredOrders.length,
       delta: todayDelivered > 0 ? `+${todayDelivered} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayDelivered > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "#1A1B25",
-      iconColor: "#34D399",
+      iconBg: "rgba(245,240,232,0.05)",
+      iconColor: "#F5F0E8",
       glow: false,
     },
     {
@@ -152,14 +163,17 @@ export default async function DashboardPage() {
             ? `+${formatCurrency(todayRevenue - yesterdayRevenue)} vs hier`
             : `-${formatCurrency(yesterdayRevenue - todayRevenue)} vs hier`,
       deltaColor: revenueDeltaColor,
-      iconBg: "#0A2A1A",
+      iconBg: "rgba(16,185,129,0.1)",
       iconColor: "#10B981",
       glow: true,
     },
   ];
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0A0B10] md:bg-transparent">
+    <div
+      className="flex flex-1 flex-col min-h-0 md:bg-transparent"
+      style={{ background: "radial-gradient(ellipse 120% 80% at 50% 0%, #1A1D26 0%, #0F1117 40%, #0A0B10 100%)" }}
+    >
 
       {/* ── Desktop header ───────────────────────────────────── */}
       <div className="hidden md:block">
@@ -176,17 +190,18 @@ export default async function DashboardPage() {
       >
         <div>
           <p style={{ fontSize: 12, color: "#8A8896", lineHeight: 1 }}>Bonjour 👋</p>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.15, marginTop: 4 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#F5F0E8", lineHeight: 1.15, marginTop: 4 }}>
             {firstName || "Bienvenue"}
           </h1>
-          <p style={{ fontSize: 12, color: "#6A6B75", marginTop: 4, lineHeight: 1 }}>
+          <p style={{ fontSize: 12, color: "#5A5B65", marginTop: 4, lineHeight: 1 }}>
             Voici votre journée
           </p>
         </div>
         <div
-          className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
+          className="flex items-center justify-center rounded-full font-bold shrink-0"
           style={{
             width: 36, height: 36, fontSize: 14,
+            color: "#FFFFFF",
             background: "#10B981",
             boxShadow: "0 0 12px rgba(16,185,129,0.2)",
           }}
@@ -203,7 +218,7 @@ export default async function DashboardPage() {
             <div
               key={key}
               className="rounded-2xl flex flex-col gap-2"
-              style={{ ...( glow ? card3DGlow : card3D), padding: 18 }}
+              style={{ ...(glow ? card3DGlow : card3D), padding: 18 }}
             >
               <div
                 className="flex items-center justify-center shrink-0"
@@ -214,7 +229,7 @@ export default async function DashboardPage() {
               <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6A6B75" }}>
                 {label}
               </p>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#F5F0E8", lineHeight: 1 }}>
                 {value}
               </p>
               <p style={{ fontSize: 11, color: deltaColor, lineHeight: 1 }}>
@@ -244,7 +259,7 @@ export default async function DashboardPage() {
         {/* ── Mobile — Dernières commandes ─────────────────────── */}
         <div className="md:hidden">
           <div className="flex items-center justify-between mb-3">
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF" }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#F5F0E8" }}>
               Dernières commandes
             </h2>
             <Link href="/dashboard/orders" style={{ fontSize: 13, color: "#10B981" }}>
@@ -270,7 +285,7 @@ export default async function DashboardPage() {
                     style={{
                       paddingTop: 14,
                       paddingBottom: 14,
-                      ...(!isLast && { borderBottom: "0.5px solid rgba(255,255,255,0.04)" }),
+                      ...(!isLast && { borderBottom: "0.5px solid rgba(245,240,232,0.05)" }),
                     }}
                   >
                     <div
@@ -280,15 +295,15 @@ export default async function DashboardPage() {
                       {name.slice(0, 1).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 500 }} className="truncate leading-tight">
+                      <p style={{ fontSize: 13, color: "#F5F0E8", fontWeight: 500 }} className="truncate leading-tight">
                         {name}
                       </p>
-                      <p style={{ fontSize: 11, color: "#4A4B55" }} className="font-mono mt-0.5">
+                      <p style={{ fontSize: 11, color: "#5A5B65" }} className="font-mono mt-0.5">
                         {order.reference}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700 }}>
+                      <p style={{ fontSize: 13, color: "#F5F0E8", fontWeight: 700 }}>
                         {formatCurrency(order.total_amount)}
                       </p>
                       <div className="flex items-center gap-1">
