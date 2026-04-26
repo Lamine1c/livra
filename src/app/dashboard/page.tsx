@@ -22,7 +22,7 @@ const cardNeumorphic = {
 
 const cardNeumorphicGlow = {
   background: BG,
-  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 30px rgba(16,185,129,0.25)`,
+  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.18)`,
 };
 
 // ── Icon box styles — inset (creusé) ──────────────────────────
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
             color: EMERALD,
             background: BG,
-            boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+            boxShadow: `-5px -5px 13px ${SHADOW_LIGHT}, 5px 5px 13px ${SHADOW_DARK}`,
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
@@ -235,7 +235,7 @@ export default async function DashboardPage() {
               <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(245,240,232,0.42)" }}>
                 {label}
               </p>
-              <p style={{ fontSize: 30, fontWeight: 700, color: OFF_WHITE, lineHeight: 1 }}>
+              <p style={{ fontSize: key === "revenue" ? 22 : 30, fontWeight: 700, color: OFF_WHITE, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {value}
               </p>
               <p style={{ fontSize: 11, color: deltaColor, lineHeight: 1 }}>

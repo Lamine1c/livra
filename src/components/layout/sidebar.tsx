@@ -28,16 +28,12 @@ export function Sidebar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    let last = 0;
-    const handler = (e: Event) => {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
-      const top = t.scrollTop ?? 0;
-      setScrolled(top > last && top > 10);
-      last = top;
-    };
-    document.addEventListener("scroll", handler, { passive: true, capture: true });
-    return () => document.removeEventListener("scroll", handler, { capture: true });
+    const main = document.querySelector('main[class*="overflow-y-auto"]') as HTMLElement | null;
+    if (!main) return;
+    const handleScroll = () => setScrolled(main.scrollTop > 0);
+    main.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => main.removeEventListener("scroll", handleScroll);
   }, []);
 
   async function handleSignOut() {
@@ -110,19 +106,19 @@ export function Sidebar() {
                 className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px]"
               >
                 <div
-                  className="flex items-center justify-center w-10 h-7 rounded-[10px] transition-colors"
+                  className="flex items-center justify-center w-11 h-9 rounded-[10px] transition-colors"
                   style={
                     active
                       ? {
                           background: "#1a1b1f",
                           boxShadow:
-                            "inset 2px 2px 4px #131417, inset -2px -2px 4px #212227, inset 0 0 8px rgba(16,185,129,0.15)",
+                            "inset 3px 3px 6px #131417, inset -3px -3px 6px #212227, inset 0 0 10px rgba(16,185,129,0.25)",
                         }
                       : undefined
                   }
                 >
                   <Icon
-                    className="h-5 w-5 transition-colors"
+                    className="h-[18px] w-[18px] transition-colors"
                     style={{ color: active ? "#10B981" : "#8A8780" }}
                   />
                 </div>
