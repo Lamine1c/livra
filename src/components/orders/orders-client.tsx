@@ -95,7 +95,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
+    <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6 space-y-4">
 
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
@@ -164,7 +164,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                     ? toggleSelect(order.id)
                     : router.push(`/dashboard/orders/${order.id}`)
                 }
-                className={`flex items-center gap-3 rounded-xl border p-3.5 transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-3 rounded-xl border p-3.5 transition-colors cursor-pointer ${
                   isSelected
                     ? "border-emerald-500/50 bg-[#0A2A14]"
                     : "border-[#252525] bg-[#161618] active:opacity-70"
