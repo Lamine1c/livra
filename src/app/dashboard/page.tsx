@@ -33,27 +33,29 @@ const STATS_CONFIG = [
 ];
 
 const card3D = {
-  background: "linear-gradient(180deg, #1E2129 0%, #16181F 100%)",
-  border: "0.5px solid rgba(245,240,232,0.06)",
+  background: "linear-gradient(180deg, #262932 0%, #181A22 100%)",
+  border: "1px solid rgba(245,240,232,0.08)",
   boxShadow: [
-    "inset 0 1px 0 0 rgba(245,240,232,0.08)",
-    "inset 0 -1px 0 0 rgba(0,0,0,0.5)",
-    "inset 1px 0 0 0 rgba(245,240,232,0.03)",
-    "0 8px 16px rgba(0,0,0,0.4)",
-    "0 2px 4px rgba(0,0,0,0.3)",
+    "inset 0 1.5px 0 0 rgba(245,240,232,0.15)",
+    "inset 0 -1px 0 0 rgba(0,0,0,0.6)",
+    "inset 1.5px 0 0 0 rgba(245,240,232,0.06)",
+    "0 12px 24px rgba(0,0,0,0.5)",
+    "0 4px 8px rgba(0,0,0,0.4)",
+    "0 1px 2px rgba(0,0,0,0.3)",
   ].join(", "),
 };
 
 const card3DGlow = {
-  background: "linear-gradient(180deg, #1E2129 0%, #16181F 100%)",
-  border: "0.5px solid rgba(16,185,129,0.15)",
+  background: "linear-gradient(180deg, #262932 0%, #181A22 100%)",
+  border: "1px solid rgba(16,185,129,0.25)",
   boxShadow: [
-    "0 0 24px rgba(16,185,129,0.18)",
-    "inset 0 1px 0 0 rgba(245,240,232,0.08)",
-    "inset 0 -1px 0 0 rgba(0,0,0,0.5)",
-    "inset 1px 0 0 0 rgba(245,240,232,0.03)",
-    "0 8px 16px rgba(0,0,0,0.4)",
-    "0 2px 4px rgba(0,0,0,0.3)",
+    "0 0 32px rgba(16,185,129,0.25)",
+    "inset 0 1.5px 0 0 rgba(245,240,232,0.15)",
+    "inset 0 -1px 0 0 rgba(0,0,0,0.6)",
+    "inset 1.5px 0 0 0 rgba(16,185,129,0.1)",
+    "0 12px 24px rgba(0,0,0,0.5)",
+    "0 4px 8px rgba(0,0,0,0.4)",
+    "0 1px 2px rgba(0,0,0,0.3)",
   ].join(", "),
 };
 
@@ -125,7 +127,9 @@ export default async function DashboardPage() {
       value: orders.length,
       delta: todayCount > 0 ? `+${todayCount} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayCount > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "rgba(245,240,232,0.05)",
+      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
+      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
+      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
       iconColor: "#F5F0E8",
       glow: false,
     },
@@ -136,7 +140,9 @@ export default async function DashboardPage() {
       value: pendingOrders.length,
       delta: "À traiter",
       deltaColor: "#F59E0B",
-      iconBg: "rgba(245,240,232,0.05)",
+      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
+      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
+      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
       iconColor: "#F5F0E8",
       glow: false,
     },
@@ -147,7 +153,9 @@ export default async function DashboardPage() {
       value: deliveredOrders.length,
       delta: todayDelivered > 0 ? `+${todayDelivered} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayDelivered > 0 ? "#10B981" : "#5A5B65",
-      iconBg: "rgba(245,240,232,0.05)",
+      iconBg: "linear-gradient(180deg, rgba(245,240,232,0.08) 0%, rgba(245,240,232,0.03) 100%)",
+      iconBoxShadow: "inset 0 1px 0 0 rgba(245,240,232,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.3)",
+      iconBorder: "0.5px solid rgba(245,240,232,0.06)",
       iconColor: "#F5F0E8",
       glow: false,
     },
@@ -163,7 +171,9 @@ export default async function DashboardPage() {
             ? `+${formatCurrency(todayRevenue - yesterdayRevenue)} vs hier`
             : `-${formatCurrency(yesterdayRevenue - todayRevenue)} vs hier`,
       deltaColor: revenueDeltaColor,
-      iconBg: "rgba(16,185,129,0.1)",
+      iconBg: "linear-gradient(180deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.08) 100%)",
+      iconBoxShadow: "inset 0 1px 0 0 rgba(16,185,129,0.3), 0 0 12px rgba(16,185,129,0.15)",
+      iconBorder: "0.5px solid rgba(16,185,129,0.3)",
       iconColor: "#10B981",
       glow: true,
     },
@@ -172,7 +182,7 @@ export default async function DashboardPage() {
   return (
     <div
       className="flex flex-1 flex-col min-h-0 md:bg-transparent"
-      style={{ background: "radial-gradient(ellipse 120% 80% at 50% 0%, #1A1D26 0%, #0F1117 40%, #0A0B10 100%)" }}
+      style={{ background: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(16,185,129,0.08) 0%, transparent 50%), radial-gradient(ellipse 140% 100% at 50% 0%, #232733 0%, #15171F 35%, #0A0B10 100%)` }}
     >
 
       {/* ── Desktop header ───────────────────────────────────── */}
@@ -214,7 +224,7 @@ export default async function DashboardPage() {
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
         <div className="md:hidden grid grid-cols-2 gap-[14px]">
-          {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconBg, iconColor, glow }) => (
+          {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconBg, iconBoxShadow, iconBorder, iconColor, glow }) => (
             <div
               key={key}
               className="rounded-2xl flex flex-col gap-2"
@@ -222,7 +232,7 @@ export default async function DashboardPage() {
             >
               <div
                 className="flex items-center justify-center shrink-0"
-                style={{ width: 36, height: 36, background: iconBg, borderRadius: 10 }}
+                style={{ width: 36, height: 36, background: iconBg, borderRadius: 10, boxShadow: iconBoxShadow, border: iconBorder }}
               >
                 <Icon style={{ width: 16, height: 16, color: iconColor }} />
               </div>
@@ -290,7 +300,7 @@ export default async function DashboardPage() {
                   >
                     <div
                       className={`flex items-center justify-center rounded-xl text-white font-bold shrink-0 ${avatarColor(name)}`}
-                      style={{ width: 36, height: 36, fontSize: 13, boxShadow: "0 4px 8px rgba(0,0,0,0.3)" }}
+                      style={{ width: 36, height: 36, fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.2)" }}
                     >
                       {name.slice(0, 1).toUpperCase()}
                     </div>
