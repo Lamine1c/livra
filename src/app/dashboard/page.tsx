@@ -36,20 +36,14 @@ const iconBoxInsetGlow = {
   boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.15)`,
 };
 
-// Couleur de la lettre de l'avatar (fond neumorphique = lettre colorée)
-function avatarLetterColor(name: string): string {
-  const colors = ["#A78BFA", "#60A5FA", "#34D399", "#FB923C", "#FB7185", "#FBBF24"];
-  return colors[name.toUpperCase().charCodeAt(0) % colors.length];
-}
-
 const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
-  pending:    { color: "#F59E0B", label: "En attente" },
-  confirmed:  { color: "#60A5FA", label: "Confirmée" },
-  processing: { color: "#60A5FA", label: "En cours" },
-  shipped:    { color: "#60A5FA", label: "En cours" },
-  delivered:  { color: EMERALD,   label: "Livrée" },
-  cancelled:  { color: "#F87171", label: "Annulée" },
-  returned:   { color: "#8A8896", label: "Retournée" },
+  pending:    { color: "#F59E0B",               label: "En attente" },
+  confirmed:  { color: "rgba(245,240,232,0.5)", label: "Confirmée" },
+  processing: { color: "rgba(245,240,232,0.5)", label: "En cours" },
+  shipped:    { color: "rgba(245,240,232,0.5)", label: "En cours" },
+  delivered:  { color: EMERALD,                 label: "Livrée" },
+  cancelled:  { color: "#F87171",               label: "Annulée" },
+  returned:   { color: "#8A8896",               label: "Retournée" },
 };
 
 // Config stats desktop (inchangée)
@@ -216,7 +210,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-40 md:p-6 space-y-6 md:space-y-6">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-44 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
         <div className="md:hidden grid grid-cols-2 gap-[18px]">
@@ -268,39 +262,32 @@ export default async function DashboardPage() {
             <h2 style={{ fontSize: 15, fontWeight: 700, color: OFF_WHITE }}>
               Dernières commandes
             </h2>
-            <Link href="/dashboard/orders" style={{ fontSize: 13, color: EMERALD }}>
+            <Link href="/dashboard/orders" style={{ fontSize: 13, color: "rgba(245,240,232,0.5)", fontWeight: 500 }}>
               Voir tout →
             </Link>
           </div>
 
-          <div className="rounded-[18px] overflow-hidden" style={{ ...cardNeumorphic, padding: 6 }}>
-            {recentOrders.length === 0 ? (
-              <div className="py-12 text-center">
-                <p style={{ fontSize: 14, color: "#8A8896" }}>Aucune commande pour l&apos;instant.</p>
-              </div>
-            ) : (
-              recentOrders.map((order, idx) => {
+          {recentOrders.length === 0 ? (
+            <div className="py-12 text-center">
+              <p style={{ fontSize: 14, color: "#8A8896" }}>Aucune commande pour l&apos;instant.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentOrders.map((order) => {
                 const name = order.client?.full_name ?? "—";
                 const dot = STATUS_DOT[order.status];
-                const isLast = idx === recentOrders.length - 1;
-                const letterColor = avatarLetterColor(name);
                 return (
                   <Link
                     key={order.id}
                     href={`/dashboard/orders/${order.id}`}
-                    className="w-full flex items-center gap-3 px-3 active:opacity-60 transition-opacity"
-                    style={{
-                      paddingTop: 12,
-                      paddingBottom: 12,
-                      ...(!isLast && { borderBottom: "0.5px solid rgba(245,240,232,0.05)" }),
-                    }}
+                    className="w-full flex items-center gap-3 rounded-[18px] active:scale-[0.99] transition-all"
+                    style={{ ...cardNeumorphic, padding: "14px 14px" }}
                   >
-                    {/* Avatar neumorphique avec lettre colorée */}
                     <div
                       className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
                       style={{
-                        width: 36, height: 36, fontSize: 14,
-                        color: letterColor,
+                        width: 40, height: 40, fontSize: 14,
+                        color: EMERALD,
                         background: BG,
                         boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
                       }}
@@ -326,9 +313,9 @@ export default async function DashboardPage() {
                     </div>
                   </Link>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── Desktop — table ──────────────────────────────────── */}

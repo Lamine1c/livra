@@ -41,9 +41,9 @@ const pillNeumorphicActive = {
 // ── Status dots ───────────────────────────────────────────────
 const MOBILE_STATUS: Record<OrderStatus, { label: string; dot: string }> = {
   pending:    { label: "En attente", dot: "#F59E0B" },
-  confirmed:  { label: "Confirmée",  dot: "#3B82F6" },
-  processing: { label: "En cours",   dot: "#3B82F6" },
-  shipped:    { label: "En cours",   dot: "#3B82F6" },
+  confirmed:  { label: "Confirmée",  dot: "rgba(245,240,232,0.5)" },
+  processing: { label: "En cours",   dot: "rgba(245,240,232,0.5)" },
+  shipped:    { label: "En cours",   dot: "rgba(245,240,232,0.5)" },
   delivered:  { label: "Livrée",     dot: EMERALD },
   cancelled:  { label: "Annulée",    dot: "#F87171" },
   returned:   { label: "Retournée",  dot: "#8A8896" },
@@ -57,11 +57,6 @@ const FILTERS: { label: string; value: string }[] = [
   { label: "Livrées",    value: "delivered" },
   { label: "Annulées",   value: "cancelled" },
 ];
-
-function avatarLetterColor(name: string): string {
-  const colors = ["#A78BFA", "#60A5FA", "#34D399", "#FB923C", "#FB7185", "#FBBF24"];
-  return colors[name.toUpperCase().charCodeAt(0) % colors.length];
-}
 
 interface OrdersClientProps {
   orders: Order[];
@@ -125,7 +120,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 
   return (
     <main
-      className={`w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 ${selectMode && selected.size > 0 ? 'pb-56' : 'pb-40'} md:p-6 space-y-4`}
+      className={`w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 ${selectMode && selected.size > 0 ? 'pb-64' : 'pb-44'} md:p-6 space-y-4`}
       style={{ background: BG }}
     >
 
@@ -190,7 +185,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 style={{
                   background: EMERALD,
                   color: OFF_WHITE,
-                  boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.45), inset 0 -2px 0 0 rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,255,255,0.15), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+                  boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.4), inset 0 -2px 0 0 rgba(0,80,50,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.2), 0 4px 12px rgba(16,185,129,0.4), 0 1px 3px rgba(0,0,0,0.3)`,
                 }}
               >
                 <Plus className="h-4 w-4" />
@@ -222,7 +217,6 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             const name = order.client?.full_name ?? "—";
             const ms = MOBILE_STATUS[order.status];
             const isSelected = selected.has(order.id);
-            const letterColor = avatarLetterColor(name);
             return (
               <div
                 key={order.id}
@@ -255,7 +249,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                     className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
                     style={{
                       width: 40, height: 40, fontSize: 14,
-                      color: letterColor,
+                      color: EMERALD,
                       background: BG,
                       boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
                     }}
@@ -310,7 +304,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       {/* Barre de sélection bulk */}
       {selectMode && selected.size > 0 && (
         <div
-          className="fixed bottom-16 left-4 right-4 z-40 flex items-center justify-between rounded-[16px] px-4 py-3 md:bottom-6 md:left-auto md:right-6"
+          className="fixed bottom-24 left-4 right-4 z-40 flex items-center justify-between rounded-[16px] px-4 py-3 md:bottom-6 md:left-auto md:right-6"
           style={cardNeumorphic}
         >
           <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
@@ -411,7 +405,7 @@ function EmptyOrders() {
         style={{
           background: EMERALD,
           color: OFF_WHITE,
-          boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.3), inset 0 -1.5px 0 0 rgba(0,0,0,0.25), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+          boxShadow: `inset 0 2px 0 0 rgba(255,255,255,0.4), inset 0 -2px 0 0 rgba(0,80,50,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.2), 0 4px 12px rgba(16,185,129,0.4), 0 1px 3px rgba(0,0,0,0.3)`,
         }}
       >
         + Nouvelle commande
