@@ -33,15 +33,17 @@ const STATS_CONFIG = [
 ];
 
 const card3D = {
-  background: "#16181F",
-  border: "0.5px solid #2A2B35",
-  boxShadow: "0 1px 0 0 #0D0E13, inset 0 1px 0 0 #2A2B35",
+  background: "#1A1C24",
+  border: "0.5px solid #2D2F3A",
+  boxShadow:
+    "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 -1px 0 0 rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.4)",
 };
 
 const card3DGlow = {
-  background: "#16181F",
-  border: "0.5px solid #2A2B35",
-  boxShadow: "0 0 12px rgba(16,185,129,0.15), 0 1px 0 0 #0D0E13, inset 0 1px 0 0 #2A2B35",
+  background: "#1A1C24",
+  border: "0.5px solid #2D2F3A",
+  boxShadow:
+    "0 0 20px rgba(16,185,129,0.12), 0 1px 0 0 rgba(255,255,255,0.05) inset, 0 -1px 0 0 rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.4)",
 };
 
 export default async function DashboardPage() {
@@ -75,15 +77,15 @@ export default async function DashboardPage() {
   const totalClients = clientsCountResult.count ?? 0;
   const totalRevenue = orders.reduce((s, o) => s + o.total_amount, 0);
 
-  const todayOrders    = orders.filter((o) => o.created_at.startsWith(today));
+  const todayOrders     = orders.filter((o) => o.created_at.startsWith(today));
   const yesterdayOrders = orders.filter((o) => o.created_at.startsWith(yesterdayStr));
-  const pendingOrders  = orders.filter((o) => o.status === "pending");
+  const pendingOrders   = orders.filter((o) => o.status === "pending");
   const deliveredOrders = orders.filter((o) => o.status === "delivered");
 
-  const todayCount     = todayOrders.length;
-  const todayRevenue   = todayOrders.reduce((s, o) => s + o.total_amount, 0);
+  const todayCount       = todayOrders.length;
+  const todayRevenue     = todayOrders.reduce((s, o) => s + o.total_amount, 0);
   const yesterdayRevenue = yesterdayOrders.reduce((s, o) => s + o.total_amount, 0);
-  const todayDelivered = todayOrders.filter((o) => o.status === "delivered").length;
+  const todayDelivered   = todayOrders.filter((o) => o.status === "delivered").length;
 
   const recentOrders = orders.slice(0, 5);
 
@@ -99,6 +101,11 @@ export default async function DashboardPage() {
     revenue: formatCurrency(totalRevenue),
   };
 
+  const revenueDeltaColor =
+    yesterdayRevenue === 0
+      ? todayRevenue > 0 ? "#10B981" : "#5A5B65"
+      : todayRevenue >= yesterdayRevenue ? "#10B981" : "#5A5B65";
+
   const mobileStats = [
     {
       key: "orders",
@@ -106,7 +113,7 @@ export default async function DashboardPage() {
       Icon: ShoppingCart,
       value: orders.length,
       delta: todayCount > 0 ? `+${todayCount} aujourd'hui` : "Aucune aujourd'hui",
-      deltaColor: todayCount > 0 ? "#10B981" : "#8A8896",
+      deltaColor: todayCount > 0 ? "#10B981" : "#5A5B65",
       iconBg: "#1A1B25",
       iconColor: "#60A5FA",
       glow: false,
@@ -128,7 +135,7 @@ export default async function DashboardPage() {
       Icon: CheckCircle,
       value: deliveredOrders.length,
       delta: todayDelivered > 0 ? `+${todayDelivered} aujourd'hui` : "Aucune aujourd'hui",
-      deltaColor: todayDelivered > 0 ? "#10B981" : "#8A8896",
+      deltaColor: todayDelivered > 0 ? "#10B981" : "#5A5B65",
       iconBg: "#1A1B25",
       iconColor: "#34D399",
       glow: false,
@@ -144,7 +151,7 @@ export default async function DashboardPage() {
           : todayRevenue >= yesterdayRevenue
             ? `+${formatCurrency(todayRevenue - yesterdayRevenue)} vs hier`
             : `-${formatCurrency(yesterdayRevenue - todayRevenue)} vs hier`,
-      deltaColor: todayRevenue >= yesterdayRevenue ? "#10B981" : "#F59E0B",
+      deltaColor: revenueDeltaColor,
       iconBg: "#0A2A1A",
       iconColor: "#10B981",
       glow: true,
@@ -152,7 +159,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0F1117] md:bg-transparent">
+    <div className="flex flex-1 flex-col min-h-0 bg-[#0A0B10] md:bg-transparent">
 
       {/* ── Desktop header ───────────────────────────────────── */}
       <div className="hidden md:block">
@@ -164,7 +171,7 @@ export default async function DashboardPage() {
 
       {/* ── Mobile header ────────────────────────────────────── */}
       <div
-        className="md:hidden flex items-center justify-between px-5 pb-5"
+        className="md:hidden flex items-center justify-between px-5 pb-6"
         style={{ paddingTop: "max(env(safe-area-inset-top), 20px)" }}
       >
         <div>
@@ -172,6 +179,9 @@ export default async function DashboardPage() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.15, marginTop: 4 }}>
             {firstName || "Bienvenue"}
           </h1>
+          <p style={{ fontSize: 12, color: "#6A6B75", marginTop: 4, lineHeight: 1 }}>
+            Voici votre journée
+          </p>
         </div>
         <div
           className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
@@ -185,26 +195,26 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-2 px-4 pb-40 md:p-6 space-y-5 md:space-y-6">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-2 px-4 pb-40 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
-        <div className="md:hidden grid grid-cols-2 gap-3">
+        <div className="md:hidden grid grid-cols-2 gap-[14px]">
           {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconBg, iconColor, glow }) => (
             <div
               key={key}
-              className="rounded-2xl p-4 flex flex-col gap-2"
-              style={glow ? card3DGlow : card3D}
+              className="rounded-2xl flex flex-col gap-2"
+              style={{ ...( glow ? card3DGlow : card3D), padding: 18 }}
             >
               <div
-                className="flex items-center justify-center rounded-xl shrink-0"
-                style={{ width: 32, height: 32, background: iconBg }}
+                className="flex items-center justify-center shrink-0"
+                style={{ width: 36, height: 36, background: iconBg, borderRadius: 10 }}
               >
-                <Icon style={{ width: 15, height: 15, color: iconColor }} />
+                <Icon style={{ width: 16, height: 16, color: iconColor }} />
               </div>
-              <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", color: "#8A8896" }}>
+              <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6A6B75" }}>
                 {label}
               </p>
-              <p style={{ fontSize: 28, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>
                 {value}
               </p>
               <p style={{ fontSize: 11, color: deltaColor, lineHeight: 1 }}>
@@ -256,12 +266,16 @@ export default async function DashboardPage() {
                   <Link
                     key={order.id}
                     href={`/dashboard/orders/${order.id}`}
-                    className="w-full flex items-center gap-3 px-4 py-3 active:opacity-60 transition-opacity"
-                    style={isLast ? undefined : { borderBottom: "0.5px solid #1E1F28" }}
+                    className="w-full flex items-center gap-3 px-4 active:opacity-60 transition-opacity"
+                    style={{
+                      paddingTop: 14,
+                      paddingBottom: 14,
+                      ...(!isLast && { borderBottom: "0.5px solid rgba(255,255,255,0.04)" }),
+                    }}
                   >
                     <div
                       className={`flex items-center justify-center rounded-xl text-white font-bold shrink-0 ${avatarColor(name)}`}
-                      style={{ width: 36, height: 36, fontSize: 13 }}
+                      style={{ width: 36, height: 36, fontSize: 13, boxShadow: "0 4px 8px rgba(0,0,0,0.3)" }}
                     >
                       {name.slice(0, 1).toUpperCase()}
                     </div>
