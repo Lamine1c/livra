@@ -136,3 +136,7 @@ Run migrations in order in your Supabase SQL editor:
    overscroll-contain [-webkit-overflow-scrolling:touch] pb-40
 6. Architecture scroll iOS : layout h-dvh overflow-hidden,
    pages flex flex-1 flex-col min-h-0, main gère son propre scroll
+7. Fix crop iOS Safari dans un contexte flex :
+   Le div enfant qui wrap le contenu principal doit avoir
+   w-0 flex-1 (pas seulement flex-1) pour forcer iOS 
+   à respecter la largeur disponible sans dépassement.
