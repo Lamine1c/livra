@@ -17,23 +17,23 @@ const OFF_WHITE    = "#F5F0E8";
 // ── Card styles — outset (en relief) ─────────────────────────
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}`,
+  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}`,
 };
 
 const cardNeumorphicGlow = {
   background: BG,
-  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.18)`,
+  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.18)`,
 };
 
 // ── Icon box styles — inset (creusé) ──────────────────────────
 const iconBoxInset = {
   background: BG,
-  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}`,
+  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}`,
 };
 
 const iconBoxInsetGlow = {
   background: BG,
-  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.15)`,
+  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.15)`,
 };
 
 const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
@@ -202,14 +202,14 @@ export default async function DashboardPage() {
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
             color: OFF_WHITE,
             background: BG,
-            boxShadow: `-5px -5px 13px ${SHADOW_LIGHT}, 5px 5px 13px ${SHADOW_DARK}`,
+            boxShadow: `-6px -6px 15px ${SHADOW_LIGHT}, 6px 6px 15px ${SHADOW_DARK}`,
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-44 md:p-6 space-y-6 md:space-y-6">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
         <div className="md:hidden grid grid-cols-2 gap-[18px]">
@@ -288,7 +288,7 @@ export default async function DashboardPage() {
                         width: 40, height: 40, fontSize: 14,
                         color: OFF_WHITE,
                         background: BG,
-                        boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
+                        boxShadow: `-3px -3px 6px ${SHADOW_LIGHT}, 3px 3px 6px ${SHADOW_DARK}`,
                       }}
                     >
                       {name.slice(0, 1).toUpperCase()}

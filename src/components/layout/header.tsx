@@ -37,7 +37,7 @@ export function Header({ title, subtitle, rightContent }: HeaderProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             borderRadius: 12,
             background: '#1a1b1f',
-            boxShadow: '-4px -4px 9px #212227, 4px 4px 9px #131417',
+            boxShadow: '-5px -5px 11px #212227, 5px 5px 11px #131417',
           }}
         >
           <Bell className="h-[18px] w-[18px]" style={{ color: 'rgba(245,240,232,0.85)' }} />

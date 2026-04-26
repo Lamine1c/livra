@@ -92,7 +92,7 @@ export function Sidebar() {
         style={{
           bottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
           background: "#1a1b1f",
-          boxShadow: "-4px -4px 10px #212227, 4px 4px 10px #131417",
+          boxShadow: "-5px -5px 12px #212227, 5px 5px 12px #131417",
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">
@@ -114,7 +114,7 @@ export function Sidebar() {
                       ? {
                           background: "#1a1b1f",
                           boxShadow:
-                            "inset 3px 3px 6px #131417, inset -3px -3px 6px #212227, inset 0 0 10px rgba(16,185,129,0.25)",
+                            "inset 4px 4px 8px #131417, inset -4px -4px 8px #212227, inset 0 0 10px rgba(16,185,129,0.25)",
                         }
                       : undefined
                   }
@@ -129,7 +129,7 @@ export function Sidebar() {
                     "text-[10px] font-medium transition-all duration-200",
                     scrolled ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-4"
                   )}
-                  style={{ color: active ? "#10B981" : "#8A8780" }}
+                  style={{ color: active ? "#F5F0E8" : "#8A8780" }}
                 >
                   {shortLabel}
                 </span>

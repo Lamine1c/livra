@@ -18,17 +18,17 @@ const MUTED        = "rgba(245,240,232,0.4)";
 
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-6px -6px 14px ${SHADOW_LIGHT}, 6px 6px 14px ${SHADOW_DARK}`,
+  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}`,
 };
 
 const pillNeumorphic = {
   background: BG,
-  boxShadow: `-3px -3px 8px ${SHADOW_LIGHT}, 3px 3px 8px ${SHADOW_DARK}`,
+  boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
 };
 
 const pillNeumorphicActive = {
   background: BG,
-  boxShadow: `inset 4px 4px 8px ${SHADOW_DARK}, inset -4px -4px 8px ${SHADOW_LIGHT}`,
+  boxShadow: `inset 5px 5px 10px ${SHADOW_DARK}, inset -5px -5px 10px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.12)`,
 };
 
 // ── Status dots ───────────────────────────────────────────────
@@ -80,7 +80,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 
   return (
     <main
-      className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-44 md:p-6 space-y-4"
+      className="w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-52 md:p-6 space-y-4"
       style={{ background: BG }}
     >
 
@@ -125,9 +125,9 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             <span
               className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold whitespace-nowrap transition-transform active:scale-[0.97]"
               style={{
-                background: EMERALD,
-                color: OFF_WHITE,
-                boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 0 rgba(0,80,50,0.4), 0 2px 6px rgba(0,0,0,0.35)`,
+                background: BG,
+                color: EMERALD,
+                boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
               }}
             >
               <Plus className="h-4 w-4" />
@@ -162,7 +162,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                     width: 40, height: 40, fontSize: 14,
                     color: OFF_WHITE,
                     background: BG,
-                    boxShadow: `-2px -2px 5px ${SHADOW_LIGHT}, 2px 2px 5px ${SHADOW_DARK}`,
+                    boxShadow: `-3px -3px 6px ${SHADOW_LIGHT}, 3px 3px 6px ${SHADOW_DARK}`,
                   }}
                 >
                   {name[0]?.toUpperCase()}
@@ -236,9 +236,9 @@ function EmptyOrders() {
         href="/dashboard/orders/new"
         className="rounded-[12px] px-4 py-2.5 text-sm font-semibold transition-transform active:scale-[0.97]"
         style={{
-          background: EMERALD,
-          color: OFF_WHITE,
-          boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 0 rgba(0,80,50,0.4), 0 2px 6px rgba(0,0,0,0.35)`,
+          background: BG,
+          color: EMERALD,
+          boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
         }}
       >
         + Nouvelle commande
