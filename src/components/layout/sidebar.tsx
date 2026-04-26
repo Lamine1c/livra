@@ -87,13 +87,14 @@ export function Sidebar() {
 
       {/* ── Mobile bottom navigation bar ────────────────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        className="md:hidden fixed left-3 right-3 z-50 rounded-[24px]"
         style={{
+          bottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
           background: "#1a1b1f",
-          boxShadow: "-5px -5px 12px #212227, 5px 5px 12px #131417",
+          boxShadow: "-6px -6px 14px #212227, 6px 6px 14px #131417",
         }}
       >
-        <div className="flex items-center justify-around px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
+        <div className="flex items-center justify-around px-2 py-2">
           {navItems.map(({ href, shortLabel, icon: Icon }) => {
             const active =
               href === "/dashboard"

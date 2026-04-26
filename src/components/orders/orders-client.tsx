@@ -20,12 +20,12 @@ const MUTED        = "rgba(245,240,232,0.4)";
 
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}`,
+  boxShadow: `-6px -6px 14px ${SHADOW_LIGHT}, 6px 6px 14px ${SHADOW_DARK}`,
 };
 
 const cardNeumorphicGlow = {
   background: BG,
-  boxShadow: `-5px -5px 12px ${SHADOW_LIGHT}, 5px 5px 12px ${SHADOW_DARK}, 0 0 20px rgba(16,185,129,0.25)`,
+  boxShadow: `-6px -6px 14px ${SHADOW_LIGHT}, 6px 6px 14px ${SHADOW_DARK}, 0 0 25px rgba(16,185,129,0.3)`,
 };
 
 const pillNeumorphic = {
@@ -35,7 +35,7 @@ const pillNeumorphic = {
 
 const pillNeumorphicActive = {
   background: BG,
-  boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.2)`,
+  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}`,
 };
 
 // ── Status dots ───────────────────────────────────────────────
@@ -132,10 +132,18 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       {/* Filtre pills + Sélectionner + Nouvelle commande */}
       {selectMode ? (
         <div className="flex items-center justify-between py-0.5">
-          <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: EMERALD, fontWeight: 600 }}>
             {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
           </p>
-          <button onClick={exitSelectMode} style={{ fontSize: 14, color: MUTED }}>
+          <button
+            onClick={exitSelectMode}
+            className="text-sm font-medium rounded-[10px] px-3 py-1.5 transition-transform active:scale-[0.97]"
+            style={{
+              color: "rgba(245,240,232,0.65)",
+              background: BG,
+              boxShadow: `-3px -3px 7px ${SHADOW_LIGHT}, 3px 3px 7px ${SHADOW_DARK}`,
+            }}
+          >
             Annuler
           </button>
         </div>
@@ -182,7 +190,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 style={{
                   background: EMERALD,
                   color: OFF_WHITE,
-                  boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 1px 0 0 rgba(255,255,255,0.15)`,
+                  boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.3), inset 0 -1.5px 0 0 rgba(0,0,0,0.25), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
                 }}
               >
                 <Plus className="h-4 w-4" />
@@ -192,8 +200,12 @@ export function OrdersClient({ orders }: OrdersClientProps) {
             </Link>
             <button
               onClick={() => setSelectMode(true)}
-              className="md:hidden text-sm transition-colors"
-              style={{ color: "rgba(245,240,232,0.5)" }}
+              className="md:hidden text-sm font-medium rounded-[10px] px-3 py-1.5 transition-transform active:scale-[0.97]"
+              style={{
+                color: "rgba(245,240,232,0.65)",
+                background: BG,
+                boxShadow: `-3px -3px 7px ${SHADOW_LIGHT}, 3px 3px 7px ${SHADOW_DARK}`,
+              }}
             >
               Sélectionner
             </button>
@@ -232,11 +244,11 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                       width: 24, height: 24,
                       background: BG,
                       boxShadow: isSelected
-                        ? `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}, inset 0 0 6px rgba(16,185,129,0.3)`
+                        ? `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}, inset 0 0 10px rgba(16,185,129,0.5)`
                         : `inset 1.5px 1.5px 3px ${SHADOW_DARK}, inset -1.5px -1.5px 3px ${SHADOW_LIGHT}`,
                     }}
                   >
-                    {isSelected && <Check className="h-3 w-3" style={{ color: EMERALD }} strokeWidth={3} />}
+                    {isSelected && <Check className="h-3.5 w-3.5" style={{ color: EMERALD }} strokeWidth={3} />}
                   </div>
                 ) : (
                   <div
@@ -299,10 +311,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       {selectMode && selected.size > 0 && (
         <div
           className="fixed bottom-16 left-4 right-4 z-40 flex items-center justify-between rounded-[16px] px-4 py-3 md:bottom-6 md:left-auto md:right-6"
-          style={{
-            ...cardNeumorphic,
-            backdropFilter: "blur(8px)",
-          }}
+          style={cardNeumorphic}
         >
           <p style={{ fontSize: 14, color: OFF_WHITE, fontWeight: 500 }}>
             {selected.size} sélectionnée{selected.size > 1 ? "s" : ""}
@@ -402,7 +411,7 @@ function EmptyOrders() {
         style={{
           background: EMERALD,
           color: OFF_WHITE,
-          boxShadow: `-2px -2px 6px ${SHADOW_LIGHT}, 2px 2px 6px ${SHADOW_DARK}, inset 0 1px 0 0 rgba(255,255,255,0.15)`,
+          boxShadow: `inset 0 1.5px 0 0 rgba(255,255,255,0.3), inset 0 -1.5px 0 0 rgba(0,0,0,0.25), -3px -3px 8px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
         }}
       >
         + Nouvelle commande

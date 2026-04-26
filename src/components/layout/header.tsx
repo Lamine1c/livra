@@ -10,8 +10,12 @@ interface HeaderProps {
 export function Header({ title, subtitle, rightContent }: HeaderProps) {
   return (
     <header
-      className="flex h-auto items-center justify-between gap-3 border-b border-[#252525] md:border-gray-200 bg-[#0D0D0D] md:bg-white px-4 md:px-6 pb-3 md:pb-4"
-      style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+      className="flex h-auto items-center justify-between gap-3 md:border-b md:border-gray-200 md:bg-white px-4 md:px-6 pb-3 md:pb-4"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top), 12px)',
+        background: '#1a1b1f',
+        boxShadow: 'inset 0 -0.5px 0 0 rgba(245,240,232,0.05)',
+      }}
     >
       <div>
         <h1 className="text-base md:text-lg font-semibold text-[#F0EDE8] md:text-gray-900">
@@ -26,8 +30,17 @@ export function Header({ title, subtitle, rightContent }: HeaderProps) {
       {rightContent !== undefined ? (
         rightContent
       ) : (
-        <button className="rounded-lg p-2 text-[#8A8780] md:text-gray-500 hover:bg-[#1e1e20] md:hover:bg-gray-100 transition-colors">
-          <Bell className="h-5 w-5" />
+        <button
+          className="md:rounded-lg md:p-2 md:text-gray-500 md:hover:bg-gray-100 md:transition-colors"
+          style={{
+            width: 38, height: 38,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 11,
+            background: '#1a1b1f',
+            boxShadow: '-3px -3px 7px #212227, 3px 3px 7px #131417',
+          }}
+        >
+          <Bell className="h-[18px] w-[18px]" style={{ color: 'rgba(245,240,232,0.7)' }} />
         </button>
       )}
     </header>
