@@ -36,7 +36,7 @@ const sectionCard: CSSProperties = {
   borderRadius: 18,
   boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
   padding: 18,
-  marginBottom: 0,
+  marginBottom: 28,
 };
 
 const toggleActive: CSSProperties = {
