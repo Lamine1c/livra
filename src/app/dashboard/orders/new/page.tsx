@@ -186,7 +186,7 @@ export default function NewOrderPage() {
     <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
       <Header title="Nouvelle commande" backHref="/dashboard/orders" hideBell />
       <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-4 md:space-y-6">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6 md:space-y-6">
 
           {/* Client */}
           <div style={sectionCard}>
