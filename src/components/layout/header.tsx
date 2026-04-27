@@ -13,11 +13,10 @@ interface HeaderProps {
 export function Header({ title, subtitle, rightContent, backHref, hideBell }: HeaderProps) {
   return (
     <header
-      className="flex h-auto items-center justify-between gap-3 md:border-b md:border-gray-200 md:bg-white px-4 md:px-6 pb-3 md:pb-4"
+      className="sticky top-0 z-20 flex h-auto items-center justify-between gap-3 md:border-b md:border-gray-200 md:bg-white px-4 md:px-6 pb-3 md:pb-4"
       style={{
         paddingTop: 'max(env(safe-area-inset-top), 12px)',
-        background: '#1a1b1f',
-        boxShadow: 'inset 0 -0.5px 0 0 rgba(245,240,232,0.05)',
+        background: 'linear-gradient(to bottom, #1a1b1f 0%, #1a1b1f 60%, transparent 100%)',
       }}
     >
       <div className="flex items-center gap-2.5">

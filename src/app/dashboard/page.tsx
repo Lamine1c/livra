@@ -188,8 +188,11 @@ export default async function DashboardPage() {
 
       {/* ── Mobile header ────────────────────────────────────── */}
       <div
-        className="md:hidden flex items-center justify-between px-5 pb-6"
-        style={{ paddingTop: "max(env(safe-area-inset-top), 20px)" }}
+        className="md:hidden sticky top-0 z-20 flex items-center justify-between px-5 pb-6"
+        style={{
+          paddingTop: "max(env(safe-area-inset-top), 20px)",
+          background: "linear-gradient(to bottom, #1a1b1f 0%, #1a1b1f 60%, transparent 100%)",
+        }}
       >
         <div>
           <p style={{ fontSize: 12, color: "#8A8896", lineHeight: 1 }}>Bonjour 👋</p>
@@ -206,7 +209,7 @@ export default async function DashboardPage() {
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
             color: OFF_WHITE,
             background: AVATAR_BG,
-            boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
+            boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
@@ -216,7 +219,7 @@ export default async function DashboardPage() {
       <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
-        <div className="md:hidden grid grid-cols-2 gap-[18px] pt-4">
+        <div className="md:hidden grid grid-cols-2 gap-[18px] pt-4 mt-6">
           {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconStyle, iconColor, glow }) => (
             <div
               key={key}
@@ -292,7 +295,7 @@ export default async function DashboardPage() {
                         width: 40, height: 40, fontSize: 14,
                         color: OFF_WHITE,
                         background: AVATAR_BG,
-                        boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
+                        boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
                       }}
                     >
                       {name.slice(0, 1).toUpperCase()}

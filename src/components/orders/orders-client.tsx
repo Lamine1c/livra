@@ -26,7 +26,7 @@ const cardNeumorphic = {
 
 const avatarStyle = {
   background: AVATAR_BG,
-  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
+  boxShadow: `4px 4px 10px rgba(0,0,0,0.5)`,
 };
 
 const pillNeumorphic = {
