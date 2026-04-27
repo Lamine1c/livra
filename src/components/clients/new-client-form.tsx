@@ -19,17 +19,19 @@ const WILAYA_OPTIONS = Object.entries(WILAYAS).map(([code, name]) => ({
   label: `${code} - ${name}`,
 }));
 
-const inputStyle: CSSProperties = {
+const BASE_INPUT: CSSProperties = {
   background: BG,
   color: OFF_WHITE,
   borderRadius: 12,
   padding: "12px 16px",
-  boxShadow: `inset -4px -4px 8px rgba(255,255,255,0.02), inset 4px 4px 8px rgba(0,0,0,0.42)`,
   border: "none",
   outline: "none",
   fontSize: 14,
   width: "100%",
 };
+
+const SHADOW_NORMAL = `inset -4px -4px 8px rgba(255,255,255,0.02), inset 4px 4px 8px rgba(0,0,0,0.42)`;
+const SHADOW_ERROR  = `inset -4px -4px 8px rgba(255,255,255,0.02), inset 4px 4px 8px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(248,113,113,0.4)`;
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -49,19 +51,30 @@ export function NewClientForm() {
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
-    wilaya: "16",
+    wilaya: "",
     commune: "",
     address: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.full_name || !form.phone || !form.wilaya || !form.commune || !form.address) {
-      setError("Tous les champs sont requis.");
+
+    const newErrors: Record<string, boolean> = {};
+    if (!form.full_name.trim()) newErrors.full_name = true;
+    if (!form.phone.trim()) newErrors.phone = true;
+    if (!form.wilaya) newErrors.wilaya = true;
+    if (!form.commune.trim()) newErrors.commune = true;
+    if (!form.address.trim()) newErrors.address = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
     setError("");
     setLoading(true);
 
@@ -99,10 +112,12 @@ export function NewClientForm() {
           <input
             type="text"
             value={form.full_name}
-            onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))}
+            onChange={(e) => {
+              setForm((p) => ({ ...p, full_name: e.target.value }));
+              if (errors.full_name) setErrors((p) => ({ ...p, full_name: false }));
+            }}
             placeholder="ex. Ahmed Benali"
-            required
-            style={inputStyle}
+            style={{ ...BASE_INPUT, boxShadow: errors.full_name ? SHADOW_ERROR : SHADOW_NORMAL }}
           />
         </Field>
 
@@ -110,21 +125,26 @@ export function NewClientForm() {
           <input
             type="tel"
             value={form.phone}
-            onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+            onChange={(e) => {
+              setForm((p) => ({ ...p, phone: e.target.value }));
+              if (errors.phone) setErrors((p) => ({ ...p, phone: false }));
+            }}
             placeholder="ex. 0561234567"
-            required
-            style={inputStyle}
+            style={{ ...BASE_INPUT, boxShadow: errors.phone ? SHADOW_ERROR : SHADOW_NORMAL }}
           />
         </Field>
 
         <Field label="Wilaya">
           <select
             value={form.wilaya}
-            onChange={(e) => setForm((p) => ({ ...p, wilaya: e.target.value }))}
-            required
+            onChange={(e) => {
+              setForm((p) => ({ ...p, wilaya: e.target.value }));
+              if (errors.wilaya) setErrors((p) => ({ ...p, wilaya: false }));
+            }}
             className="appearance-none"
-            style={inputStyle}
+            style={{ ...BASE_INPUT, boxShadow: errors.wilaya ? SHADOW_ERROR : SHADOW_NORMAL }}
           >
+            <option value="" disabled style={{ background: BG }}>Choisir une wilaya</option>
             {WILAYA_OPTIONS.map(({ value, label }) => (
               <option key={value} value={value} style={{ background: BG }}>
                 {label}
@@ -137,10 +157,12 @@ export function NewClientForm() {
           <input
             type="text"
             value={form.commune}
-            onChange={(e) => setForm((p) => ({ ...p, commune: e.target.value }))}
+            onChange={(e) => {
+              setForm((p) => ({ ...p, commune: e.target.value }));
+              if (errors.commune) setErrors((p) => ({ ...p, commune: false }));
+            }}
             placeholder="ex. Bab El Oued"
-            required
-            style={inputStyle}
+            style={{ ...BASE_INPUT, boxShadow: errors.commune ? SHADOW_ERROR : SHADOW_NORMAL }}
           />
         </Field>
 
@@ -148,10 +170,12 @@ export function NewClientForm() {
           <input
             type="text"
             value={form.address}
-            onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+            onChange={(e) => {
+              setForm((p) => ({ ...p, address: e.target.value }));
+              if (errors.address) setErrors((p) => ({ ...p, address: false }));
+            }}
             placeholder="ex. Rue 23 Mars, Bâtiment A"
-            required
-            style={inputStyle}
+            style={{ ...BASE_INPUT, boxShadow: errors.address ? SHADOW_ERROR : SHADOW_NORMAL }}
           />
         </Field>
 
@@ -163,14 +187,17 @@ export function NewClientForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-[12px] py-3 text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-50"
+            className="w-full rounded-[12px] py-3 text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
             style={{
               background: BG,
-              color: EMERALD,
+              color: loading ? "rgba(16,185,129,0.5)" : EMERALD,
               boxShadow: `-8px -8px 16px ${SHADOW_LIGHT}, 8px 8px 16px ${SHADOW_DARK}`,
             }}
           >
-            {loading ? "Création…" : "Enregistrer"}
+            {loading && (
+              <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mr-2" />
+            )}
+            {loading ? "Enregistrement…" : "Enregistrer"}
           </button>
 
           <button
@@ -179,7 +206,7 @@ export function NewClientForm() {
             className="w-full rounded-[12px] py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
             style={{
               background: BG,
-              color: MUTED,
+              color: "rgba(245,240,232,0.5)",
               boxShadow: `-8px -8px 16px ${SHADOW_LIGHT}, 8px 8px 16px ${SHADOW_DARK}`,
             }}
           >

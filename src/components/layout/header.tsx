@@ -7,9 +7,10 @@ interface HeaderProps {
   subtitle?: string;
   rightContent?: ReactNode;
   backHref?: string;
+  hideBell?: boolean;
 }
 
-export function Header({ title, subtitle, rightContent, backHref }: HeaderProps) {
+export function Header({ title, subtitle, rightContent, backHref, hideBell }: HeaderProps) {
   return (
     <header
       className="flex h-auto items-center justify-between gap-3 md:border-b md:border-gray-200 md:bg-white px-4 md:px-6 pb-3 md:pb-4"
@@ -46,7 +47,7 @@ export function Header({ title, subtitle, rightContent, backHref }: HeaderProps)
       </div>
       {rightContent !== undefined ? (
         rightContent
-      ) : (
+      ) : hideBell ? null : (
         <button
           className="md:rounded-lg md:p-2 md:text-gray-500 md:hover:bg-gray-100 md:transition-colors"
           style={{
