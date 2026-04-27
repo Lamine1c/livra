@@ -29,8 +29,8 @@ const avatarStyle = {
 };
 
 const pillNeumorphic = {
-  background: BG,
-  boxShadow: `-6px -6px 12px ${SHADOW_LIGHT}, 6px 6px 12px ${SHADOW_DARK}`,
+  background: "transparent",
+  boxShadow: "none",
 };
 
 const pillNeumorphicActive = {
