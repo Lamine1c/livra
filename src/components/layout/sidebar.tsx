@@ -94,7 +94,7 @@ export function Sidebar() {
         style={{
           bottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
           background: "#1a1b1f",
-          boxShadow: "-5px -5px 12px #212227, 5px 5px 12px #131417",
+          boxShadow: "-12px -12px 20px #1e1f24, 12px 12px 20px #0c0d11",
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">
@@ -116,7 +116,7 @@ export function Sidebar() {
                       ? {
                           background: "#1a1b1f",
                           boxShadow:
-                            "inset 4px 4px 8px #131417, inset -4px -4px 8px #212227, inset 0 0 10px rgba(16,185,129,0.25)",
+                            "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 12px rgba(16,185,129,0.15)",
                         }
                       : undefined
                   }

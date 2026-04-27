@@ -35,7 +35,7 @@ const pillNeumorphic = {
 
 const pillNeumorphicActive = {
   background: BG,
-  boxShadow: `inset -5px -5px 10px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(0,0,0,0.4), inset 0 0 14px rgba(16,185,129,0.12)`,
+  boxShadow: `inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 12px rgba(16,185,129,0.12)`,
 };
 
 // ── Status dots ───────────────────────────────────────────────

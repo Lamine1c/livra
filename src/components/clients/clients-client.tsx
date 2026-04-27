@@ -153,11 +153,16 @@ function EmptyClients() {
       </div>
       <Link
         href="/dashboard/clients/new"
-        className="rounded-[12px] px-4 py-2.5 text-sm font-semibold transition-transform active:scale-[0.97]"
+        className="transition-transform active:scale-[0.97]"
         style={{
           background: BG,
           color: EMERALD,
           boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+          borderRadius: 12,
+          padding: "8px 16px",
+          fontSize: 14,
+          fontWeight: 600,
+          display: "inline-block",
         }}
       >
         + Nouveau client

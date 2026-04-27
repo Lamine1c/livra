@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -22,9 +23,42 @@ const WILAYA_OPTIONS = Object.entries(WILAYAS).map(([code, name]) => ({
   label: `${code} - ${name}`,
 }));
 
-const DC = "rounded-xl border border-[#252525] bg-[#161618] md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden";
-const DCH = "px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100";
-const DCB = "px-4 py-4 md:px-6";
+// ── Palette ──────────────────────────────────────────────────
+const BG           = "#1a1b1f";
+const SHADOW_LIGHT = "#1e1f24";
+const SHADOW_DARK  = "#0c0d11";
+const EMERALD      = "#10B981";
+const OFF_WHITE    = "#F5F0E8";
+const MUTED        = "rgba(245,240,232,0.4)";
+
+const sectionCard: CSSProperties = {
+  background: BG,
+  borderRadius: 18,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+  padding: 18,
+  marginBottom: 0,
+};
+
+const toggleActive: CSSProperties = {
+  background: BG,
+  color: EMERALD,
+  padding: "6px 14px",
+  borderRadius: 10,
+  fontSize: 13,
+  fontWeight: 600,
+  border: "none",
+  boxShadow: "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 12px rgba(16,185,129,0.12)",
+};
+
+const toggleInactive: CSSProperties = {
+  background: "transparent",
+  color: MUTED,
+  padding: "6px 14px",
+  borderRadius: 10,
+  fontSize: 13,
+  fontWeight: 500,
+  border: "none",
+};
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -149,43 +183,33 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
-      <Header title="Nouvelle commande" />
-      <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
+    <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
+      <Header title="Nouvelle commande" backHref="/dashboard/orders" hideBell />
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-4 md:space-y-6">
 
           {/* Client */}
-          <div className={DC}>
-            <div className={DCH}>
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Client</h2>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setUseExistingClient(true)}
-                    className={`text-sm font-medium px-3 py-1 rounded-lg transition-colors ${
-                      useExistingClient
-                        ? "bg-[#10B981]/15 text-[#10B981] md:bg-emerald-100 md:text-emerald-700"
-                        : "text-[#8A8780] hover:text-[#F0EDE8] md:text-gray-500 md:hover:text-gray-700"
-                    }`}
-                  >
-                    Existant
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUseExistingClient(false)}
-                    className={`text-sm font-medium px-3 py-1 rounded-lg transition-colors ${
-                      !useExistingClient
-                        ? "bg-[#10B981]/15 text-[#10B981] md:bg-emerald-100 md:text-emerald-700"
-                        : "text-[#8A8780] hover:text-[#F0EDE8] md:text-gray-500 md:hover:text-gray-700"
-                    }`}
-                  >
-                    Nouveau
-                  </button>
-                </div>
+          <div style={sectionCard}>
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE }}>Client</h2>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUseExistingClient(true)}
+                  style={useExistingClient ? toggleActive : toggleInactive}
+                >
+                  Existant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUseExistingClient(false)}
+                  style={!useExistingClient ? toggleActive : toggleInactive}
+                >
+                  Nouveau
+                </button>
               </div>
             </div>
-            <div className={`${DCB} space-y-4`}>
+            <div className="space-y-4">
               {useExistingClient ? (
                 <>
                   <Select
@@ -219,21 +243,28 @@ export default function NewOrderPage() {
                         <button
                           type="button"
                           onClick={() => setEditingClient(true)}
-                          className="flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300 md:text-emerald-600 md:hover:text-emerald-700"
+                          className="flex items-center gap-1.5 text-sm"
+                          style={{ color: EMERALD, background: "none", border: "none" }}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                           Modifier les infos du client
                         </button>
                       ) : (
-                        <div className="rounded-lg border border-[#10B981]/30 bg-[#0A2A14] p-4 space-y-3 md:border-emerald-200 md:bg-emerald-50">
+                        <div
+                          className="rounded-[14px] p-4 space-y-3"
+                          style={{
+                            background: BG,
+                            boxShadow: "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 14px rgba(16,185,129,0.1)",
+                          }}
+                        >
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-[#10B981] md:text-emerald-800">
+                            <p style={{ fontSize: 13, fontWeight: 500, color: EMERALD }}>
                               Modifier le client
                             </p>
                             <button
                               type="button"
                               onClick={() => setEditingClient(false)}
-                              className="text-[#10B981] hover:text-emerald-300 md:hover:text-emerald-800"
+                              style={{ color: EMERALD, background: "none", border: "none" }}
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -278,7 +309,7 @@ export default function NewOrderPage() {
                               />
                             </div>
                           </div>
-                          <p className="text-xs text-[#8A8780] md:text-emerald-700">
+                          <p style={{ fontSize: 12, color: MUTED }}>
                             Ces modifications seront enregistrées à la création de la commande.
                           </p>
                         </div>
@@ -338,11 +369,11 @@ export default function NewOrderPage() {
           </div>
 
           {/* Articles */}
-          <div className={DC}>
-            <div className={DCH}>
-              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Articles</h2>
-            </div>
-            <div className={`${DCB} space-y-4`}>
+          <div style={sectionCard}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE, marginBottom: 16 }}>
+              Articles
+            </h2>
+            <div className="space-y-4">
               {lines.map((line, i) => (
                 <div key={i} className="space-y-2">
                   {/* Ligne 1 : produit full-width + bouton suppression */}
@@ -360,7 +391,8 @@ export default function NewOrderPage() {
                       <button
                         type="button"
                         onClick={() => removeLine(i)}
-                        className="mb-0.5 rounded-lg p-1.5 text-[#8A8780] hover:bg-[#252525] hover:text-red-400 md:text-gray-400 md:hover:bg-red-50 md:hover:text-red-600 transition-colors"
+                        className="mb-0.5 rounded-lg p-1.5 transition-colors"
+                        style={{ color: "rgba(245,240,232,0.3)", background: "none", border: "none" }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -395,10 +427,13 @@ export default function NewOrderPage() {
                       />
                     </div>
                     <div className="shrink-0 pb-0.5 text-right min-w-[76px]">
-                      <p className="text-[10px] uppercase tracking-wide text-[#8A8780] md:text-gray-400 mb-0.5">
+                      <p
+                        className="text-[10px] uppercase tracking-wide mb-0.5"
+                        style={{ color: MUTED }}
+                      >
                         Total
                       </p>
-                      <p className="text-sm font-semibold text-[#F0EDE8] md:text-gray-900">
+                      <p style={{ color: OFF_WHITE, fontSize: 13, fontWeight: 600 }}>
                         {formatCurrency(line.quantity * line.unit_price)}
                       </p>
                     </div>
@@ -409,7 +444,8 @@ export default function NewOrderPage() {
               <button
                 type="button"
                 onClick={addLine}
-                className="flex items-center gap-2 text-sm font-medium text-emerald-500 hover:text-emerald-400 md:text-emerald-600 md:hover:text-emerald-700"
+                className="flex items-center gap-2 text-sm font-medium"
+                style={{ color: EMERALD, background: "none", border: "none" }}
               >
                 <Plus className="h-4 w-4" />
                 Ajouter un article
@@ -418,19 +454,19 @@ export default function NewOrderPage() {
           </div>
 
           {/* Résumé */}
-          <div className={DC}>
-            <div className={DCH}>
-              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Résumé</h2>
-            </div>
-            <div className={`${DCB} space-y-4`}>
+          <div style={sectionCard}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE, marginBottom: 16 }}>
+              Résumé
+            </h2>
+            <div className="space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-[#8A8780] md:text-gray-500">Sous-total</span>
-                <span className="font-medium text-[#F0EDE8] md:text-gray-900">
+                <span style={{ color: MUTED }}>Sous-total</span>
+                <span style={{ color: OFF_WHITE, fontWeight: 500 }}>
                   {formatCurrency(subtotal)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-[#8A8780] md:text-gray-500">
+                <span className="text-sm" style={{ color: MUTED }}>
                   Frais de livraison
                 </span>
                 <div className="w-36">
@@ -443,9 +479,12 @@ export default function NewOrderPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-between border-t border-[#252525] md:border-gray-100 pt-3 font-semibold">
-                <span className="text-[#F0EDE8] md:text-gray-900">Total</span>
-                <span className="text-emerald-400 md:text-emerald-600">
+              <div
+                className="flex justify-between pt-3 font-semibold"
+                style={{ borderTop: "1px solid rgba(245,240,232,0.08)" }}
+              >
+                <span style={{ color: OFF_WHITE }}>Total</span>
+                <span style={{ color: EMERALD }}>
                   {formatCurrency(total)}
                 </span>
               </div>
@@ -459,7 +498,14 @@ export default function NewOrderPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg border border-red-800/30 bg-red-900/20 px-4 py-3 text-sm text-red-400 md:border-0 md:bg-red-50 md:text-red-600">
+            <p
+              className="rounded-lg px-4 py-3 text-sm"
+              style={{
+                color: "#F87171",
+                background: "rgba(248,113,113,0.08)",
+                border: "1px solid rgba(248,113,113,0.2)",
+              }}
+            >
               {error}
             </p>
           )}
