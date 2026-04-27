@@ -12,7 +12,7 @@ import { Order, OrderStatus } from "@/types";
 const BG           = "#1a1b1f";
 const SHADOW_LIGHT = "#1e1f24";
 const SHADOW_DARK  = "#0c0d11";
-const AVATAR_BG    = "#222328";
+const AVATAR_BG    = "#282a2f";
 const AVATAR_LIGHT = "#242630";
 const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
@@ -215,14 +215,8 @@ export default async function DashboardPage() {
 
       <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
-        {/* ── Mobile gradient fade ─────────────────────────────── */}
-        <div
-          className="md:hidden pointer-events-none sticky top-0 left-0 right-0 z-10"
-          style={{ height: 24, background: "linear-gradient(to bottom, #1a1b1f, transparent)", marginBottom: -24 }}
-        />
-
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
-        <div className="md:hidden grid grid-cols-2 gap-[18px]">
+        <div className="md:hidden grid grid-cols-2 gap-[18px] pt-4">
           {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconStyle, iconColor, glow }) => (
             <div
               key={key}

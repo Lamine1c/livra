@@ -10,7 +10,7 @@ import { WILAYAS } from "@/lib/utils";
 const BG           = "#1a1b1f";
 const SHADOW_LIGHT = "#1e1f24";
 const SHADOW_DARK  = "#0c0d11";
-const AVATAR_BG    = "#222328";
+const AVATAR_BG    = "#282a2f";
 const AVATAR_LIGHT = "#242630";
 const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
@@ -59,10 +59,6 @@ export function ClientsClient({ clients }: ClientsClientProps) {
         style={{ background: BG }}
         onScroll={onScrollHandler}
       >
-        <div
-          className="md:hidden pointer-events-none sticky top-0 left-0 right-0 z-10"
-          style={{ height: 24, background: "linear-gradient(to bottom, #1a1b1f, transparent)", marginBottom: -24 }}
-        />
         <EmptyClients />
       </main>
     );
@@ -74,11 +70,6 @@ export function ClientsClient({ clients }: ClientsClientProps) {
       style={{ background: BG }}
       onScroll={onScrollHandler}
     >
-      <div
-        className="md:hidden pointer-events-none sticky top-0 left-0 right-0 z-10"
-        style={{ height: 24, background: "linear-gradient(to bottom, #1a1b1f, transparent)", marginBottom: -24 }}
-      />
-
       {clients.length > 5 && (
         <div
           className="mb-5 flex items-center gap-3 rounded-[12px] px-4 py-3"
