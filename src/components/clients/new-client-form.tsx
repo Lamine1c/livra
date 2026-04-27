@@ -26,7 +26,6 @@ const BASE_INPUT: CSSProperties = {
   padding: "12px 16px",
   border: "none",
   outline: "none",
-  fontSize: 14,
   width: "100%",
 };
 
