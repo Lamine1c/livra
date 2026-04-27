@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git -C /Users/lamine/livra add src/components/orders/orders-client.tsx src/app/dashboard/page.tsx src/components/layout/sidebar.tsx src/components/layout/header.tsx)",
+      "Bash(git -C /Users/lamine/livra commit -m ' *)",
+      "Bash(git -C /Users/lamine/livra add src/components/layout/sidebar.tsx)",
+      "Bash(git -C /Users/lamine/livra commit -m \"fix: hide nav scroll sur Commandes - MutationObserver pour mount asynchrone\")",
+      "Bash(git -C /Users/lamine/livra add src/components/clients/clients-client.tsx src/app/dashboard/clients/page.tsx src/app/dashboard/clients/new/page.tsx src/components/clients/new-client-form.tsx src/components/layout/header.tsx)",
+      "Bash(git -C /Users/lamine/livra commit -m \"feat: page Clients refonte A2-S1 + page nouveau client\")",
+      "Bash(git -C /Users/lamine/livra add src/components/clients/clients-client.tsx src/components/clients/new-client-form.tsx src/components/layout/header.tsx src/app/dashboard/clients/new/page.tsx)",
+      "Bash(git -C /Users/lamine/livra commit -m \"feat: polish page Clients - validation, recherche, loading, header\")",
+      "Bash(git -C /Users/lamine/livra add src/app/globals.css src/components/clients/new-client-form.tsx)",
+      "Bash(git -C /Users/lamine/livra commit -m \"fix: prevent iOS Safari zoom on input focus \\(font-size 16px min\\)\")"
     ]
   }
 }

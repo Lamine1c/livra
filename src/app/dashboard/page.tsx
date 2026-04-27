@@ -13,7 +13,6 @@ const BG           = "#1a1b1f";
 const SHADOW_LIGHT = "#1e1f24";
 const SHADOW_DARK  = "#0c0d11";
 const AVATAR_BG    = "#282a2f";
-const AVATAR_LIGHT = "#242630";
 const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
@@ -29,15 +28,15 @@ const cardNeumorphicGlow = {
   boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.25)`,
 };
 
-// ── Avatar box styles — outset ────────────────────────────────
+// ── Avatar box styles — inset ─────────────────────────────────
 const avatarStyle = {
-  background: AVATAR_BG,
-  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
+  background: BG,
+  boxShadow: `inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03)`,
 };
 
 const avatarStyleGlow = {
-  background: AVATAR_BG,
-  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}, inset 0 0 10px rgba(16,185,129,0.2)`,
+  background: BG,
+  boxShadow: `inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 12px rgba(16,185,129,0.15)`,
 };
 
 const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
@@ -208,18 +207,18 @@ export default async function DashboardPage() {
           style={{
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
             color: OFF_WHITE,
-            background: AVATAR_BG,
-            boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
+            background: BG,
+            boxShadow: "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03)",
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
         </div>
       </div>
 
-      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-2 px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
-        <div className="md:hidden grid grid-cols-2 gap-[18px] pt-4 mt-6">
+        <div className="md:hidden grid grid-cols-2 gap-[18px] pt-6 mt-4" style={{ overflow: "visible" }}>
           {mobileStats.map(({ key, label, Icon, value, delta, deltaColor, iconStyle, iconColor, glow }) => (
             <div
               key={key}
@@ -294,8 +293,8 @@ export default async function DashboardPage() {
                       style={{
                         width: 40, height: 40, fontSize: 14,
                         color: OFF_WHITE,
-                        background: AVATAR_BG,
-                        boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
+                        background: BG,
+                        boxShadow: "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03)",
                       }}
                     >
                       {name.slice(0, 1).toUpperCase()}

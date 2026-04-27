@@ -13,7 +13,6 @@ const BG           = "#1a1b1f";
 const SHADOW_LIGHT = "#1e1f24";
 const SHADOW_DARK  = "#0c0d11";
 const AVATAR_BG    = "#282a2f";
-const AVATAR_LIGHT = "#242630";
 const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
@@ -25,8 +24,8 @@ const cardNeumorphic = {
 };
 
 const avatarStyle = {
-  background: AVATAR_BG,
-  boxShadow: `4px 4px 10px rgba(0,0,0,0.5)`,
+  background: BG,
+  boxShadow: `inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03)`,
 };
 
 const pillNeumorphic = {
@@ -234,8 +233,8 @@ function EmptyOrders() {
       <div
         className="flex h-14 w-14 items-center justify-center rounded-[14px]"
         style={{
-          background: AVATAR_BG,
-          boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
+          background: BG,
+          boxShadow: `inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03)`,
         }}
       >
         <ShoppingBag className="h-6 w-6" style={{ color: "rgba(245,240,232,0.5)" }} />
