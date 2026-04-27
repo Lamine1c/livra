@@ -511,7 +511,7 @@ export default function NewOrderPage() {
           )}
 
           <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="ghost" onClick={() => router.back()}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
