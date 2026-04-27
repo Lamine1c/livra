@@ -10,10 +10,10 @@ import { OrdersTable } from "@/components/orders/orders-table";
 
 // ── Palette A2-S1 audacieux ───────────────────────────────────
 const BG           = "#1a1b1f";
-const SHADOW_LIGHT = "#232429";
+const SHADOW_LIGHT = "#1e1f24";
 const SHADOW_DARK  = "#0c0d11";
 const AVATAR_BG    = "#222328";
-const AVATAR_LIGHT = "#282a30";
+const AVATAR_LIGHT = "#242630";
 const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
@@ -98,6 +98,12 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       }}
       style={{ background: BG }}
     >
+
+      {/* Mobile gradient fade */}
+      <div
+        className="md:hidden pointer-events-none sticky top-0 left-0 right-0 z-10"
+        style={{ height: 24, background: "linear-gradient(to bottom, #1a1b1f, transparent)", marginBottom: -24 }}
+      />
 
       {/* Filtre pills + Nouvelle commande */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
