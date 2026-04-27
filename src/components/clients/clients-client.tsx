@@ -6,25 +6,25 @@ import { Users, Phone, MapPin, Search } from "lucide-react";
 import { Client } from "@/types";
 import { WILAYAS } from "@/lib/utils";
 
-// ── Palette A2-S1 ─────────────────────────────────────────────
+// ── Palette A2-S1 audacieux ───────────────────────────────────
 const BG           = "#1a1b1f";
-const SHADOW_LIGHT = "#1f2025";
-const SHADOW_DARK  = "#0f1014";
-const AVATAR_BG    = "#1d1e23";
-const AVATAR_LIGHT = "#232429";
-const AVATAR_DARK  = "#0c0d11";
+const SHADOW_LIGHT = "#232429";
+const SHADOW_DARK  = "#0c0d11";
+const AVATAR_BG    = "#222328";
+const AVATAR_LIGHT = "#282a30";
+const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
 const MUTED        = "rgba(245,240,232,0.4)";
 
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-8px -8px 16px ${SHADOW_LIGHT}, 8px 8px 16px ${SHADOW_DARK}`,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
 };
 
 const avatarStyle = {
   background: AVATAR_BG,
-  boxShadow: `-4px -4px 8px ${AVATAR_LIGHT}, 4px 4px 8px ${AVATAR_DARK}`,
+  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
 };
 
 const onScrollHandler = (e: React.UIEvent<HTMLElement>) => {
@@ -75,7 +75,7 @@ export function ClientsClient({ clients }: ClientsClientProps) {
           className="mb-5 flex items-center gap-3 rounded-[12px] px-4 py-3"
           style={{
             background: BG,
-            boxShadow: `inset -4px -4px 8px rgba(255,255,255,0.02), inset 4px 4px 8px rgba(0,0,0,0.42)`,
+            boxShadow: `inset -5px -5px 10px rgba(255,255,255,0.02), inset 5px 5px 10px rgba(0,0,0,0.45)`,
           }}
         >
           <Search className="h-4 w-4 shrink-0" style={{ color: MUTED }} />
@@ -140,8 +140,8 @@ function EmptyClients() {
       <div
         className="flex h-14 w-14 items-center justify-center rounded-[14px]"
         style={{
-          background: BG,
-          boxShadow: `inset -4px -4px 8px rgba(255,255,255,0.02), inset 4px 4px 8px rgba(0,0,0,0.42)`,
+          background: AVATAR_BG,
+          boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
         }}
       >
         <Users className="h-6 w-6" style={{ color: MUTED }} />
@@ -158,7 +158,7 @@ function EmptyClients() {
         style={{
           background: BG,
           color: EMERALD,
-          boxShadow: `-8px -8px 16px ${SHADOW_LIGHT}, 8px 8px 16px ${SHADOW_DARK}`,
+          boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
         }}
       >
         + Nouveau client

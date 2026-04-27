@@ -8,27 +8,35 @@ import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { OrdersTable } from "@/components/orders/orders-table";
 
-// ── Neumorphic palette ────────────────────────────────────────
+// ── Palette A2-S1 audacieux ───────────────────────────────────
 const BG           = "#1a1b1f";
-const SHADOW_LIGHT = "#212227";
-const SHADOW_DARK  = "#131417";
+const SHADOW_LIGHT = "#232429";
+const SHADOW_DARK  = "#0c0d11";
+const AVATAR_BG    = "#222328";
+const AVATAR_LIGHT = "#282a30";
+const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
 const MUTED        = "rgba(245,240,232,0.4)";
 
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}`,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+};
+
+const avatarStyle = {
+  background: AVATAR_BG,
+  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
 };
 
 const pillNeumorphic = {
   background: BG,
-  boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+  boxShadow: `-6px -6px 12px ${SHADOW_LIGHT}, 6px 6px 12px ${SHADOW_DARK}`,
 };
 
 const pillNeumorphicActive = {
   background: BG,
-  boxShadow: `inset 5px 5px 10px ${SHADOW_DARK}, inset -5px -5px 10px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.12)`,
+  boxShadow: `inset -5px -5px 10px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(0,0,0,0.4), inset 0 0 14px rgba(16,185,129,0.12)`,
 };
 
 // ── Status dots ───────────────────────────────────────────────
@@ -102,10 +110,10 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 {/* Mobile pill — neumorphique */}
                 <button
                   onClick={() => setActiveFilter(f.value)}
-                  className="md:hidden shrink-0 whitespace-nowrap rounded-[12px] px-4 py-2 text-sm font-medium transition-all"
+                  className="md:hidden shrink-0 whitespace-nowrap rounded-[20px] px-4 py-2 text-sm font-medium transition-all"
                   style={active
                     ? { ...pillNeumorphicActive, color: OFF_WHITE }
-                    : { ...pillNeumorphic, color: "rgba(245,240,232,0.6)" }
+                    : { ...pillNeumorphic, color: MUTED }
                   }
                 >
                   {f.label}{count > 0 ? ` (${count})` : ""}
@@ -134,7 +142,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
               style={{
                 background: BG,
                 color: EMERALD,
-                boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+                boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
               }}
             >
               <Plus className="h-4 w-4" />
@@ -146,7 +154,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       </div>
 
       {/* Mobile — liste de cards */}
-      <div className="w-full md:hidden space-y-3">
+      <div className="w-full md:hidden space-y-5">
         {filtered.length === 0 ? (
           <EmptyOrders />
         ) : (
@@ -164,12 +172,11 @@ export function OrdersClient({ orders }: OrdersClientProps) {
                 }}
               >
                 <div
-                  className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
+                  className="flex items-center justify-center rounded-[10px] shrink-0 font-bold"
                   style={{
                     width: 40, height: 40, fontSize: 14,
                     color: OFF_WHITE,
-                    background: BG,
-                    boxShadow: `-3px -3px 6px ${SHADOW_LIGHT}, 3px 3px 6px ${SHADOW_DARK}`,
+                    ...avatarStyle,
                   }}
                 >
                   {name[0]?.toUpperCase()}
@@ -227,8 +234,8 @@ function EmptyOrders() {
       <div
         className="flex h-14 w-14 items-center justify-center rounded-[14px]"
         style={{
-          background: BG,
-          boxShadow: `inset 2px 2px 4px ${SHADOW_DARK}, inset -2px -2px 4px ${SHADOW_LIGHT}`,
+          background: AVATAR_BG,
+          boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
         }}
       >
         <ShoppingBag className="h-6 w-6" style={{ color: "rgba(245,240,232,0.5)" }} />
@@ -245,7 +252,7 @@ function EmptyOrders() {
         style={{
           background: BG,
           color: EMERALD,
-          boxShadow: `-4px -4px 10px ${SHADOW_LIGHT}, 4px 4px 10px ${SHADOW_DARK}`,
+          boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
         }}
       >
         + Nouvelle commande

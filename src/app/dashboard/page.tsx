@@ -8,33 +8,36 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { Order, OrderStatus } from "@/types";
 
-// ── Neumorphic palette ────────────────────────────────────────
+// ── Palette A2-S1 audacieux ───────────────────────────────────
 const BG           = "#1a1b1f";
-const SHADOW_LIGHT = "#212227";
-const SHADOW_DARK  = "#131417";
+const SHADOW_LIGHT = "#232429";
+const SHADOW_DARK  = "#0c0d11";
+const AVATAR_BG    = "#222328";
+const AVATAR_LIGHT = "#282a30";
+const AVATAR_DARK  = "#0a0b0f";
 const EMERALD      = "#10B981";
 const OFF_WHITE    = "#F5F0E8";
 
-// ── Card styles — outset (en relief) ─────────────────────────
+// ── Card styles — outset ──────────────────────────────────────
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}`,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
 };
 
 const cardNeumorphicGlow = {
   background: BG,
-  boxShadow: `-7px -7px 16px ${SHADOW_LIGHT}, 7px 7px 16px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.18)`,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}, 0 0 28px rgba(16,185,129,0.25)`,
 };
 
-// ── Icon box styles — inset (creusé) ──────────────────────────
-const iconBoxInset = {
-  background: BG,
-  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}`,
+// ── Avatar box styles — outset ────────────────────────────────
+const avatarStyle = {
+  background: AVATAR_BG,
+  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
 };
 
-const iconBoxInsetGlow = {
-  background: BG,
-  boxShadow: `inset 3px 3px 6px ${SHADOW_DARK}, inset -3px -3px 6px ${SHADOW_LIGHT}, inset 0 0 8px rgba(16,185,129,0.15)`,
+const avatarStyleGlow = {
+  background: AVATAR_BG,
+  boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}, inset 0 0 10px rgba(16,185,129,0.2)`,
 };
 
 const STATUS_DOT: Record<OrderStatus, { color: string; label: string }> = {
@@ -125,7 +128,7 @@ export default async function DashboardPage() {
       value: orders.length,
       delta: todayCount > 0 ? `+${todayCount} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayCount > 0 ? EMERALD : MUTED,
-      iconStyle: iconBoxInset,
+      iconStyle: avatarStyle,
       iconColor: OFF_WHITE,
       glow: false,
     },
@@ -136,7 +139,7 @@ export default async function DashboardPage() {
       value: pendingOrders.length,
       delta: "À traiter",
       deltaColor: "#F59E0B",
-      iconStyle: iconBoxInset,
+      iconStyle: avatarStyle,
       iconColor: OFF_WHITE,
       glow: false,
     },
@@ -147,7 +150,7 @@ export default async function DashboardPage() {
       value: deliveredOrders.length,
       delta: todayDelivered > 0 ? `+${todayDelivered} aujourd'hui` : "Aucune aujourd'hui",
       deltaColor: todayDelivered > 0 ? EMERALD : MUTED,
-      iconStyle: iconBoxInset,
+      iconStyle: avatarStyle,
       iconColor: OFF_WHITE,
       glow: false,
     },
@@ -163,7 +166,7 @@ export default async function DashboardPage() {
             ? `+${formatCurrency(todayRevenue - yesterdayRevenue)} vs hier`
             : `-${formatCurrency(yesterdayRevenue - todayRevenue)} vs hier`,
       deltaColor: revenueDeltaColor,
-      iconStyle: iconBoxInsetGlow,
+      iconStyle: avatarStyleGlow,
       iconColor: EMERALD,
       glow: true,
     },
@@ -171,7 +174,7 @@ export default async function DashboardPage() {
 
   return (
     <div
-      className="flex flex-1 flex-col min-h-0 md:bg-transparent"
+      className="flex flex-1 flex-col min-h-0"
       style={{ background: BG }}
     >
 
@@ -202,15 +205,15 @@ export default async function DashboardPage() {
           style={{
             width: 48, height: 48, fontSize: 18, fontWeight: 500,
             color: OFF_WHITE,
-            background: BG,
-            boxShadow: `-6px -6px 15px ${SHADOW_LIGHT}, 6px 6px 15px ${SHADOW_DARK}`,
+            background: AVATAR_BG,
+            boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
           }}
         >
           {(firstName || user?.email || "?")[0].toUpperCase()}
         </div>
       </div>
 
-      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6 space-y-6 md:space-y-6">
 
         {/* ── Mobile stats 2×2 ───────────────────────────────── */}
         <div className="md:hidden grid grid-cols-2 gap-[18px]">
@@ -221,8 +224,8 @@ export default async function DashboardPage() {
               style={{ ...(glow ? cardNeumorphicGlow : cardNeumorphic), padding: 18 }}
             >
               <div
-                className="flex items-center justify-center shrink-0 rounded-[11px]"
-                style={{ width: 36, height: 36, ...iconStyle }}
+                className="flex items-center justify-center shrink-0 rounded-[10px]"
+                style={{ width: 40, height: 40, ...iconStyle }}
               >
                 <Icon style={{ width: 16, height: 16, color: iconColor }} />
               </div>
@@ -272,7 +275,7 @@ export default async function DashboardPage() {
               <p style={{ fontSize: 14, color: "#8A8896" }}>Aucune commande pour l&apos;instant.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-5">
               {recentOrders.map((order) => {
                 const name = order.client?.full_name ?? "—";
                 const dot = STATUS_DOT[order.status];
@@ -284,12 +287,12 @@ export default async function DashboardPage() {
                     style={{ ...cardNeumorphic, padding: "14px 14px" }}
                   >
                     <div
-                      className="flex items-center justify-center rounded-[11px] shrink-0 font-bold"
+                      className="flex items-center justify-center rounded-[10px] shrink-0 font-bold"
                       style={{
                         width: 40, height: 40, fontSize: 14,
                         color: OFF_WHITE,
-                        background: BG,
-                        boxShadow: `-3px -3px 6px ${SHADOW_LIGHT}, 3px 3px 6px ${SHADOW_DARK}`,
+                        background: AVATAR_BG,
+                        boxShadow: `-6px -6px 12px ${AVATAR_LIGHT}, 6px 6px 12px ${AVATAR_DARK}`,
                       }}
                     >
                       {name.slice(0, 1).toUpperCase()}

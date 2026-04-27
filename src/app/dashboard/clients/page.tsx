@@ -24,7 +24,7 @@ export default async function ClientsPage() {
       style={{
         background: "#1a1b1f",
         color: "#10B981",
-        boxShadow: "-8px -8px 16px #1f2025, 8px 8px 16px #0f1014",
+        boxShadow: "-12px -12px 20px #232429, 12px 12px 20px #0c0d11",
       }}
     >
       <Plus className="h-4 w-4" />
