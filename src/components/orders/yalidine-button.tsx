@@ -60,7 +60,7 @@ export function YalidineButton({ orderId, trackingNumber: initialTracking }: Yal
 
   return (
     <div className="flex flex-col gap-2">
-      <Button onClick={handleCreate} disabled={loading} variant="secondary">
+      <Button onClick={handleCreate} disabled={loading} variant="primary">
         {loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

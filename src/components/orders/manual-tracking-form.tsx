@@ -113,7 +113,7 @@ export function ManualTrackingForm({
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <Button type="submit" variant="secondary" disabled={loading || !tracking.trim()}>
+        <Button type="submit" variant="primary" disabled={loading || !tracking.trim()}>
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />

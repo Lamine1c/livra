@@ -43,13 +43,13 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  processing: "bg-purple-100 text-purple-800",
-  shipped: "bg-indigo-100 text-indigo-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  returned: "bg-gray-100 text-gray-800",
+  pending: "bg-yellow-900/30 text-yellow-400",
+  confirmed: "bg-blue-900/30 text-blue-400",
+  processing: "bg-purple-900/30 text-purple-400",
+  shipped: "bg-indigo-900/30 text-indigo-400",
+  delivered: "bg-emerald-900/30 text-emerald-400",
+  cancelled: "bg-red-900/30 text-red-400",
+  returned: "bg-gray-800/30 text-gray-400",
 };
 
 export const WILAYAS: Record<string, string> = {
