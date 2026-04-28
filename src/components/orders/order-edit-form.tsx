@@ -25,8 +25,8 @@ function toLines(items: OrderItem[]): OrderLine[] {
 }
 
 const DC: React.CSSProperties = { background: "#1a1b1f", borderRadius: 18, boxShadow: "-12px -12px 20px #1e1f24, 12px 12px 20px #0c0d11", padding: 18, marginBottom: 28 };
-const DCH = "px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100";
-const DCB = "px-4 py-4 md:px-6";
+
+
 
 export function OrderEditForm({ order }: { order: Order }) {
   const router = useRouter();
@@ -113,11 +113,11 @@ export function OrderEditForm({ order }: { order: Order }) {
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
 
       {/* Articles */}
-      <div className={DC}>
-        <div className={DCH}>
+      <div style={DC}>
+        
           <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Articles</h2>
         </div>
-        <div className={`${DCB} space-y-4`}>
+        <div className="space-y-4">
           {lines.map((line, i) => (
             <div key={i} className="space-y-2">
               {/* Ligne 1 : produit full-width + bouton suppression */}
@@ -193,11 +193,11 @@ export function OrderEditForm({ order }: { order: Order }) {
       </div>
 
       {/* Résumé */}
-      <div className={DC}>
-        <div className={DCH}>
+      <div style={DC}>
+        
           <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Résumé</h2>
         </div>
-        <div className={`${DCB} space-y-4`}>
+        <div className="space-y-4">
           <div className="flex justify-between text-sm">
             <span className="text-[#8A8780] md:text-gray-500">Sous-total</span>
             <span className="font-medium text-[#F0EDE8] md:text-gray-900">
