@@ -22,9 +22,9 @@ export default async function OrderEditPage({
   if (!order) notFound();
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
-      <Header title={`Modifier ${(order as Order).reference}`} />
-      <ScrollMain className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
+    <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: "#1a1b1f" }}>
+      <Header title={`Modifier ${(order as Order).reference}`} backHref={`/dashboard/orders/${id}`} hideBell />
+      <ScrollMain className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
         <div className="mx-auto max-w-3xl">
           <OrderEditForm order={order as Order} />
         </div>
