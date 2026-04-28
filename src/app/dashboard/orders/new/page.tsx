@@ -416,7 +416,7 @@ export default function NewOrderPage() {
                     </div>
                     <div className="flex-1">
                       <Input
-                        label="Prix unitaire"
+                        label="Prix unitaire" placeholder="0"
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
@@ -475,7 +475,7 @@ export default function NewOrderPage() {
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    value={deliveryFee === 0 ? "" : String(deliveryFee)}
+                    placeholder="0" value={deliveryFee === 0 ? "" : String(deliveryFee)}
                     onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
                   />
                 </div>
