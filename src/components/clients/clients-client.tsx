@@ -18,7 +18,7 @@ const MUTED        = "rgba(245,240,232,0.4)";
 
 const cardNeumorphic = {
   background: BG,
-  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+  boxShadow: `-6px -6px 12px ${SHADOW_LIGHT}, 6px 6px 12px ${SHADOW_DARK}`,
 };
 
 const avatarStyle = {
@@ -157,7 +157,7 @@ function EmptyClients() {
         style={{
           background: BG,
           color: EMERALD,
-          boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+          boxShadow: `-6px -6px 12px ${SHADOW_LIGHT}, 6px 6px 12px ${SHADOW_DARK}`,
           borderRadius: 12,
           padding: "8px 16px",
           fontSize: 14,
