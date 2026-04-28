@@ -71,12 +71,12 @@ export function YalidineForm({ apiId, apiToken }: YalidineFormProps) {
       />
 
       {success && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="rounded-lg px-3 py-2 text-sm" style={{ background: "rgba(16,185,129,0.1)", color: "#10B981" }}>
           Credentials Yalidine sauvegardés.
         </p>
       )}
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="rounded-lg px-3 py-2 text-sm" style={{ background: "rgba(248,113,113,0.1)", color: "#F87171" }}>
           {error}
         </p>
       )}

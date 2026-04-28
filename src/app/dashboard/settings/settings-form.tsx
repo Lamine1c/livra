@@ -60,7 +60,7 @@ export function SettingsForm({ profile, userEmail }: SettingsFormProps) {
         placeholder="+213 6XX XXX XXX"
       />
       {success && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="rounded-lg px-3 py-2 text-sm" style={{ background: "rgba(16,185,129,0.1)", color: "#10B981" }}>
           Profil mis à jour avec succès.
         </p>
       )}
