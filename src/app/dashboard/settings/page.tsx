@@ -4,6 +4,20 @@ import { ScrollMain } from "@/components/layout/scroll-main";
 import { SettingsForm } from "./settings-form";
 import { YalidineForm } from "./yalidine-form";
 
+const BG = "#1a1b1f";
+const SHADOW_LIGHT = "#1e1f24";
+const SHADOW_DARK = "#0c0d11";
+const OFF_WHITE = "#F5F0E8";
+const MUTED = "rgba(245,240,232,0.4)";
+
+const sectionCard = {
+  background: BG,
+  borderRadius: 18,
+  boxShadow: `-12px -12px 20px ${SHADOW_LIGHT}, 12px 12px 20px ${SHADOW_DARK}`,
+  padding: 18,
+  marginBottom: 28,
+};
+
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,40 +29,30 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
-      <Header title="Réglages" />
+    <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
+      <Header title="Réglages" hideBell />
 
-      <ScrollMain className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
-        <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
+        <div className="mx-auto max-w-2xl">
 
-          {/* Profil marchand */}
-          <div className="rounded-xl border border-[#252525] bg-[#161618] md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden">
-            <div className="px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100">
-              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
-                Profil marchand
-              </h2>
-            </div>
-            <div className="px-4 py-4 md:px-6">
-              <SettingsForm profile={profile} userEmail={user?.email ?? ""} />
-            </div>
+          <div style={sectionCard}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE, marginBottom: 16 }}>
+              Profil marchand
+            </h2>
+            <SettingsForm profile={profile} userEmail={user?.email ?? ""} />
           </div>
 
-          {/* Yalidine */}
-          <div className="rounded-xl border border-[#252525] bg-[#161618] md:rounded-xl md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden">
-            <div className="px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100">
-              <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">
-                Connecte ton Yalidine
-              </h2>
-              <p className="text-xs md:text-sm text-[#8A8780] md:text-gray-500 mt-0.5">
-                On s&apos;occupe du reste — tes identifiants sont chiffrés et jamais partagés.
-              </p>
-            </div>
-            <div className="px-4 py-4 md:px-6">
-              <YalidineForm
-                apiId={profile?.yalidine_api_id ?? null}
-                apiToken={profile?.yalidine_api_token ?? null}
-              />
-            </div>
+          <div style={sectionCard}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE, marginBottom: 4 }}>
+              Connecte ton Yalidine
+            </h2>
+            <p style={{ fontSize: 12, color: MUTED, marginBottom: 16 }}>
+              On s&apos;occupe du reste — tes identifiants sont chiffrés et jamais partagés.
+            </p>
+            <YalidineForm
+              apiId={profile?.yalidine_api_id ?? null}
+              apiToken={profile?.yalidine_api_token ?? null}
+            />
           </div>
 
         </div>
