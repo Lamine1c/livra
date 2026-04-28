@@ -116,7 +116,6 @@ export function OrderEditForm({ order }: { order: Order }) {
       <div style={DC}>
         
           <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Articles</h2>
-        </div>
         <div className="space-y-4">
           {lines.map((line, i) => (
             <div key={i} className="space-y-2">
@@ -196,7 +195,6 @@ export function OrderEditForm({ order }: { order: Order }) {
       <div style={DC}>
         
           <h2 className="font-semibold text-[#F0EDE8] md:text-gray-900">Résumé</h2>
-        </div>
         <div className="space-y-4">
           <div className="flex justify-between text-sm">
             <span className="text-[#8A8780] md:text-gray-500">Sous-total</span>
