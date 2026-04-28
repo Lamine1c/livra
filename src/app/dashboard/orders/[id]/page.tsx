@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
+import { ScrollMain } from "@/components/layout/scroll-main";
 import { OrderActionsMenu } from "@/components/orders/order-actions-menu";
 import { OrderStatusRow } from "@/components/orders/order-status-row";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
@@ -45,7 +46,7 @@ export default async function OrderDetailPage({
   return (
     <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
       <Header title={`Commande ${o.reference}`} backHref="/dashboard/orders" hideBell rightContent={<OrderActionsMenu orderId={o.id} />} />
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
         <div className="mx-auto max-w-3xl">
 
           <div style={{ marginBottom: 28 }}>
@@ -220,7 +221,7 @@ export default async function OrderDetailPage({
           </div>
 
         </div>
-      </main>
+      </ScrollMain>
     </div>
   );
 }

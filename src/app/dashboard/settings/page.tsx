@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
+import { ScrollMain } from "@/components/layout/scroll-main";
 import { SettingsForm } from "./settings-form";
 import { YalidineForm } from "./yalidine-form";
 
@@ -17,7 +18,7 @@ export default async function SettingsPage() {
     <div className="flex flex-1 flex-col min-h-0 bg-[#0D0D0D] md:bg-transparent">
       <Header title="Réglages" />
 
-      <main className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
+      <ScrollMain className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-4 pb-40 md:p-6">
         <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
 
           {/* Profil marchand */}
@@ -51,7 +52,7 @@ export default async function SettingsPage() {
           </div>
 
         </div>
-      </main>
+      </ScrollMain>
     </div>
   );
 }

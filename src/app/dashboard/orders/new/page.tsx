@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Header } from "@/components/layout/header";
+import { ScrollMain } from "@/components/layout/scroll-main";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -185,7 +186,7 @@ export default function NewOrderPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
       <Header title="Nouvelle commande" backHref="/dashboard/orders" hideBell />
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6 md:space-y-6">
 
           {/* Client */}
@@ -519,7 +520,7 @@ export default function NewOrderPage() {
             </Button>
           </div>
         </form>
-      </main>
+      </ScrollMain>
     </div>
   );
 }

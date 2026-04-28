@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
+import { ScrollMain } from "@/components/layout/scroll-main";
 import { ClientEditForm } from "@/components/clients/client-edit-form";
 import { DeleteClientButton } from "@/components/clients/delete-client-button";
 import { formatDate, WILAYAS, formatCurrency } from "@/lib/utils";
@@ -50,7 +51,7 @@ export default async function ClientDetailPage({
     <div className="flex flex-1 flex-col min-h-0 md:bg-transparent" style={{ background: BG }}>
       <Header title={client.full_name} backHref="/dashboard/clients" hideBell />
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
+      <ScrollMain className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] pt-4 px-5 pb-52 md:p-6">
         <div className="mx-auto max-w-2xl">
 
           {/* Informations */}
@@ -111,7 +112,7 @@ export default async function ClientDetailPage({
           )}
 
         </div>
-      </main>
+      </ScrollMain>
     </div>
   );
 }
