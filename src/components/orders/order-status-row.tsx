@@ -49,7 +49,7 @@ export function OrderStatusRow({ orderId, currentStatus }: OrderStatusRowProps) 
         <button
           onClick={() => setSheetOpen(true)}
           disabled={loading}
-          className="rounded-lg border border-[#10B981] bg-[#1A2A1A] px-3 py-1.5 text-sm font-medium text-[#10B981] disabled:opacity-50 transition-opacity"
+          className="rounded-[12px] px-3 py-1.5 text-sm font-medium disabled:opacity-50 transition-transform active:scale-[0.97]" style={{ background: "#1a1b1f", color: "#10B981", boxShadow: "-6px -6px 12px #1e1f24, 6px 6px 12px #0c0d11" }}
         >
           Changer statut
         </button>
