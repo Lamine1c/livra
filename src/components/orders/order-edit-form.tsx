@@ -24,7 +24,7 @@ function toLines(items: OrderItem[]): OrderLine[] {
   }));
 }
 
-const DC = "rounded-xl border border-[#252525] bg-[#161618] md:border-gray-200 md:bg-white md:shadow-sm overflow-hidden";
+const DC: React.CSSProperties = { background: "#1a1b1f", borderRadius: 18, boxShadow: "-12px -12px 20px #1e1f24, 12px 12px 20px #0c0d11", padding: 18, marginBottom: 28 };
 const DCH = "px-4 py-3 md:px-6 md:py-4 border-b border-[#252525] md:border-gray-100";
 const DCB = "px-4 py-4 md:px-6";
 
@@ -236,7 +236,7 @@ export function OrderEditForm({ order }: { order: Order }) {
       )}
 
       <div className="flex gap-3 justify-end">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" onClick={() => router.back()}>
           Annuler
         </Button>
         <Button type="submit" disabled={loading}>
