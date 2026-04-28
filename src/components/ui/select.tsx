@@ -32,7 +32,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             background: "#1a1b1f",
             color: "#F5F0E8",
             fontSize: 16,
-            borderRadius: 12,
+            borderRadius: 12, colorScheme: "dark",
             padding: "12px 16px",
             boxShadow: error
               ? "inset 4px 4px 8px rgba(0,0,0,0.45), inset -2px -2px 6px rgba(255,255,255,0.03), inset 0 0 0 1px rgba(248,113,113,0.4)"
