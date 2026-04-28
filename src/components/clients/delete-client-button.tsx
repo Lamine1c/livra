@@ -35,7 +35,7 @@ export function DeleteClientButton({ clientId }: { clientId: string }) {
     <>
       <button
         onClick={openSheet}
-        className="flex items-center gap-1.5 rounded-lg border border-[#252525] md:border-gray-200 px-3 py-1.5 text-sm font-medium text-[#F87171] hover:bg-[#1e1e20] md:hover:bg-red-50 transition-colors"
+        className="flex items-center gap-1.5 rounded-[12px] px-3 py-1.5 text-sm font-medium transition-transform active:scale-[0.97]" style={{ background: "#1a1b1f", color: "#F87171", boxShadow: "-12px -12px 20px #1e1f24, 12px 12px 20px #0c0d11" }}
       >
         <Trash2 className="h-3.5 w-3.5" />
         Supprimer
