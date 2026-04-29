@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import crypto from "crypto";
 
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, note: "Statut ignoré" });
     }
 
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     const { data: order, error: fetchError } = await supabase
       .from("orders")
