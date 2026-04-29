@@ -54,7 +54,8 @@ export default async function OrderDetailPage({
             <OrderStatusRow orderId={o.id} currentStatus={o.status} />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ ...sectionCard }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: "#F5F0E8", marginBottom: 16 }}>Suivi de commande</h2>
             <TrackingTimeline status={o.status} trackingNumber={o.tracking_number} />
           </div>
 
