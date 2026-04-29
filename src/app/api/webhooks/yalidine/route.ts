@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order, error: fetchError } = await supabase
       .from("orders")
-      .select("id, status, reference, tracking_number, user_id, client:clients(phone), profiles:profiles(phone, shop_name)")
+      .select("id, status, reference, tracking_number, user_id, client:clients(phone), profiles:profiles(phone, store_name)")
       .eq("tracking_number", tracking)
       .single();
 
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     // Notifications WhatsApp
     const clientRaw = Array.isArray(order.client) ? order.client[0] : order.client;
     const profileRaw = Array.isArray(order.profiles) ? order.profiles[0] : order.profiles;
-    const shopName = (profileRaw as { shop_name?: string })?.shop_name ?? "LIVRA";
+    const shopName = (profileRaw as { store_name?: string })?.store_name ?? "LIVRA";
     const vendorPhone = (profileRaw as { phone?: string })?.phone;
     const clientPhone = (clientRaw as { phone?: string })?.phone;
 
