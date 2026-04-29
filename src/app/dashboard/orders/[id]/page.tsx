@@ -54,6 +54,12 @@ export default async function OrderDetailPage({
             <OrderStatusRow orderId={o.id} currentStatus={o.status} />
           </div>
 
+          <div style={{ marginBottom: 28 }}>
+            <TrackingTimeline status={o.status} trackingNumber={o.tracking_number} />
+          </div>
+
+
+
           {/* OTP */}
           {!o.otp_verified_at && o.status === "pending" && o.client && (
             <div style={sectionCard}>
