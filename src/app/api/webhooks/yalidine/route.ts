@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     if (false && secret) {
       const signature = req.headers.get("x-yalidine-signature") ?? "";
-      if (!verifySignature(rawBody, signature, secret)) {
+      if (!verifySignature(rawBody, signature, secret!)) {
         console.warn("[Yalidine Webhook] Signature invalide");
         return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
