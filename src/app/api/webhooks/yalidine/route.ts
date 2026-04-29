@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import crypto from "crypto";
 
 const STATUS_MAP: Record<string, string> = {
@@ -20,18 +21,38 @@ const STATUS_RANK: Record<string, number> = {
 };
 
 function verifySignature(payload: string, signature: string, secret: string): boolean {
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(payload)
-    .digest("hex");
+  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected)
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   } catch {
     return false;
   }
+}
+
+function vendorMessage(status: string, reference: string, tracking: string | null): string | null {
+  if (status === "shipped") {
+    return `🚚 Commande ${reference} prise en charge par Yalidine.\nNuméro de suivi : ${tracking ?? "N/A"}\nSuivez sur : yalidine.app`;
+  }
+  if (status === "delivered") {
+    return `✅ Commande ${reference} livrée avec succès !\nPensez à confirmer le paiement reçu.`;
+  }
+  if (status === "returned") {
+    return `⚠️ Échec de livraison pour la commande ${reference}.\nLe colis est en cours de retour. Connectez-vous à LIVRA pour plus de détails.`;
+  }
+  return null;
+}
+
+function clientMessage(status: string, tracking: string | null, shopName: string): string | null {
+  if (status === "shipped") {
+    return `🚚 Votre commande est en route !\nNuméro de suivi Yalidine : ${tracking ?? "N/A"}\nSuivez votre colis sur : yalidine.app/?tracking=${tracking ?? ""}`;
+  }
+  if (status === "delivered") {
+    return `✅ Votre commande a été livrée. Merci pour votre confiance !\n— ${shopName} via LIVRA 🛡️`;
+  }
+  if (status === "returned") {
+    return `⚠️ Notre livreur n'a pas pu vous joindre aujourd'hui.\nContactez ${shopName} pour reprogrammer la livraison.`;
+  }
+  return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -48,8 +69,6 @@ export async function POST(req: NextRequest) {
     }
 
     const body = JSON.parse(rawBody);
-    console.log("[Yalidine Webhook]", JSON.stringify(body));
-
     const tracking = body?.tracking ?? body?.id;
     const yalidineStatus = body?.status ?? body?.last_status;
 
@@ -59,7 +78,6 @@ export async function POST(req: NextRequest) {
 
     const livraStatus = STATUS_MAP[yalidineStatus];
     if (!livraStatus) {
-      console.warn("[Yalidine Webhook] Statut inconnu:", yalidineStatus);
       return NextResponse.json({ ok: true, note: "Statut ignoré" });
     }
 
@@ -67,12 +85,11 @@ export async function POST(req: NextRequest) {
 
     const { data: order, error: fetchError } = await supabase
       .from("orders")
-      .select("id, status")
+      .select("id, status, reference, tracking_number, user_id, client:clients(phone), profiles:profiles(phone, shop_name)")
       .eq("tracking_number", tracking)
       .single();
 
     if (fetchError || !order) {
-      console.warn("[Yalidine Webhook] Commande introuvable:", tracking);
       return NextResponse.json({ ok: true, note: "Commande non trouvée" });
     }
 
@@ -83,13 +100,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, note: "Pas de régression" });
     }
 
-    const { error: updateError } = await supabase
+    // Mettre à jour le statut
+    await supabase
       .from("orders")
       .update({ status: livraStatus, updated_at: new Date().toISOString() })
       .eq("id", order.id);
 
-    if (updateError) {
-      return NextResponse.json({ error: "Erreur update" }, { status: 500 });
+    // Notifications WhatsApp
+    const clientRaw = Array.isArray(order.client) ? order.client[0] : order.client;
+    const profileRaw = Array.isArray(order.profiles) ? order.profiles[0] : order.profiles;
+    const shopName = (profileRaw as { shop_name?: string })?.shop_name ?? "LIVRA";
+    const vendorPhone = (profileRaw as { phone?: string })?.phone;
+    const clientPhone = (clientRaw as { phone?: string })?.phone;
+
+    const vMsg = vendorMessage(livraStatus, order.reference, order.tracking_number);
+    const cMsg = clientMessage(livraStatus, order.tracking_number, shopName);
+
+    if (vendorPhone && vMsg) {
+      await sendWhatsAppNotification(vendorPhone, vMsg);
+    }
+
+    if (clientPhone && cMsg) {
+      await sendWhatsAppNotification(clientPhone, cMsg);
     }
 
     console.log(`[Yalidine Webhook] ${order.id} → ${livraStatus}`);
