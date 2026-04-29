@@ -4,11 +4,9 @@ const PHONE_NUMBER_ID = "1081472725051661";
 const GRAPH_API_URL = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
 
 export function generateOTP(): string {
-  // Cryptographically secure 6-digit code
   return crypto.randomInt(100000, 999999).toString();
 }
 
-// Normalise vers E.164 sans "+" pour l'API WhatsApp.
 export function normalizePhoneNumber(phone: string): string {
   const trimmed = phone.trim();
   if (trimmed.startsWith("+")) return trimmed.slice(1).replace(/\D/g, "");
@@ -30,14 +28,43 @@ interface WhatsAppResult {
   error?: string;
 }
 
-export async function sendOtpWhatsApp(
-  phone: string,
-  clientName: string,
-  otp: string
-): Promise<WhatsAppResult> {
+// ─── TWILIO ───────────────────────────────────────────────
+async function sendViaTwilio(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_WHATSAPP_FROM ?? "whatsapp:+14155238886";
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  const toFormatted = `whatsapp:+${to}`;
+
+  const body = new URLSearchParams({
+    From: from,
+    To: toFormatted,
+    Body: message,
+  });
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+
+  const data = await res.json();
+  console.log("[Twilio API]", { status: res.status, body: data });
+
+  if (!res.ok) {
+    return { ok: false, error: data?.message ?? "Twilio error" };
+  }
+  return { ok: true };
+}
+
+// ─── META ─────────────────────────────────────────────────
+async function sendViaMeta(to: string, clientName: string, otp: string): Promise<{ ok: boolean; error?: string }> {
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME;
-  const to = normalizePhoneNumber(phone);
 
   const body = templateName
     ? buildTemplatePayload(to, templateName, clientName, otp)
@@ -53,24 +80,62 @@ export async function sendOtpWhatsApp(
   });
 
   const data = await res.json();
-
-  console.log("[WhatsApp API]", { status: res.status, body: data });
+  console.log("[Meta WhatsApp API]", { status: res.status, body: data });
 
   if (!res.ok) {
-    const msg = data?.error?.message ?? "WhatsApp API error";
-    return { success: false, maskedPhone: maskedPhone(phone), error: msg };
+    return { ok: false, error: data?.error?.message ?? "Meta error" };
   }
-
-  return { success: true, maskedPhone: maskedPhone(phone) };
+  return { ok: true };
 }
 
-// Template approuvé — corps attendu : "Bonjour {{1}}, votre code LIVRA est {{2}}."
-function buildTemplatePayload(
-  to: string,
-  templateName: string,
+// ─── SEND OTP (auto-switch Twilio → Meta) ─────────────────
+export async function sendOtpWhatsApp(
+  phone: string,
   clientName: string,
   otp: string
-) {
+): Promise<WhatsAppResult> {
+  const to = normalizePhoneNumber(phone);
+  const masked = maskedPhone(phone);
+  const message = `Bonjour ${clientName} !\n\nVotre code de confirmation LIVRA est :\n\n*${otp}*\n\nCe code expire dans 10 minutes. Ne le communiquez à personne.`;
+
+  // Twilio disponible → on l'utilise
+  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    const result = await sendViaTwilio(to, message);
+    return { success: result.ok, maskedPhone: masked, error: result.error };
+  }
+
+  // Fallback Meta
+  const result = await sendViaMeta(to, clientName, otp);
+  return { success: result.ok, maskedPhone: masked, error: result.error };
+}
+
+// ─── NOTIFICATION GÉNÉRIQUE (statuts, tracking) ───────────
+export async function sendWhatsAppNotification(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const to = normalizePhoneNumber(phone);
+
+  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    const result = await sendViaTwilio(to, message);
+    return { success: result.ok, error: result.error };
+  }
+
+  // Meta fallback — text simple
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const res = await fetch(GRAPH_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(buildTextPayload(to, "", message)),
+  });
+
+  return { success: res.ok };
+}
+
+function buildTemplatePayload(to: string, templateName: string, clientName: string, otp: string) {
   return {
     messaging_product: "whatsapp",
     to,
@@ -91,14 +156,11 @@ function buildTemplatePayload(
   };
 }
 
-// Mode développement / sandbox uniquement (numéros de test Meta)
-function buildTextPayload(to: string, clientName: string, otp: string) {
+function buildTextPayload(to: string, _clientName: string, message: string) {
   return {
     messaging_product: "whatsapp",
     to,
     type: "text",
-    text: {
-      body: `Bonjour ${clientName} !\n\nVotre code de confirmation LIVRA est :\n\n*${otp}*\n\nCe code expire dans 10 minutes. Ne le communiquez à personne.`,
-    },
+    text: { body: message },
   };
 }
