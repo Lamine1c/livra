@@ -43,7 +43,18 @@ function clientMessage(status: string, tracking: string | null, shopName: string
   return null;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const subscribe = searchParams.get("subscribe");
+  const crcToken = searchParams.get("crc_token");
+
+  if (subscribe !== null && crcToken) {
+    return new Response(crcToken, {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
   return Response.json({ ok: true });
 }
 
