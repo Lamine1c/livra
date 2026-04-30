@@ -1,0 +1,36 @@
+// ─── TEMPLATES MESSAGES WHATSAPP ──────────────────────────────
+// Centralisés ici pour faciliter les modifications + multilangue futur
+
+export function vendorMessage(
+  status: string,
+  reference: string,
+  tracking: string | null
+): string | null {
+  if (status === "shipped") {
+    return `🚚 Commande ${reference} prise en charge par Yalidine.\nTracking: ${tracking ?? "N/A"}`;
+  }
+  if (status === "delivered") {
+    return `✅ Commande ${reference} livrée avec succès !\nPensez à confirmer le paiement reçu.`;
+  }
+  if (status === "returned") {
+    return `⚠️ Échec de livraison pour la commande ${reference}.\nLe colis est en cours de retour.`;
+  }
+  return null;
+}
+
+export function clientMessage(
+  status: string,
+  tracking: string | null,
+  shopName: string
+): string | null {
+  if (status === "shipped") {
+    return `🚚 Votre commande est en route !\nTracking Yalidine: ${tracking ?? "N/A"}`;
+  }
+  if (status === "delivered") {
+    return `✅ Votre commande a été livrée. Merci pour votre confiance !\n— ${shopName} via LIVRA 🛡️`;
+  }
+  if (status === "returned") {
+    return `⚠️ Notre livreur n'a pas pu vous joindre.\nContactez ${shopName} pour reprogrammer.`;
+  }
+  return null;
+}
