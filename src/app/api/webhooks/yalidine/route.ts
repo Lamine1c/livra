@@ -43,6 +43,10 @@ function clientMessage(status: string, tracking: string | null, shopName: string
   return null;
 }
 
+export async function GET() {
+  return Response.json({ ok: true });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
