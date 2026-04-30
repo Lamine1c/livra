@@ -54,17 +54,17 @@ export function YalidineForm({ apiId, apiToken }: YalidineFormProps) {
 
       <Input
         id="yalidine-api-id"
-        label="Identifiant Yalidine"
-        placeholder="Votre identifiant Yalidine"
+        label="API ID Yalidine"
+        placeholder="ex: 88907974135838388077"
         value={id}
         onChange={(e) => setId(e.target.value)}
         autoComplete="off"
       />
       <Input
         id="yalidine-api-token"
-        label="Clé secrète Yalidine"
+        label="API Token Yalidine"
         type="password"
-        placeholder="Votre clé secrète Yalidine"
+        placeholder="Votre token Yalidine (long)"
         value={token}
         onChange={(e) => setToken(e.target.value)}
         autoComplete="off"
