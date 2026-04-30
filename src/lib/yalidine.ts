@@ -33,6 +33,7 @@ export async function createYalidineParcel(
   const toWilaya = WILAYAS[order.client.wilaya] ?? order.client.wilaya;
 
   const payload = {
+    order_id: order.reference,
     firstname,
     familyname,
     contact_phone: order.client.phone,
