@@ -7,6 +7,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Match toutes les routes SAUF :
+     * - _next/static, _next/image, favicon
+     * - images statiques
+     * - api/cron/* (cron jobs Vercel, auth via CRON_SECRET)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
