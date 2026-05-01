@@ -57,10 +57,7 @@ export default async function SettingsPage() {
           </div>
 
           {/* Déconnexion */}
-          <div style={{...sectionCard, marginBottom: 0}}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: "rgba(245,240,232,0.5)", marginBottom: 16 }}>
-              Compte
-            </h2>
+          <div style={{...sectionCard, marginBottom: 0, padding: "10px 14px"}}>
             <SignoutButton />
           </div>
 
