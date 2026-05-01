@@ -22,10 +22,10 @@ export default async function ClientsPage() {
       href="/dashboard/clients/new"
       className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold whitespace-nowrap transition-transform active:scale-[0.97]"
       style={{
-        background: "#1a1b1f",
-        color: "#10B981",
-        boxShadow: "-12px -12px 20px #232429, 12px 12px 20px #0c0d11",
-      }}
+  background: "#1e1f23",
+  color: "#10B981",
+  boxShadow: "-4px -4px 8px #232429, 4px 4px 8px #0c0d11",
+}}
     >
       <Plus className="h-4 w-4" />
       <span className="hidden sm:inline">Nouveau client</span>
