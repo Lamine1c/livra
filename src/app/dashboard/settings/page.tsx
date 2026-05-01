@@ -55,6 +55,31 @@ export default async function SettingsPage() {
             />
           </div>
 
+          {/* Déconnexion */}
+          <div style={{...sectionCard, marginBottom: 0}}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: "#ef4444", marginBottom: 16 }}>
+              Déconnexion
+            </h2>
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(239,68,68,0.3)",
+                  background: "rgba(239,68,68,0.08)",
+                  color: "#ef4444",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Se déconnecter
+              </button>
+            </form>
+          </div>
+
         </div>
       </ScrollMain>
     </div>
