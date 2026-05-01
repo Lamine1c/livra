@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/yalidine-poll",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
