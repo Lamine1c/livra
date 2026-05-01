@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { Header } from "@/components/layout/header";
 import { ScrollMain } from "@/components/layout/scroll-main";
@@ -180,6 +181,16 @@ export default function NewOrderPage() {
 
     await supabase.from("order_items").insert(items);
     await fetch(`/api/orders/${order.id}/send-otp`, { method: "POST" });
+
+    posthog.capture("order_created", {
+      order_id: order.id,
+      reference: order.reference,
+      total_amount: total,
+      delivery_fee: deliveryFee,
+      item_count: lines.length,
+      new_client: !useExistingClient,
+    });
+
     router.push(`/dashboard/orders/${order.id}`);
   }
 

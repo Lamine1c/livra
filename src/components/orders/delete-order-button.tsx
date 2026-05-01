@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ export function DeleteOrderButton({ orderId }: { orderId: string }) {
     setLoading(true);
     await supabase.from("order_items").delete().eq("order_id", orderId);
     await supabase.from("orders").delete().eq("id", orderId);
+    posthog.capture("order_deleted", { order_id: orderId });
     router.push("/dashboard/orders");
   }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Package } from "lucide-react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -33,7 +34,20 @@ export default function RegisterPage() {
 
     if (error) {
       setError(error.message);
+      posthog.captureException(error);
     } else {
+      if (signUpData.user) {
+        posthog.identify(signUpData.user.id, {
+          email: signUpData.user.email,
+          full_name: fullName,
+          store_name: storeName,
+        });
+        posthog.capture("user_signed_up", {
+          email: signUpData.user.email,
+          full_name: fullName,
+          store_name: storeName,
+        });
+      }
       router.push("/dashboard");
     }
     setLoading(false);

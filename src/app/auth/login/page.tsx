@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Package } from "lucide-react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,13 @@ export default function LoginPage() {
 
     if (error) {
       setError("Email ou mot de passe incorrect.");
+      posthog.captureException(error);
     } else {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        posthog.identify(user.id, { email: user.email });
+        posthog.capture("user_signed_in", { email: user.email });
+      }
       router.push("/dashboard");
     }
     setLoading(false);

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, RotateCcw, CheckCircle2, Loader2, Info } from "lucide-react";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 
 interface OtpVerifyWidgetProps {
@@ -52,6 +53,7 @@ export function OtpVerifyWidget({
     setMaskedPhone(data.maskedPhone);
     setPhase("input");
     setResendCooldown(60);
+    posthog.capture("order_otp_sent", { order_id: orderId });
     setTimeout(() => inputRefs.current[0]?.focus(), 100);
   }
 

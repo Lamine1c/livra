@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createYalidineParcel } from "@/lib/yalidine";
 import { Order } from "@/types";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(
   _req: NextRequest,
@@ -68,6 +69,18 @@ export async function POST(
   if (updateError) {
     return NextResponse.json({ error: "Tracking créé mais erreur de sauvegarde." }, { status: 500 });
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "yalidine_parcel_created",
+    properties: {
+      order_id: id,
+      tracking_number: tracking,
+      total_amount: order.total_amount,
+    },
+  });
+  await posthog.shutdown();
 
   return NextResponse.json({ tracking });
 }

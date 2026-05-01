@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(
   req: NextRequest,
@@ -67,6 +68,14 @@ export async function POST(
   if (updateError) {
     return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "order_otp_verified",
+    properties: { order_id: id },
+  });
+  await posthog.shutdown();
 
   return NextResponse.json({ success: true });
 }

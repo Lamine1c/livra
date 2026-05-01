@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { OrderStatus } from "@/types";
 import { ORDER_STATUS_LABELS } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -35,7 +36,14 @@ export function OrderStatusSelect({
       .from("orders")
       .update({ status: next, updated_at: new Date().toISOString() })
       .eq("id", orderId);
-    if (!error) setStatus(next);
+    if (!error) {
+      setStatus(next);
+      posthog.capture("order_status_changed", {
+        order_id: orderId,
+        from_status: status,
+        to_status: next,
+      });
+    }
     setLoading(false);
   }
 

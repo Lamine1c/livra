@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { WILAYAS } from "@/lib/utils";
 
@@ -87,10 +88,12 @@ export function NewClientForm() {
 
     if (err) {
       setError("Erreur lors de la création.");
+      posthog.captureException(err);
       setLoading(false);
       return;
     }
 
+    posthog.capture("client_created", { wilaya: form.wilaya });
     router.push("/dashboard/clients");
   }
 
