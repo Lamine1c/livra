@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/header";
 import { ScrollMain } from "@/components/layout/scroll-main";
 import { SettingsForm } from "./settings-form";
 import { YalidineForm } from "./yalidine-form";
+import { SignoutButton } from "@/components/settings/signout-button";
 
 const BG = "#1a1b1f";
 const SHADOW_LIGHT = "#1e1f24";
@@ -60,24 +61,7 @@ export default async function SettingsPage() {
             <h2 style={{ fontSize: 14, fontWeight: 600, color: "rgba(245,240,232,0.5)", marginBottom: 16 }}>
               Compte
             </h2>
-            <form action="/auth/signout" method="post">
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(239,68,68,0.2)",
-                  background: "transparent",
-                  color: "rgba(239,68,68,0.7)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                }}
-              >
-                Se déconnecter
-              </button>
-            </form>
+            <SignoutButton />
           </div>
 
         </div>
