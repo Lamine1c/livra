@@ -30,7 +30,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith("/auth");
+  const isAuthRoute = pathname.startsWith("/auth") && !pathname.startsWith("/auth/callback");
   const isDashboardRoute = pathname.startsWith("/dashboard");
 
   if (!user && isDashboardRoute) {
