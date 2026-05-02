@@ -33,7 +33,37 @@ const inputStyle: React.CSSProperties = {
   marginBottom: 12,
   boxShadow: `inset -3px -3px 6px ${SHADOW_LIGHT}, inset 3px 3px 6px ${SHADOW_DARK}`,
   outline: "none",
+  WebkitAppearance: "none",
+  appearance: "none",
 };
+
+function SelectField({ value, onChange, placeholder, options }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  options: string[];
+}) {
+  return (
+    <div style={{ position: "relative", marginBottom: 12 }}>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        required
+        style={{ ...inputStyle, marginBottom: 0, color: value ? OFF_WHITE : MUTED, width: "100%" }}
+      >
+        <option value="" disabled style={{ background: "#25262b", color: MUTED }}>{placeholder}</option>
+        {options.map(o => (
+          <option key={o} value={o} style={{ background: "#25262b", color: OFF_WHITE }}>{o}</option>
+        ))}
+      </select>
+      {/* Chevron custom */}
+      <div style={{
+        position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+        pointerEvents: "none", color: MUTED, fontSize: 10,
+      }}>▼</div>
+    </div>
+  );
+}
 
 function Form() {
   const searchParams = useSearchParams();
@@ -89,33 +119,28 @@ function Form() {
         <form onSubmit={handleSubmit}>
           <input type="text" placeholder="Votre prénom" value={prenom} onChange={e => setPrenom(e.target.value)} required style={inputStyle} />
           <input type="tel" placeholder="Numéro WhatsApp (ex: 0555123456)" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} required style={inputStyle} />
-          <select value={wilaya} onChange={e => setWilaya(e.target.value)} required style={{ ...inputStyle, color: wilaya ? OFF_WHITE : MUTED }}>
-            <option value="" disabled>Votre wilaya</option>
-            {WILAYAS.map(w => <option key={w} value={w} style={{ background: BG, color: OFF_WHITE }}>{w}</option>)}
-          </select>
-          <select value={couleur} onChange={e => setCouleur(e.target.value)} required style={{ ...inputStyle, color: couleur ? OFF_WHITE : MUTED, marginBottom: 20 }}>
-            <option value="" disabled>Couleur de votre casque</option>
-            {COULEURS.map(c => <option key={c} value={c} style={{ background: BG, color: OFF_WHITE }}>{c}</option>)}
-          </select>
+          <SelectField value={wilaya} onChange={setWilaya} placeholder="Votre wilaya" options={WILAYAS} />
+          <SelectField value={couleur} onChange={setCouleur} placeholder="Couleur de votre casque" options={COULEURS} />
 
-          {error && <p style={{ fontSize: 13, color: "#EF4444", marginBottom: 12 }}>{error}</p>}
+          {error && <p style={{ fontSize: 13, color: "#EF4444", marginBottom: 12, marginTop: 4 }}>{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
             style={{
               width: "100%",
-              background: EMERALD,
-              color: "#fff",
-              border: "none",
-              borderRadius: 16,
-              padding: "16px 18px",
+              background: BG,
+              color: loading ? MUTED : EMERALD,
+              border: `1px solid rgba(16,185,129,0.3)`,
+              borderRadius: 14,
+              padding: "15px 18px",
               fontSize: 15,
               fontWeight: 700,
-              letterSpacing: 0.5,
+              letterSpacing: 0.3,
               cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1,
-              boxShadow: "0 4px 24px rgba(16,185,129,0.35), 0 1px 0 rgba(255,255,255,0.1) inset",
+              marginTop: 8,
+              boxShadow: `-4px -4px 8px ${SHADOW_LIGHT}, 4px 4px 8px ${SHADOW_DARK}`,
+              transition: "opacity 0.2s",
             }}
           >
             {loading ? "Inscription..." : "Je rejoins LIVRA 🚀"}
