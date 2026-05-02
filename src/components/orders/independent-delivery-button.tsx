@@ -19,7 +19,7 @@ export function IndependentDeliveryButton({ orderId, driverName, driverPhone }: 
 
   const isAssigned = !!driverName && !!driverPhone;
 
-  const qrUrl = `https://golivra.app/livreur/rejoindre?order=${orderId}`;
+  const qrUrl = `https://livra-app-dz-26.vercel.app/livreur/rejoindre?order=${orderId}`;
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}&bgcolor=1a1b1f&color=F5F0E8&margin=10`;
 
   if (isAssigned) {
