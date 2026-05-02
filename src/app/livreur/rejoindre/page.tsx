@@ -56,7 +56,6 @@ function SelectField({ value, onChange, placeholder, options }: {
           <option key={o} value={o} style={{ background: "#25262b", color: OFF_WHITE }}>{o}</option>
         ))}
       </select>
-      {/* Chevron custom */}
       <div style={{
         position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
         pointerEvents: "none", color: MUTED, fontSize: 10,
@@ -98,6 +97,12 @@ function Form() {
           .from("orders")
           .update({ independent_driver_name: prenom, independent_driver_phone: whatsapp, status: "shipped" })
           .eq("id", orderId);
+
+        await fetch(`/api/orders/${orderId}/driver-notify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ driverName: prenom }),
+        });
       }
 
       router.push(`/livreur/${data.id}`);
@@ -140,7 +145,6 @@ function Form() {
               cursor: loading ? "not-allowed" : "pointer",
               marginTop: 8,
               boxShadow: `-4px -4px 8px ${SHADOW_LIGHT}, 4px 4px 8px ${SHADOW_DARK}`,
-              transition: "opacity 0.2s",
             }}
           >
             {loading ? "Inscription..." : "Je rejoins LIVRA 🚀"}
