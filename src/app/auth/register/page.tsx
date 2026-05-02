@@ -48,7 +48,7 @@ export default function RegisterPage() {
           store_name: storeName,
         });
       }
-      router.push("/dashboard");
+      router.push("/auth/verify-email");
     }
     setLoading(false);
   }
