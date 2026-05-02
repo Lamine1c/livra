@@ -8,6 +8,7 @@ import { TrackingTimeline } from "@/components/orders/tracking-timeline";
 import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { YalidineButton } from "@/components/orders/yalidine-button";
 import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
+import { IndependentDeliveryButton } from "@/components/orders/independent-delivery-button";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -77,6 +78,21 @@ export default async function OrderDetailPage({
               />
             </div>
           )}
+
+          {/* Livraison indépendante */}
+          <div style={sectionCard}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: OFF_WHITE, marginBottom: 4 }}>
+              Livraison indépendante
+            </h2>
+            <p style={{ fontSize: 12, color: MUTED, marginBottom: 16 }}>
+              Pour les livraisons en wilaya avec un livreur de votre choix.
+            </p>
+            <IndependentDeliveryButton
+              orderId={o.id}
+              driverName={o.independent_driver_name}
+              driverPhone={o.independent_driver_phone}
+            />
+          </div>
 
           {/* Yalidine */}
           <div style={sectionCard}>

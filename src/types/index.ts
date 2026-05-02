@@ -70,6 +70,8 @@ export interface Order {
   otp_code: string | null;
   otp_expires_at: string | null;
   otp_verified_at: string | null;
+  independent_driver_name: string | null;
+  independent_driver_phone: string | null;
   created_at: string;
   updated_at: string;
   client?: Client;
