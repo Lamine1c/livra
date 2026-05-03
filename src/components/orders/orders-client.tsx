@@ -56,6 +56,7 @@ const FILTERS: { label: string; value: string }[] = [
   { label: "En cours",   value: "shipped" },  // covers processing+shipped
   { label: "Livrées",    value: "delivered" },
   { label: "Annulées",   value: "cancelled" },
+  { label: "Retournées", value: "returned" },
 ];
 
 interface OrdersClientProps {
