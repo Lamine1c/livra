@@ -72,6 +72,11 @@ export interface Order {
   otp_verified_at: string | null;
   independent_driver_name: string | null;
   independent_driver_phone: string | null;
+  delivery_mode: "moto_perso" | "yalidine" | null;
+  qr_token: string | null;
+  driver_id: string | null;
+  picked_up_at: string | null;
+  delivered_at: string | null;
   created_at: string;
   updated_at: string;
   client?: Client;

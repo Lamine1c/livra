@@ -9,6 +9,7 @@ import { OtpVerifyWidget } from "@/components/orders/otp-verify-widget";
 import { YalidineButton } from "@/components/orders/yalidine-button";
 import { ManualTrackingForm } from "@/components/orders/manual-tracking-form";
 import { IndependentDeliveryButton } from "@/components/orders/independent-delivery-button";
+import { DeliveryModeSection } from "@/components/orders/delivery-mode-section";
 import { formatCurrency, formatDate, WILAYAS } from "@/lib/utils";
 import { Order } from "@/types";
 
@@ -61,6 +62,13 @@ export default async function OrderDetailPage({
           </div>
 
 
+
+          {/* Choix mode de livraison + QR smart */}
+          <DeliveryModeSection
+            orderId={o.id}
+            deliveryMode={o.delivery_mode ?? null}
+            qrToken={o.qr_token ?? null}
+          />
 
           {/* OTP */}
           {!o.otp_verified_at && o.status === "pending" && o.client && (

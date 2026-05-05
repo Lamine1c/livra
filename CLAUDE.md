@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Variables d'environnement critiques
+
+- **QR_SIGNING_SECRET** : secret HMAC pour signer les tokens QR smart. Avant tout deploy Vercel, ajouter une valeur aléatoire de 32+ caractères (`openssl rand -hex 32`). Sans cette variable, le build passe mais l'API `/api/scan` et `/api/orders/[id]/generate-qr` throwent en runtime.
+
 ## Commands
 
 ```bash
