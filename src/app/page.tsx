@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Package, ShoppingCart, Users, BarChart3, ArrowRight } from "lucide-react";
 
 const features = [
@@ -32,19 +31,14 @@ export default function HomePage() {
           <span className="text-lg sm:text-xl font-bold text-gray-900">LIVRA</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/auth/login"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 hidden xs:block sm:block"
-          >
+          {/* TODO: link to mobile app download or remove */}
+          <span className="text-sm font-medium text-gray-600 hidden xs:block sm:block">
             Connexion
-          </Link>
-          <Link
-            href="/auth/register"
-            className="rounded-lg bg-emerald-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 whitespace-nowrap"
-          >
-            <span className="sm:hidden">S'inscrire</span>
+          </span>
+          <span className="rounded-lg bg-emerald-600 px-3 sm:px-4 py-2 text-sm font-medium text-white whitespace-nowrap cursor-default">
+            <span className="sm:hidden">S&apos;inscrire</span>
             <span className="hidden sm:inline">Commencer gratuitement</span>
-          </Link>
+          </span>
         </div>
       </nav>
 
@@ -64,19 +58,14 @@ export default function HomePage() {
           Conçu pour les e-commerçants algériens, avec les 58 wilayas intégrées.
         </p>
         <div className="mt-8 sm:mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
-          <Link
-            href="/auth/register"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg hover:bg-emerald-700"
-          >
+          {/* TODO: link to mobile app download or remove */}
+          <span className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg cursor-default">
             Démarrer maintenant
             <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 hover:bg-gray-50"
-          >
+          </span>
+          <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 cursor-default">
             Se connecter
-          </Link>
+          </span>
         </div>
       </section>
 
