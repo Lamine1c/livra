@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createYalidineParcel } from "@/lib/yalidine";
 import { Order } from "@/types";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { generateBuyerToken } from "@/lib/qr-token";
+import { buyerTrackingYalidine } from "@/lib/whatsapp-templates";
 
 export async function POST(
   _req: NextRequest,
@@ -81,6 +84,26 @@ export async function POST(
     },
   });
   await posthog.shutdown();
+
+  // Notifier l'acheteur avec le lien de tracking (best-effort)
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("store_name, full_name")
+      .eq("id", user.id)
+      .single();
+
+    const vendorName = profile?.store_name ?? profile?.full_name ?? "votre vendeur";
+    const clientData = Array.isArray(order.client) ? order.client[0] : order.client;
+
+    if (clientData?.phone) {
+      const buyerToken = generateBuyerToken(order.id);
+      const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
+      await sendWhatsAppNotification(clientData.phone, buyerTrackingYalidine(vendorName, trackingUrl));
+    }
+  } catch (err) {
+    console.error("[yalidine] buyer WA failed:", err);
+  }
 
   return NextResponse.json({ tracking });
 }

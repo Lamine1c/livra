@@ -1,6 +1,14 @@
 // ─── TEMPLATES MESSAGES WHATSAPP ──────────────────────────────
 // Centralisés ici pour faciliter les modifications + multilangue futur
 
+export function buyerTrackingMotoPerso(vendorName: string, url: string): string {
+  return `Bonjour, votre commande de ${vendorName} est en route ! Suivez votre livraison en direct : ${url}`;
+}
+
+export function buyerTrackingYalidine(vendorName: string, url: string): string {
+  return `Bonjour, votre commande de ${vendorName} a été expédiée via Yalidine. Suivez son statut : ${url}`;
+}
+
 export function vendorMessage(
   status: string,
   reference: string,
