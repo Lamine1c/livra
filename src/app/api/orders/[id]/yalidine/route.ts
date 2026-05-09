@@ -1,26 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createYalidineParcel } from "@/lib/yalidine";
 import { Order } from "@/types";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
 import { buyerTrackingYalidine } from "@/lib/whatsapp-templates";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  }
+  const { user, supabase, error: authError } = await getAuthenticatedUser(req);
+  if (!user || !supabase) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
@@ -37,7 +30,6 @@ export async function POST(
     return NextResponse.json({ error: "Un bon Yalidine existe déjà pour cette commande." }, { status: 400 });
   }
 
-  // Lire les credentials depuis le profil du vendeur
   const { data: profile } = await supabase
     .from("profiles")
     .select("yalidine_api_id, yalidine_api_token")
@@ -87,13 +79,13 @@ export async function POST(
 
   // Notifier l'acheteur avec le lien de tracking (best-effort)
   try {
-    const { data: profile } = await supabase
+    const { data: profileForNotif } = await supabase
       .from("profiles")
       .select("store_name, full_name")
       .eq("id", user.id)
       .single();
 
-    const vendorName = profile?.store_name ?? profile?.full_name ?? "votre vendeur";
+    const vendorName = profileForNotif?.store_name ?? profileForNotif?.full_name ?? "votre vendeur";
     const clientData = Array.isArray(order.client) ? order.client[0] : order.client;
 
     if (clientData?.phone) {
