@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -29,26 +29,8 @@ export default function LocateClient({
 
   const [confirmed, setConfirmed] = useState(initialConfirmed);
   const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const requestGeo = useCallback((map: mapboxgl.Map, marker: mapboxgl.Marker) => {
-    setGeoLoading(true);
-    setGeoError(false);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const center: [number, number] = [pos.coords.longitude, pos.coords.latitude];
-        map.flyTo({ center, zoom: 16, duration: 1200 });
-        marker.setLngLat(center);
-        setGeoLoading(false);
-      },
-      () => {
-        setGeoError(true);
-        setGeoLoading(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  }, []);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -78,10 +60,6 @@ export default function LocateClient({
       .addTo(map);
     markerRef.current = marker;
 
-    if (!initialConfirmed) {
-      map.on("load", () => requestGeo(map, marker));
-    }
-
     return () => {
       map.remove();
       mapRef.current = null;
@@ -94,10 +72,26 @@ export default function LocateClient({
   }, [confirmed]);
 
   function handleUseCurrentPosition() {
-    const map = mapRef.current;
-    const marker = markerRef.current;
-    if (!map || !marker) return;
-    requestGeo(map, marker);
+    if (!("geolocation" in navigator)) {
+      setGeoError("Géolocalisation non supportée par ce navigateur.");
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const center: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+        mapRef.current?.flyTo({ center, zoom: 16 });
+        markerRef.current?.setLngLat(center);
+        setGeoError(null);
+        setGeoLoading(false);
+      },
+      () => {
+        setGeoError("Géolocalisation refusée. Place le pin manuellement sur la carte.");
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   async function handleConfirm() {
@@ -185,7 +179,7 @@ export default function LocateClient({
         </div>
       )}
 
-      {/* Geo error */}
+      {/* Geo error — shown only after user clicks the button and geo fails */}
       {geoError && !geoLoading && !confirmed && (
         <div
           style={{
@@ -198,30 +192,11 @@ export default function LocateClient({
             borderRadius: 16,
             padding: "12px 16px",
             zIndex: 15,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
           }}
         >
-          <p style={{ color: "rgba(245,240,232,0.65)", fontSize: 13, margin: 0, flex: 1 }}>
-            Active la géolocalisation pour pinpointer ta position
+          <p style={{ color: "rgba(245,240,232,0.65)", fontSize: 13, margin: 0 }}>
+            {geoError}
           </p>
-          <button
-            onClick={handleUseCurrentPosition}
-            style={{
-              backgroundColor: "#076a4d",
-              color: "#F5F0E8",
-              border: "none",
-              borderRadius: 10,
-              padding: "6px 14px",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            Réessayer
-          </button>
         </div>
       )}
 
