@@ -33,6 +33,8 @@ export async function GET(req: NextRequest) {
       delivery_fee,
       notes,
       created_at,
+      buyer_lat,
+      buyer_lng,
       client:clients(full_name, phone, address, wilaya, commune),
       items:order_items(product_name, quantity, unit_price, total_price)
     `)

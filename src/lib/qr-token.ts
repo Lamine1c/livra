@@ -118,6 +118,64 @@ export function verifyBuyerToken(token: string): BuyerVerifyResult {
   return { valid: true, orderId };
 }
 
+// ── Locate token (scope sentinel = "__locate__", expiry = 7d) ──
+// Used by the buyer to confirm their GPS position via /locate?t=<token>
+
+const LOCATE_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function generateLocateToken(orderId: string): string {
+  const payload = `${orderId}|__locate__|${Date.now()}`;
+  const sig = crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
+  const encoded = Buffer.from(payload, "utf8").toString("base64url");
+  return `${encoded}.${sig}`;
+}
+
+export type LocateTokenVerifyResult =
+  | { valid: true; orderId: string }
+  | { valid: false; expired?: boolean };
+
+export function verifyLocateToken(token: string): LocateTokenVerifyResult {
+  if (!token || typeof token !== "string") return { valid: false };
+
+  const dot = token.lastIndexOf(".");
+  if (dot === -1) return { valid: false };
+
+  const encoded = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  let payload: string;
+  try {
+    payload = Buffer.from(encoded, "base64url").toString("utf8");
+  } catch {
+    return { valid: false };
+  }
+
+  let expectedSig: string;
+  try {
+    expectedSig = crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
+  } catch {
+    return { valid: false };
+  }
+
+  if (sig.length !== expectedSig.length) return { valid: false };
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+    return { valid: false };
+  }
+
+  const parts = payload.split("|");
+  if (parts.length !== 3) return { valid: false };
+  const [orderId, scope, tsStr] = parts;
+  if (scope !== "__locate__") return { valid: false };
+  const ts = parseInt(tsStr, 10);
+  if (!orderId || isNaN(ts)) return { valid: false };
+
+  if (Date.now() - ts > LOCATE_TOKEN_EXPIRY_MS) {
+    return { valid: false, expired: true };
+  }
+
+  return { valid: true, orderId };
+}
+
 // ── Driver token (scope sentinel = "__driver__", expiry = 24h) ──
 // Used by mobile to authenticate GPS position writes via /api/driver/position
 
