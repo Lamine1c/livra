@@ -27,18 +27,25 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Idempotent: if an active delivery already exists for this order, return it
+  // Idempotent: check for ANY existing delivery row regardless of status
   const { data: existing } = await supabase
     .from("deliveries")
     .select("id, driver_id")
     .eq("order_id", orderId)
-    .eq("status", "active")
     .maybeSingle();
 
   if (existing?.id) {
     if (existing.driver_id !== verified.driverId) {
-      return NextResponse.json({ error: "Order already assigned to another driver" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Cette commande est déjà prise par un autre motard" },
+        { status: 409 }
+      );
     }
+    // Reactivate existing row (covers in_progress, cancelled, etc.)
+    await supabase
+      .from("deliveries")
+      .update({ status: "active" })
+      .eq("id", existing.id);
     return NextResponse.json({ deliveryId: existing.id });
   }
 
