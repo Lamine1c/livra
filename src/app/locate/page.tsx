@@ -1,13 +1,6 @@
-import dynamic from "next/dynamic";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
-
-const LocateClient = dynamic(() => import("./locate-client"), {
-  ssr: false,
-  loading: () => (
-    <div style={{ backgroundColor: "#1a1b1f", minHeight: "100dvh" }} />
-  ),
-});
+import LocateClient from "./locate-client";
 
 export default async function LocatePage({
   searchParams,
