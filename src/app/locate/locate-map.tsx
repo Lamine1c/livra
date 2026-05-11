@@ -44,7 +44,7 @@ export default function LocateClient({
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/navigation-night-v1",
+      style: "mapbox://styles/mapbox/streets-v12",
       center: initCenter,
       zoom: initialConfirmed && buyerLat != null ? 15 : 11,
       attributionControl: false,
