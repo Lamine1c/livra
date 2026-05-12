@@ -27,7 +27,7 @@ const DEFAULT_CENTER: [number, number] = [3.042048, 36.737221];
 
 function resolveStatusLabel(orderStatus: string, deliveryStatus: string | null): string {
   if (orderStatus === "delivered" || deliveryStatus === "completed") return "Livré";
-  if (deliveryStatus === "in_progress") return "En route vers vous";
+  if (deliveryStatus === "active") return "En route vers vous";
   return "En attente";
 }
 
