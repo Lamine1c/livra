@@ -151,7 +151,7 @@ export default function LocateClient({
             📍 Confirme ta position
           </p>
           <p style={{ color: "rgba(245,240,232,0.6)", fontSize: 13, margin: "4px 0 0" }}>
-            Notre motard te trouve sans appeler ✅
+            Notre livreur te trouve sans appeler ✅
           </p>
           <p style={{ color: "rgba(245,240,232,0.35)", fontSize: 11, margin: "4px 0 0" }}>
             {vendorName} · {orderNumber}
@@ -269,7 +269,7 @@ export default function LocateClient({
               }}
             >
               <p style={{ color: "#F5F0E8", fontSize: 16, fontWeight: 700, margin: 0 }}>
-                ✅ Position enregistrée ! Tu peux fermer cette page.
+                ✅ Localisation enregistrée ! Tu peux fermer cette page.
               </p>
             </div>
             <button

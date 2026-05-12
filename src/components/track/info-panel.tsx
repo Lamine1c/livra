@@ -73,7 +73,7 @@ export default function InfoPanel({
           }}
         >
           <span>📞</span>
-          Appeler le motard
+          Appeler le livreur
         </a>
       )}
 

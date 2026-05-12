@@ -49,9 +49,10 @@ export default function MotoPersoTracker({
   const [hasPosition, setHasPosition] = useState(
     initialDelivery?.lastLat != null && initialDelivery?.lastLng != null
   );
+  const [liveOrderStatus, setLiveOrderStatus] = useState<string>(orderStatus);
 
-  const isDelivered = orderStatus === "delivered" || deliveryStatus === "completed";
-  const statusLabel = resolveStatusLabel(orderStatus, deliveryStatus);
+  const isDelivered = liveOrderStatus === "delivered" || deliveryStatus === "completed";
+  const statusLabel = resolveStatusLabel(liveOrderStatus, deliveryStatus);
 
   // Initialise Mapbox once on mount
   useEffect(() => {
@@ -138,6 +139,28 @@ export default function MotoPersoTracker({
     };
   }, [initialDelivery?.id, orderId, isDelivered]);
 
+  // Supabase Realtime — subscribe to order status (delivered overlay)
+  useEffect(() => {
+    if (isDelivered) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+        (payload) => {
+          const row = payload.new as { status?: string };
+          if (row.status) setLiveOrderStatus(row.status);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderId, isDelivered]);
+
   return (
     <div
       style={{
@@ -202,7 +225,7 @@ export default function MotoPersoTracker({
             }}
           >
             <p style={{ color: "rgba(245, 240, 232, 0.65)", fontSize: 13, margin: 0 }}>
-              Position du motard non disponible
+              Localisation du livreur non disponible
             </p>
           </div>
         )}

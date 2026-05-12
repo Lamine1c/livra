@@ -42,12 +42,20 @@ export async function POST(
   const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
   const message = `🛵 Votre livreur *${driverName}* est en route !\n\n${buyerTrackingMotoPerso(vendorName, trackingUrl)}`;
 
+  const waResult = await sendWhatsAppNotification(client.phone, message);
+
+  if (!waResult.success) {
+    console.error("[driver-notify] WhatsApp send failed:", waResult.error);
+    return NextResponse.json(
+      { error: "Impossible d'envoyer le message WhatsApp au client", detail: waResult.error },
+      { status: 502 }
+    );
+  }
+
   await supabase
     .from("orders")
     .update({ picked_up_at: new Date().toISOString(), status: "processing" })
     .eq("id", id);
-
-  await sendWhatsAppNotification(client.phone, message);
 
   return NextResponse.json({ success: true });
 }
