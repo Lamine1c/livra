@@ -1,6 +1,10 @@
 // ─── TEMPLATES MESSAGES WHATSAPP ──────────────────────────────
 // Centralisés ici pour faciliter les modifications + multilangue futur
 
+export function deliveryCompletedTemplate(vendorName: string): string {
+  return `✅ Votre commande de ${vendorName} a bien été livrée.\n\nMerci d'avoir choisi LIVRA 🚀`;
+}
+
 export function buyerTrackingMotoPerso(vendorName: string, url: string): string {
   return `Bonjour, votre commande de ${vendorName} est en route ! Suivez votre livraison en direct : ${url}`;
 }

@@ -95,6 +95,8 @@ export default function MotoPersoTracker({
     const supabase = createClient();
     const deliveryId = initialDelivery.id;
 
+    console.log("[MotoTracker] subscribing to delivery:", deliveryId);
+
     const channel = supabase
       .channel(`delivery-pos-${orderId}-${deliveryId}`)
       .on(
@@ -106,6 +108,7 @@ export default function MotoPersoTracker({
           filter: `id=eq.${deliveryId}`,
         },
         (payload) => {
+          console.log("[MotoTracker] delivery update:", payload.new);
           const row = payload.new as {
             last_lat?: number | null;
             last_lng?: number | null;
@@ -132,7 +135,9 @@ export default function MotoPersoTracker({
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[MotoTracker] delivery sub status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -143,6 +148,8 @@ export default function MotoPersoTracker({
   useEffect(() => {
     if (isDelivered) return;
 
+    console.log("[MotoTracker] subscribing to order status:", orderId);
+
     const supabase = createClient();
     const channel = supabase
       .channel(`order-status-${orderId}`)
@@ -150,11 +157,14 @@ export default function MotoPersoTracker({
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
         (payload) => {
+          console.log("[MotoTracker] order update:", payload.new);
           const row = payload.new as { status?: string };
           if (row.status) setLiveOrderStatus(row.status);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[MotoTracker] order sub status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

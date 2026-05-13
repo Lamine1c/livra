@@ -121,12 +121,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Update order: mark as picked up
+  // Update order: driver has started — "shipped" = Prise en charge
   await supabase
     .from("orders")
     .update({
       picked_up_at: new Date().toISOString(),
-      status: "processing",
+      status: "shipped",
       driver_id: verified.driverId,
     })
     .eq("id", orderId);

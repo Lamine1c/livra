@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { deliveryCompletedTemplate } from "@/lib/whatsapp-templates";
 
 export async function POST(req: NextRequest) {
   let body: { deviceToken?: unknown; deliveryId?: unknown; orderId?: unknown };
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Order mismatch" }, { status: 400 });
   }
 
-  // Idempotent: already completed
+  // Idempotent: already completed — WA was already sent on first call
   if (delivery.status === "completed") {
     return NextResponse.json({ ok: true, completedAt: null });
   }
@@ -78,6 +80,38 @@ export async function POST(req: NextRequest) {
       { error: "Delivery marked but order status failed to update" },
       { status: 500 }
     );
+  }
+
+  // Fetch order + client + vendor for WA notification
+  const { data: order } = await supabase
+    .from("orders")
+    .select("user_id, client:clients(phone, full_name)")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) {
+    console.error("[complete-delivery] order not found for WA:", orderId);
+  } else {
+    const client = order.client
+      ? (Array.isArray(order.client) ? order.client[0] : order.client)
+      : null;
+
+    const { data: vendor } = await supabase
+      .from("profiles")
+      .select("store_name, full_name")
+      .eq("id", order.user_id)
+      .single();
+    const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
+
+    if (client?.phone) {
+      const message = deliveryCompletedTemplate(vendorName);
+      const waResult = await sendWhatsAppNotification(client.phone, message);
+      if (!waResult.success) {
+        console.error("[complete-delivery] WhatsApp send failed:", waResult.error);
+      }
+    } else {
+      console.error("[complete-delivery] client phone missing, WA skipped");
+    }
   }
 
   return NextResponse.json({ ok: true, completedAt });

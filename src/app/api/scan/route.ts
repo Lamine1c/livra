@@ -67,6 +67,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Advance order status to "processing" (En traitement) on QR scan.
+  // Only moves forward — won't downgrade an order already in progress.
+  await supabase
+    .from("orders")
+    .update({ status: "processing" })
+    .eq("id", result.orderId)
+    .in("status", ["pending", "confirmed"]);
+
   return NextResponse.json({
     ok: true,
     orderId: order.id,
