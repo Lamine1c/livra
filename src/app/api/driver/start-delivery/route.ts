@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { verifyDriverToken } from "@/lib/qr-token";
+import { verifyDriverToken, generateBuyerToken } from "@/lib/qr-token";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { buyerTrackingMotoPerso } from "@/lib/whatsapp-templates";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -27,12 +29,30 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Idempotent: check for ANY existing delivery row regardless of status
+  // Idempotence: if picked_up_at is already set, the delivery was already started + WA sent
+  const { data: orderCheck } = await supabase
+    .from("orders")
+    .select("picked_up_at")
+    .eq("id", orderId)
+    .single();
+
+  if (orderCheck?.picked_up_at) {
+    const { data: existingDelivery } = await supabase
+      .from("deliveries")
+      .select("id")
+      .eq("order_id", orderId)
+      .maybeSingle();
+    return NextResponse.json({ deliveryId: existingDelivery?.id, alreadyStarted: true });
+  }
+
+  // Check for existing delivery row (conflict or crash recovery)
   const { data: existing } = await supabase
     .from("deliveries")
     .select("id, driver_id")
     .eq("order_id", orderId)
     .maybeSingle();
+
+  let deliveryId: string;
 
   if (existing?.id) {
     if (existing.driver_id !== verified.driverId) {
@@ -41,23 +61,75 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
-    // Reactivate existing row (covers in_progress, cancelled, etc.)
     await supabase
       .from("deliveries")
       .update({ status: "active" })
       .eq("id", existing.id);
-    return NextResponse.json({ deliveryId: existing.id });
+    deliveryId = existing.id;
+  } else {
+    const { data: delivery, error } = await supabase
+      .from("deliveries")
+      .insert({ order_id: orderId, driver_id: verified.driverId })
+      .select("id")
+      .single();
+
+    if (error || !delivery) {
+      return NextResponse.json({ error: error?.message ?? "Insert failed" }, { status: 500 });
+    }
+    deliveryId = delivery.id;
   }
 
-  const { data: delivery, error } = await supabase
-    .from("deliveries")
-    .insert({ order_id: orderId, driver_id: verified.driverId })
-    .select("id")
+  // Fetch driver prenom
+  const { data: driver } = await supabase
+    .from("drivers")
+    .select("prenom")
+    .eq("id", verified.driverId)
+    .single();
+  const driverPrenom = driver?.prenom ?? "votre livreur";
+
+  // Fetch order + client + vendor info
+  const { data: order } = await supabase
+    .from("orders")
+    .select("id, user_id, client:clients(phone, full_name)")
+    .eq("id", orderId)
     .single();
 
-  if (error || !delivery) {
-    return NextResponse.json({ error: error?.message ?? "Insert failed" }, { status: 500 });
+  if (!order) {
+    console.error("[start-delivery] order not found:", orderId);
+  } else {
+    const client = order.client
+      ? (Array.isArray(order.client) ? order.client[0] : order.client)
+      : null;
+
+    const { data: vendor } = await supabase
+      .from("profiles")
+      .select("store_name, full_name")
+      .eq("id", order.user_id)
+      .single();
+    const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
+
+    if (client?.phone) {
+      const buyerToken = generateBuyerToken(orderId);
+      const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
+      const message = `🛵 Votre livreur *${driverPrenom}* est en route !\n\n${buyerTrackingMotoPerso(vendorName, trackingUrl)}`;
+      const waResult = await sendWhatsAppNotification(client.phone, message);
+      if (!waResult.success) {
+        console.error("[start-delivery] WhatsApp send failed:", waResult.error);
+      }
+    } else {
+      console.error("[start-delivery] client phone missing, WA skipped");
+    }
   }
 
-  return NextResponse.json({ deliveryId: delivery.id });
+  // Update order: mark as picked up
+  await supabase
+    .from("orders")
+    .update({
+      picked_up_at: new Date().toISOString(),
+      status: "processing",
+      driver_id: verified.driverId,
+    })
+    .eq("id", orderId);
+
+  return NextResponse.json({ deliveryId });
 }
