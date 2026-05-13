@@ -75,10 +75,21 @@ export async function GET(req: NextRequest) {
     .eq("id", result.orderId)
     .in("status", ["pending", "confirmed"]);
 
+  // Flatten client fields so the mobile Order type (buyer_name, buyer_phone, etc.) is populated.
+  const client = order.client
+    ? (Array.isArray(order.client) ? order.client[0] : order.client)
+    : null;
+
   return NextResponse.json({
     ok: true,
     orderId: order.id,
-    order,
+    order: {
+      ...order,
+      buyer_name: client?.full_name ?? null,
+      buyer_phone: client?.phone ?? null,
+      buyer_address: client?.address ?? null,
+      buyer_wilaya: client?.wilaya ?? null,
+    },
     vendorName: vendor?.store_name ?? vendor?.full_name ?? "Vendeur LIVRA",
     expiresIn: 24 * 3600,
     deviceToken,
