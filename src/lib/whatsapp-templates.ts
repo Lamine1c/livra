@@ -5,6 +5,10 @@ export function deliveryCompletedTemplate(vendorName: string): string {
   return `✅ Votre commande de ${vendorName} a bien été livrée.\n\nMerci d'avoir choisi LIVRA 🚀`;
 }
 
+export function locatePinpointTemplate(vendorName: string, locateUrl: string): string {
+  return `📍 Confirmez votre position pour votre commande chez ${vendorName}.\n\nCliquez ici (1 tap) : ${locateUrl}\n\nVotre livreur vous trouvera sans appel ni adresse à taper.`;
+}
+
 export function buyerTrackingMotoPerso(vendorName: string, url: string): string {
   return `Bonjour, votre commande de ${vendorName} est en route ! Suivez votre livraison en direct : ${url}`;
 }
