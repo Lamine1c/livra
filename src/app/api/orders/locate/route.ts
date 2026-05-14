@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
+import { sendExpoPush } from "@/lib/expo-push";
 
 export async function GET(req: NextRequest) {
   const t = req.nextUrl.searchParams.get("t");
@@ -73,6 +74,15 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
+  // Idempotence check: fetch order before update to detect first-time location confirmation
+  const { data: orderBefore } = await supabase
+    .from("orders")
+    .select("buyer_lat, user_id")
+    .eq("id", result.orderId)
+    .single();
+
+  const wasAlreadyLocated = orderBefore?.buyer_lat != null;
+
   const { error } = await supabase
     .from("orders")
     .update({
@@ -84,6 +94,27 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: "Erreur lors de l'enregistrement" }, { status: 500 });
+  }
+
+  // Push notif to vendor — only on first location confirmation
+  if (!wasAlreadyLocated && orderBefore?.user_id) {
+    const { data: vendor } = await supabase
+      .from("profiles")
+      .select("expo_push_token")
+      .eq("id", orderBefore.user_id)
+      .single();
+
+    if (vendor?.expo_push_token) {
+      const pushResult = await sendExpoPush(
+        vendor.expo_push_token,
+        "📍 Position client confirmée",
+        `Votre client a partagé sa position pour la commande #${result.orderId.slice(0, 8).toUpperCase()}.`,
+        { orderId: result.orderId, type: "buyer_location_confirmed" }
+      );
+      if (!pushResult.success) {
+        console.error("[locate] expo push failed:", pushResult.error);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });

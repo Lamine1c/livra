@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken, generateBuyerToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { buyerTrackingMotoPerso } from "@/lib/whatsapp-templates";
+import { sendExpoPush } from "@/lib/expo-push";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -130,6 +131,27 @@ export async function POST(req: NextRequest) {
       driver_id: verified.driverId,
     })
     .eq("id", orderId);
+
+  // Push notif to vendor — delivery started (idempotence already ensured by picked_up_at check above)
+  if (order?.user_id) {
+    const { data: vendorPush } = await supabase
+      .from("profiles")
+      .select("expo_push_token")
+      .eq("id", order.user_id)
+      .single();
+
+    if (vendorPush?.expo_push_token) {
+      const pushResult = await sendExpoPush(
+        vendorPush.expo_push_token,
+        "🛵 Livreur en route",
+        `${driverPrenom} a démarré la livraison de la commande #${orderId.slice(0, 8).toUpperCase()}.`,
+        { orderId, type: "delivery_started" }
+      );
+      if (!pushResult.success) {
+        console.error("[start-delivery] expo push failed:", pushResult.error);
+      }
+    }
+  }
 
   return NextResponse.json({ deliveryId });
 }

@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { deliveryCompletedTemplate } from "@/lib/whatsapp-templates";
+import { sendExpoPush } from "@/lib/expo-push";
 
 export async function POST(req: NextRequest) {
   let body: { deviceToken?: unknown; deliveryId?: unknown; orderId?: unknown };
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("store_name, full_name")
+      .select("store_name, full_name, expo_push_token")
       .eq("id", order.user_id)
       .single();
     const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
@@ -111,6 +112,19 @@ export async function POST(req: NextRequest) {
       }
     } else {
       console.error("[complete-delivery] client phone missing, WA skipped");
+    }
+
+    // Push notif to vendor — delivery completed
+    if (vendor?.expo_push_token) {
+      const pushResult = await sendExpoPush(
+        vendor.expo_push_token,
+        "✅ Commande livrée",
+        `La commande #${orderId.slice(0, 8).toUpperCase()} a été livrée avec succès !`,
+        { orderId, type: "delivery_completed" }
+      );
+      if (!pushResult.success) {
+        console.error("[complete-delivery] expo push failed:", pushResult.error);
+      }
     }
   }
 
