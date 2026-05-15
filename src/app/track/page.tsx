@@ -74,6 +74,7 @@ export default async function TrackPage({
       }}
       vendorName={vendorName}
       delivery={delivery}
+      token={t}
     />
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import InfoPanel from "./info-panel";
 import "mapbox-gl/dist/mapbox-gl.css";
 import mapboxgl from "mapbox-gl";
@@ -14,12 +13,12 @@ type InitialDelivery = {
 } | null;
 
 type MotoPersoTrackerProps = {
-  orderId: string;
   orderStatus: string;
   driverName: string | null;
   driverPhone: string | null;
   vendorName: string;
   initialDelivery: InitialDelivery;
+  token: string;
 };
 
 // Default center: Algiers
@@ -32,12 +31,12 @@ function resolveStatusLabel(orderStatus: string, deliveryStatus: string | null):
 }
 
 export default function MotoPersoTracker({
-  orderId,
   orderStatus,
   driverName,
   driverPhone,
   vendorName,
   initialDelivery,
+  token,
 }: MotoPersoTrackerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -50,6 +49,7 @@ export default function MotoPersoTracker({
     initialDelivery?.lastLat != null && initialDelivery?.lastLng != null
   );
   const [liveOrderStatus, setLiveOrderStatus] = useState<string>(orderStatus);
+  const [deliveredAt, setDeliveredAt] = useState<string | null>(null);
 
   const isDelivered = liveOrderStatus === "delivered" || deliveryStatus === "completed";
   const statusLabel = resolveStatusLabel(liveOrderStatus, deliveryStatus);
@@ -88,88 +88,61 @@ export default function MotoPersoTracker({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Supabase Realtime — subscribe to delivery position updates
+  // Poll every 5s — Realtime is blocked by RLS for anon buyer client
   useEffect(() => {
-    if (!initialDelivery?.id || isDelivered) return;
+    if (isDelivered) return;
 
-    const supabase = createClient();
-    const deliveryId = initialDelivery.id;
+    const startedAt = Date.now();
+    const MAX_DURATION_MS = 60 * 60 * 1000; // 1h absolute timeout
 
-    console.log("[MotoTracker] subscribing to delivery:", deliveryId);
+    const interval = setInterval(async () => {
+      if (Date.now() - startedAt > MAX_DURATION_MS) {
+        console.log("[MotoTracker] polling timeout reached");
+        clearInterval(interval);
+        return;
+      }
 
-    const channel = supabase
-      .channel(`delivery-pos-${orderId}-${deliveryId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "deliveries",
-          filter: `id=eq.${deliveryId}`,
-        },
-        (payload) => {
-          console.log("[MotoTracker] delivery update:", payload.new);
-          const row = payload.new as {
-            last_lat?: number | null;
-            last_lng?: number | null;
-            status?: string;
-          };
+      try {
+        const res = await fetch(`/api/track/status?t=${token}`);
+        if (!res.ok) {
+          console.error("[MotoTracker] poll failed", res.status);
+          return;
+        }
+        const data = await res.json() as {
+          orderStatus: string;
+          deliveredAt: string | null;
+          delivery: { lastLat: number | null; lastLng: number | null; deliveryStatus: string } | null;
+        };
 
-          if (row.status) setDeliveryStatus(row.status);
+        if (data.orderStatus) setLiveOrderStatus(data.orderStatus);
+        if (data.deliveredAt) setDeliveredAt(data.deliveredAt);
+        if (data.delivery?.deliveryStatus) setDeliveryStatus(data.delivery.deliveryStatus);
 
-          if (row.last_lat != null && row.last_lng != null) {
-            const pos: [number, number] = [row.last_lng, row.last_lat];
-            setHasPosition(true);
-
-            const map = mapRef.current;
-            if (!map) return;
-
+        if (data.delivery?.lastLat != null && data.delivery?.lastLng != null) {
+          const pos: [number, number] = [data.delivery.lastLng, data.delivery.lastLat];
+          setHasPosition(true);
+          const map = mapRef.current;
+          if (map) {
             if (markerRef.current) {
               markerRef.current.setLngLat(pos);
             } else {
               const el = createMarkerElement();
               markerRef.current = new mapboxgl.Marker(el).setLngLat(pos).addTo(map);
             }
-
             map.flyTo({ center: pos, duration: 1500 });
           }
         }
-      )
-      .subscribe((status) => {
-        console.log("[MotoTracker] delivery sub status:", status);
-      });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [initialDelivery?.id, orderId, isDelivered]);
-
-  // Supabase Realtime — subscribe to order status (delivered overlay)
-  useEffect(() => {
-    if (isDelivered) return;
-
-    console.log("[MotoTracker] subscribing to order status:", orderId);
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`order-status-${orderId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
-        (payload) => {
-          console.log("[MotoTracker] order update:", payload.new);
-          const row = payload.new as { status?: string };
-          if (row.status) setLiveOrderStatus(row.status);
+        if (data.orderStatus === "delivered" || data.orderStatus === "cancelled") {
+          clearInterval(interval);
         }
-      )
-      .subscribe((status) => {
-        console.log("[MotoTracker] order sub status:", status);
-      });
+      } catch (e) {
+        console.error("[MotoTracker] poll error", e);
+      }
+    }, 5000);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [orderId, isDelivered]);
+    return () => clearInterval(interval);
+  }, [token, isDelivered]);
 
   return (
     <div
@@ -213,6 +186,14 @@ export default function MotoPersoTracker({
             >
               Commande livrée
             </p>
+            {deliveredAt && (
+              <p style={{ color: "rgba(245, 240, 232, 0.7)", fontSize: 14, marginTop: 6 }}>
+                {new Date(deliveredAt).toLocaleTimeString("fr-DZ", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
             <p style={{ color: "rgba(245, 240, 232, 0.7)", fontSize: 15, marginTop: 8 }}>
               Merci !
             </p>

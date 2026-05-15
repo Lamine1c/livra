@@ -45,18 +45,19 @@ type TrackClientProps = {
   order: OrderData;
   vendorName: string;
   delivery: DeliveryData;
+  token: string;
 };
 
-export default function TrackClient({ order, vendorName, delivery }: TrackClientProps) {
+export default function TrackClient({ order, vendorName, delivery, token }: TrackClientProps) {
   if (order.deliveryMode === "moto_perso") {
     return (
       <MotoPersoTracker
-        orderId={order.id}
         orderStatus={order.status}
         driverName={order.driverName}
         driverPhone={order.driverPhone}
         vendorName={vendorName}
         initialDelivery={delivery}
+        token={token}
       />
     );
   }
