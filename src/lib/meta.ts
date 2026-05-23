@@ -86,9 +86,8 @@ export async function getLeadData(
   const firstName = find("first_name", "prenom", "prénom");
   const lastName = find("last_name", "nom");
   const fullName =
-    find("full_name", "nom_complet") ??
-    [firstName, lastName].filter(Boolean).join(" ") ||
-    null;
+  find("full_name", "nom_complet") ??
+  ([firstName, lastName].filter(Boolean).join(" ") || null);
 
   return {
     name: fullName,
