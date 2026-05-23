@@ -63,6 +63,7 @@ export async function GET(req: NextRequest) {
       .eq("device_id", deviceId)
       .maybeSingle();
     if (driver?.id) {
+      void supabase.from("drivers").update({ last_scan_at: new Date().toISOString() }).eq("id", driver.id);
       deviceToken = generateDriverToken(driver.id as string);
     }
   }
