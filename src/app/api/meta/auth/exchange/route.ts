@@ -10,7 +10,7 @@ import {
 
 // The redirect URI must match exactly what the mobile app sends.
 // Scheme "livramobile" is declared in app.json.
-const REDIRECT_URI = "livramobile://oauth-meta";
+const REDIRECT_URI = "https://golivra.app/oauth/meta-callback";
 
 export async function POST(req: NextRequest) {
   const userId = await verifySupabaseJwt(req.headers.get("authorization"));
