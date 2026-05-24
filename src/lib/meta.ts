@@ -37,6 +37,23 @@ export async function exchangeShortToken(
   return res.data as { access_token: string; token_type: string };
 }
 
+// PKCE variant — used by the mobile OAuth flow (expo-auth-session)
+export async function exchangeShortTokenPKCE(
+  code: string,
+  redirectUri: string,
+  codeVerifier: string
+): Promise<{ access_token: string; token_type: string }> {
+  const res = await graphFetch("oauth/access_token", {
+    client_id: process.env.META_APP_ID!,
+    client_secret: process.env.META_APP_SECRET!,
+    redirect_uri: redirectUri,
+    code,
+    code_verifier: codeVerifier,
+  });
+  if (!res.ok) throw new Error(`PKCE token exchange failed: ${JSON.stringify(res.data)}`);
+  return res.data as { access_token: string; token_type: string };
+}
+
 export async function exchangeLongLivedToken(
   shortToken: string
 ): Promise<{ access_token: string; expires_in: number }> {
@@ -95,6 +112,22 @@ export async function getLeadData(
     city: find("city", "ville", "wilaya"),
     raw: d,
   };
+}
+
+// Verifies a Supabase JWT from an Authorization: Bearer header.
+// Returns the user_id (UUID) if valid, null otherwise.
+export async function verifySupabaseJwt(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const jwt = authHeader.slice(7);
+  // createServiceClient can call auth.getUser() with an arbitrary JWT
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+  const { data: { user } } = await supabase.auth.getUser(jwt);
+  return user?.id ?? null;
 }
 
 export function verifyWebhookSignature(
