@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import {
-  exchangeShortTokenPKCE,
+  exchangeShortToken,
   exchangeLongLivedToken,
   getUserPages,
   graphFetch,
@@ -18,20 +18,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { code?: unknown; code_verifier?: unknown };
+  let body: { code?: unknown };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { code, code_verifier } = body;
-  if (typeof code !== "string" || !code || typeof code_verifier !== "string" || !code_verifier) {
-    return NextResponse.json({ error: "Missing code or code_verifier" }, { status: 400 });
+  const { code } = body;
+  if (typeof code !== "string" || !code) {
+    return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
 
   try {
-    const short = await exchangeShortTokenPKCE(code, REDIRECT_URI, code_verifier);
+    const short = await exchangeShortToken(code, REDIRECT_URI);
     const long = await exchangeLongLivedToken(short.access_token);
 
     const meRes = await graphFetch("me", { fields: "id,name", access_token: long.access_token });

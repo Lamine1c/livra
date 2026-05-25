@@ -12,8 +12,7 @@ export default function MetaCallbackClient() {
     attempted.current = true;
 
     const params = searchParams.toString();
-    // --/ prefix tells Expo Router this is a pure deep link, not a route
-    const deepLink = `livramobile://--/oauth-meta${params ? `?${params}` : ""}`;
+    const deepLink = `livramobile://oauth-meta${params ? `?${params}` : ""}`;
 
     const timer = setTimeout(() => {
       window.location.href = deepLink;
@@ -23,7 +22,7 @@ export default function MetaCallbackClient() {
   }, [searchParams]);
 
   const params = searchParams.toString();
-  const deepLink = `livramobile://--/oauth-meta${params ? `?${params}` : ""}`;
+  const deepLink = `livramobile://oauth-meta${params ? `?${params}` : ""}`;
 
   return (
     <main
