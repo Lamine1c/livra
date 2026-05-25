@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { graphFetch } from "@/lib/meta";
+import { graphFetch, verifySupabaseJwt } from "@/lib/meta";
 
 type Params = { params: Promise<{ pageId: string }> };
 
@@ -20,11 +19,10 @@ async function getPageToken(userId: string, pageId: string): Promise<string | nu
 export async function POST(req: NextRequest, { params }: Params) {
   const { pageId } = await params;
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await verifySupabaseJwt(req.headers.get("authorization"));
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const pageToken = await getPageToken(session.user.id, pageId);
+  const pageToken = await getPageToken(userId, pageId);
   if (!pageToken) return NextResponse.json({ error: "Page not found" }, { status: 404 });
 
   const res = await graphFetch(
@@ -42,7 +40,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   await service
     .from("meta_page_subscriptions")
     .update({ active: true })
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .eq("page_id", pageId);
 
   return NextResponse.json({ success: true });
@@ -52,11 +50,10 @@ export async function POST(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const { pageId } = await params;
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await verifySupabaseJwt(req.headers.get("authorization"));
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const pageToken = await getPageToken(session.user.id, pageId);
+  const pageToken = await getPageToken(userId, pageId);
   if (!pageToken) return NextResponse.json({ error: "Page not found" }, { status: 404 });
 
   // Best-effort unsubscribe — Meta may already be unsubscribed; ignore errors
@@ -70,7 +67,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   await service
     .from("meta_page_subscriptions")
     .update({ active: false })
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .eq("page_id", pageId);
 
   return NextResponse.json({ success: true });
