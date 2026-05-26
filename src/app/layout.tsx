@@ -12,9 +12,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LIVRA — Gestion de commandes",
+  title: "LIVRA — L'OS de votre e-commerce",
   description:
-    "SaaS de gestion de commandes pour e-commerçants algériens. Suivez vos commandes, clients et livraisons avec les 58 wilayas intégrées.",
+    "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons. Pour les e-commerçants en Algérie et la diaspora.",
 };
 
 export default function RootLayout({
