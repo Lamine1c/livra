@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -23,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="h-full">
-      <body className={`${inter.className} h-full bg-gray-50 text-gray-900`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans h-full bg-gray-50 text-gray-900`}>
         {children}
       </body>
     </html>

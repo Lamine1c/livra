@@ -1,0 +1,61 @@
+import Link from "next/link";
+
+export default function Footer() {
+  return (
+    <footer
+      className="bg-deep"
+      style={{ borderTop: "var(--border-faint)" }}
+    >
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
+          {/* Brand */}
+          <div>
+            <p
+              className="text-ivoire font-medium tracking-widest text-sm mb-2"
+              style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
+            >
+              LIVRA
+            </p>
+            <p className="text-mist text-sm">
+              L&apos;OS de votre e-commerce.
+            </p>
+          </div>
+
+          {/* Links */}
+          <nav
+            className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-mist"
+            aria-label="Liens du pied de page"
+          >
+            <Link href="/blog" className="hover:text-ivoire transition-colors duration-200">
+              Blog
+            </Link>
+            <Link href="/privacy" className="hover:text-ivoire transition-colors duration-200">
+              Privacy
+            </Link>
+            <Link href="/cgu" className="hover:text-ivoire transition-colors duration-200">
+              CGU
+            </Link>
+            <a
+              href="mailto:hello@golivra.app"
+              className="hover:text-ivoire transition-colors duration-200"
+            >
+              Contact
+            </a>
+          </nav>
+        </div>
+
+        <div
+          className="mt-10 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          style={{ borderTop: "var(--border-faint)" }}
+        >
+          <p className="text-mist text-sm">
+            Conçu en Algérie. Hébergé en Europe.
+          </p>
+          <p className="text-mist text-xs">
+            &copy; 2026 LIVRA. Tous droits réservés.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
