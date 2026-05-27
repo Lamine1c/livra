@@ -120,7 +120,7 @@ export default function LandingPage() {
         <div className="px-6">
           <FadeIn>
             <p className="text-mist text-xl text-center pt-16 pb-0">
-              Voici comment LIVRA règle ça.
+              Voilà à quoi ressemble votre semaine.
             </p>
           </FadeIn>
           <CinemaMode />

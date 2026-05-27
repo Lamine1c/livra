@@ -1,17 +1,19 @@
 const ROW1 = [
-  "clients ma yredouch sur whatsapp",
-  "livreur perdu encore une fois",
-  "colis retourné encore",
-  "50 messages pour rien",
-  "Yalidine kayna problème",
+  "rani mkhrob, rani n'gérer f sbitar",
+  "Copier-coller Facebook vers Excel, rassi tbloqua",
+  "Klana l'retour, rani nkhdem ghir 3la jal les frais",
+  "Krahna men colis en instance",
+  "krahna had la jungle",
+  "Yalidine t'khallas fihom ghali",
 ];
 
 const ROW2 = [
-  "confirmatrice fasla",
-  "stock perdu walou",
-  "Excel 7bel ma3rftch n7assbo",
-  "lead Meta 200 da, walou yred",
-  "ma3rftch win rah colis dyali",
+  "Sl3a t93ad 15 jours bch t'rajja3li, t'mout",
+  "rassi tbloqua ya khawti",
+  "Meta takol f l'budget",
+  "Traba7 livreur, y'khssar m3ak client",
+  "rani n'fakar n'gla9 had la page",
+  "chb3t krah fi liyyam",
 ];
 
 function Track({ items, reverse }: { items: string[]; reverse?: boolean }) {

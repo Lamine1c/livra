@@ -1,44 +1,57 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MonitorSmartphone, Users, MapPin, Zap, Package, CheckCircle } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 
-const FRAMES = [
+type Frame = {
+  text: string[];
+  italic?: boolean;
+  isFinal?: boolean;
+};
+
+const FRAMES: Frame[] = [
   {
-    Icon: Zap,
-    step: "01",
-    title: "Lead Facebook reçu.",
-    body: "Votre pub tourne. Un client clique. Ses coordonnées arrivent dans LIVRA en temps réel — sans copier-coller, sans CSV.",
+    text: [
+      "Vous fermez votre boutique à 23h.",
+      "Vous rouvrez votre téléphone à 7h.",
+      "H24 connecté sur Messenger.",
+      "Tgoul tnakhdem f central téléphonique.",
+    ],
   },
   {
-    Icon: MonitorSmartphone,
-    step: "02",
-    title: "Commande créée en 10 secondes.",
-    body: "La confirmatrice voit le lead, confirme par appel, crée la commande directement dans le dashboard. Zéro Excel.",
+    text: [
+      "30 leads Meta hier.",
+      "25 ne répondront jamais.",
+      "5 vont vous dire « bch7al hada ? »",
+      "puis raccrocher.",
+    ],
   },
   {
-    Icon: Users,
-    step: "03",
-    title: "Dispatch au livreur.",
-    body: "LIVRA envoie la course au livreur disponible. Il reçoit l'adresse, l'itinéraire optimisé, le QR du colis.",
+    text: [
+      "Le tracking dit « en cours ».",
+      "Le livreur dit « dfa3to l'barah ».",
+      "Le client vous écrit « winraho l'colis ? ».",
+      "Wana rani f l'dlam.",
+    ],
   },
   {
-    Icon: MapPin,
-    step: "04",
-    title: "Le client voit son livreur.",
-    body: "Un lien WhatsApp automatique. Le client suit son livreur en temps réel sur une carte. Plus de 'c'est pour quand ?'.",
+    text: [
+      "Yalidine vous facture le retour.",
+      "Encore.",
+      "Le retour koul l'bénéfice ta3 3 commandes livrées.",
+    ],
   },
   {
-    Icon: Package,
-    step: "05",
-    title: "Scan à la porte.",
-    body: "Le livreur scanne le QR. La livraison est prouvée. Yalidine est notifié automatiquement. Preuve irréfutable.",
+    text: [
+      "Vous ne dormez plus.",
+      "Votre famille ne vous voit plus.",
+      "Vous appelez ça « être patron ».",
+    ],
+    italic: true,
   },
   {
-    Icon: CheckCircle,
-    step: "06",
-    title: "Tableau de bord en temps réel.",
-    body: "Vous voyez toutes vos commandes, tous vos livreurs, tous vos taux. Prise de décision en 30 secondes.",
+    text: ["Stop.", "Sortez de la jungle."],
+    isFinal: true,
   },
 ];
 
@@ -82,48 +95,44 @@ export default function CinemaMode() {
       <style>{`
         .cinema-frame {
           opacity: 0;
-          transform: translateY(12px);
-          transition: opacity 380ms ease-out, transform 380ms ease-out;
+          transform: translateY(14px);
+          transition: opacity 400ms ease-out, transform 400ms ease-out;
           pointer-events: none;
           position: absolute;
           inset: 0;
           display: flex;
           flex-direction: column;
           justify-content: center;
+          padding: 3rem 2.5rem;
         }
         .cinema-frame.active {
           opacity: 1;
           transform: translateY(0);
           pointer-events: auto;
         }
-        .cinema-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 9999px;
-          background: var(--mist);
-          opacity: 0.3;
-          transition: opacity 300ms, background 300ms, width 300ms;
-          flex-shrink: 0;
+        .cinema-arrow-pulse {
+          animation: cinema-arrow-pulse 2s ease-in-out infinite;
         }
-        .cinema-dot.active {
-          width: 20px;
-          background: var(--terracotta);
-          opacity: 1;
+        @keyframes cinema-arrow-pulse {
+          0%, 100% { opacity: 0.4; transform: translateY(0); }
+          50%       { opacity: 1;   transform: translateY(6px); }
         }
         @media (prefers-reduced-motion: reduce) {
           .cinema-frame {
             transition: none;
           }
+          .cinema-arrow-pulse {
+            animation: none;
+            opacity: 0.7;
+          }
         }
       `}</style>
 
-      {/* outer: tall enough to create scroll room */}
       <div
         ref={sectionRef}
         style={{ height: `${FRAMES.length * 100}vh`, position: "relative" }}
-        aria-label="Démonstration du flux LIVRA"
+        aria-label="Narration : votre semaine sans LIVRA"
       >
-        {/* sticky panel */}
         <div
           style={{
             position: "sticky",
@@ -145,93 +154,99 @@ export default function CinemaMode() {
               boxShadow: "var(--shadow-card)",
               width: "100%",
               maxWidth: 560,
-              minHeight: 360,
+              minHeight: 320,
               position: "relative",
               overflow: "hidden",
-              padding: "3rem 2.5rem",
             }}
           >
-            {FRAMES.map(({ Icon, step, title, body }, i) => (
-              <div
-                key={i}
-                className={`cinema-frame${i === activeIndex ? " active" : ""}`}
-                aria-hidden={i !== activeIndex}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.75rem" }}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      color: "var(--terracotta)",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      letterSpacing: "0.08em",
-                    }}
+            {FRAMES.map((frame, i) => {
+              const isActive = i === activeIndex;
+
+              if (frame.isFinal) {
+                return (
+                  <div
+                    key={i}
+                    className={`cinema-frame${isActive ? " active" : ""}`}
+                    aria-hidden={!isActive}
+                    style={{ alignItems: "center", textAlign: "center" }}
                   >
-                    {step}
-                  </span>
-                  <Icon
-                    size={28}
-                    strokeWidth={1.5}
-                    style={{ color: "var(--mist)" }}
-                    aria-hidden="true"
-                  />
+                    <p
+                      style={{
+                        color: "var(--terracotta)",
+                        fontSize: "clamp(3rem, 10vw, 5rem)",
+                        fontWeight: 700,
+                        letterSpacing: "-0.03em",
+                        lineHeight: 1,
+                        margin: "0 0 1rem",
+                      }}
+                    >
+                      {frame.text[0]}
+                    </p>
+                    <p
+                      style={{
+                        color: "var(--ivoire)",
+                        fontSize: "clamp(1.25rem, 4vw, 1.75rem)",
+                        fontWeight: 400,
+                        letterSpacing: "-0.02em",
+                        margin: "0 0 2rem",
+                      }}
+                    >
+                      {frame.text[1]}
+                    </p>
+                    <ArrowDown
+                      size={24}
+                      strokeWidth={1.5}
+                      className="cinema-arrow-pulse"
+                      style={{ color: "var(--terracotta)" }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={i}
+                  className={`cinema-frame${isActive ? " active" : ""}`}
+                  aria-hidden={!isActive}
+                >
+                  {frame.text.map((line, j) => {
+                    const isLastLine = j === frame.text.length - 1;
+                    const useItalic = frame.italic && isLastLine;
+                    return (
+                      <p
+                        key={j}
+                        style={{
+                          color: "var(--ivoire)",
+                          fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
+                          fontWeight: 400,
+                          lineHeight: 1.6,
+                          margin: "0 0 0.625rem",
+                          fontStyle: useItalic ? "italic" : "normal",
+                          opacity: useItalic ? 0.85 : 1,
+                        }}
+                      >
+                        {line}
+                      </p>
+                    );
+                  })}
                 </div>
-                <h3
-                  style={{
-                    color: "var(--ivoire)",
-                    fontSize: "clamp(1.375rem, 3vw, 1.875rem)",
-                    fontWeight: 600,
-                    letterSpacing: "-0.02em",
-                    margin: "0 0 1rem",
-                  }}
-                >
-                  {title}
-                </h3>
-                <p
-                  style={{
-                    color: "var(--mist)",
-                    fontSize: "0.9375rem",
-                    lineHeight: 1.65,
-                    margin: 0,
-                    maxWidth: 420,
-                  }}
-                >
-                  {body}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* progress dots */}
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              alignItems: "center",
-              marginTop: "1.75rem",
-            }}
-            aria-hidden="true"
-          >
-            {FRAMES.map((_, i) => (
-              <span
-                key={i}
-                className={`cinema-dot${i === activeIndex ? " active" : ""}`}
-              />
-            ))}
-          </div>
-
-          {/* scroll hint — only on first frame */}
+          {/* scroll hint — frame 0 only */}
           <p
             style={{
               color: "var(--mist)",
               fontSize: "0.75rem",
-              marginTop: "1rem",
-              opacity: activeIndex === 0 ? 0.6 : 0,
+              marginTop: "1.25rem",
+              opacity: activeIndex === 0 ? 0.5 : 0,
               transition: "opacity 400ms",
             }}
             aria-hidden="true"
           >
-            Descendez pour voir la suite ↓
+            Descendez pour continuer
           </p>
         </div>
       </div>

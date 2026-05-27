@@ -5,59 +5,59 @@ import { useEffect, useRef } from "react";
 const BUBBLES = [
   {
     from: "client",
-    name: "Rania B.",
+    name: "Ahmed Drop",
     avatarColor: "var(--terracotta)",
-    text: "Bonjour j'ai commandé hier, il est où mon colis ?",
-    time: "09:14",
-  },
-  {
-    from: "vendor",
-    name: "Vous",
-    avatarColor: "var(--sapin)",
-    text: "Bonjour ! Je vérifie… 🙏",
-    time: "09:31",
+    text: "H24 connecté sur Messenger, tgoul rani nakhdem f central téléphonique",
+    time: "il y a 2h",
   },
   {
     from: "client",
-    name: "Younes K.",
+    name: "Boutique El Jadida",
     avatarColor: "var(--ambre)",
-    text: "J'attends depuis 3 jours, personne répond",
-    time: "10:02",
+    text: "T3ayatlo 5 fois ma yrépondich, ki t'annuler y9olk « 3lah ma jbtouhlich ? »",
+    time: "il y a 4h",
   },
   {
     from: "client",
-    name: "Sarah M.",
+    name: "Sara Fashion DZ",
+    avatarColor: "var(--sapin)",
+    text: "L'livreur y3ayatlo ghir mara whda, ma yrépondich y9olo « retour »",
+    time: "il y a 6h",
+  },
+  {
+    from: "client",
+    name: "Imad Ecom",
     avatarColor: "var(--coral)",
-    text: "Le livreur est passé, j'étais là, il a pas sonné",
-    time: "10:45",
-  },
-  {
-    from: "vendor",
-    name: "Vous",
-    avatarColor: "var(--sapin)",
-    text: "Désolé… je rappelle le livreur",
-    time: "10:58",
+    text: "L'tracking y9ol « en cours », w l'livreur y9oli « dfa3to l'barah »",
+    time: "il y a 8h",
   },
   {
     from: "client",
-    name: "Karim D.",
-    avatarColor: "var(--mist)",
-    text: "RETOURNÉ encore une fois ??? Sérieux ???",
-    time: "14:20",
-  },
-  {
-    from: "client",
-    name: "Nadia T.",
+    name: "Yasmine Boutique",
     avatarColor: "var(--terracotta)",
-    text: "5ème appel. Yalidine dit que c'est vous, vous dites c'est eux",
-    time: "15:33",
+    text: "Le retour ya khouti y'koul l'bénéfice ta3 3 commandes livrées",
+    time: "hier",
   },
   {
-    from: "vendor",
-    name: "Vous",
+    from: "client",
+    name: "Karim Stock",
+    avatarColor: "var(--mist)",
+    text: "Un lead Meta à 2$, pour qu'à la fin il te dise « bch7al hada ? »",
+    time: "hier",
+  },
+  {
+    from: "client",
+    name: "Selma Mode",
+    avatarColor: "var(--ambre)",
+    text: "L'client y3ayatli lya y9oli « winraho l'colis ? », wana rani f l'dlam",
+    time: "hier",
+  },
+  {
+    from: "client",
+    name: "Reda E-shop",
     avatarColor: "var(--sapin)",
-    text: "… je suis désolé, on règle ça demain",
-    time: "18:41",
+    text: "30% de retour, hada machi business, hada rah tmaskhir b nass",
+    time: "il y a 2 jours",
   },
 ];
 
@@ -180,7 +180,7 @@ export default function WhatsAppWall() {
                 margin: 0,
               }}
             >
-              Mon e-commerce
+              Conversations e-commerçants DZ
             </p>
             <p
               style={{
@@ -189,7 +189,7 @@ export default function WhatsAppWall() {
                 margin: 0,
               }}
             >
-              Groupe WhatsApp · 47 membres
+              Groupe Facebook · 12 400 membres
             </p>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function WhatsAppWall() {
             fontStyle: "italic",
           }}
         >
-          Votre quotidien avant LIVRA.
+          Vous vous reconnaissez ?
         </p>
       </div>
     </>
