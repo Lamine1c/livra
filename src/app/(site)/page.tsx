@@ -1,9 +1,12 @@
-import { MonitorSmartphone, Users, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Section from "@/components/site/Section";
 import WaitlistForm from "@/components/site/WaitlistForm";
 import FadeIn from "@/components/site/FadeIn";
+import PainMarquee from "@/components/site/PainMarquee";
+import WhatsAppWall from "@/components/site/WhatsAppWall";
+import CinemaMode from "@/components/site/CinemaMode";
 
 export const metadata = {
   title: "LIVRA — L'OS de votre e-commerce",
@@ -25,46 +28,21 @@ export const metadata = {
   },
 };
 
-const PAIN_PHRASES = [
-  "Vos clients vous fantôment après commande.",
-  "60 % de vos colis reviennent à la maison.",
-  "Votre confirmatrice fait 30 appels pour 5 ventes.",
-  "Vous ne savez jamais où sont vos livreurs.",
-];
-
 const PILLARS = [
   {
-    Icon: MonitorSmartphone,
+    step: "01",
     title: "Zéro lead perdu.",
     body: "Vos leads Facebook entrent automatiquement dans LIVRA. Plus d'export CSV à 23h.",
   },
   {
-    Icon: Users,
+    step: "02",
     title: "Vos clients vivent une expérience Amazon.",
     body: "Ils reçoivent un lien WhatsApp. Ils voient leur livreur en direct sur une carte. Ils savent quand il sonne à la porte.",
   },
   {
-    Icon: MapPin,
+    step: "03",
     title: "Vos livreurs ne se perdent plus.",
     body: "QR code, GPS, itinéraire optimisé. Le bon colis au bon endroit, à la bonne heure.",
-  },
-];
-
-const STEPS = [
-  {
-    num: "01",
-    title: "Installez LIVRA sur mobile, tablette ou web.",
-    body: "Téléchargez l'application ou ouvrez le dashboard dans votre navigateur.",
-  },
-  {
-    num: "02",
-    title: "Connectez votre page Facebook en 30 secondes.",
-    body: "Une autorisation OAuth, et vos leads arrivent dans LIVRA en temps réel.",
-  },
-  {
-    num: "03",
-    title: "Vos leads deviennent des commandes pilotées.",
-    body: "Confirmation, dispatch, suivi GPS, preuve de livraison. Tout dans un seul système.",
   },
 ];
 
@@ -108,26 +86,47 @@ export default function LandingPage() {
               </a>
             </div>
           </FadeIn>
+
+          {/* scroll teaser */}
+          <FadeIn delay={280}>
+            <p
+              className="text-mist mt-16 text-sm"
+              style={{ opacity: 0.5 }}
+              aria-hidden="true"
+            >
+              Vous vous reconnaissez là-dedans ? ↓
+            </p>
+          </FadeIn>
         </div>
 
-        {/* ── Le problème ──────────────────────────────────────── */}
+        {/* ── Wall of Pain — Marquee ────────────────────────── */}
+        <div style={{ paddingBottom: "5rem", overflow: "hidden" }}>
+          <PainMarquee />
+        </div>
+
+        {/* ── Wall of Pain — WhatsApp ───────────────────────── */}
         <Section>
           <FadeIn>
-            <div className="flex flex-col gap-10 md:gap-14 max-w-3xl mx-auto">
-              {PAIN_PHRASES.map((phrase, i) => (
-                <p
-                  key={i}
-                  className="text-ivoire text-2xl md:text-3xl font-medium pl-6 border-l-2 border-terracotta"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  {phrase}
-                </p>
-              ))}
-            </div>
+            <p className="text-mist text-xl text-center mb-12">
+              Ça ressemble à votre groupe WhatsApp ?
+            </p>
+          </FadeIn>
+          <FadeIn delay={80}>
+            <WhatsAppWall />
           </FadeIn>
         </Section>
 
-        {/* ── Le système LIVRA ─────────────────────────────────── */}
+        {/* ── Le système LIVRA — CinemaMode ────────────────── */}
+        <div className="px-6">
+          <FadeIn>
+            <p className="text-mist text-xl text-center pt-16 pb-0">
+              Voici comment LIVRA règle ça.
+            </p>
+          </FadeIn>
+          <CinemaMode />
+        </div>
+
+        {/* ── Trois piliers ─────────────────────────────────── */}
         <Section>
           <FadeIn>
             <p className="text-mist text-xl text-center mb-16">
@@ -135,53 +134,19 @@ export default function LandingPage() {
             </p>
           </FadeIn>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PILLARS.map(({ Icon, title, body }, i) => (
-              <FadeIn key={i} delay={i * 80}>
-                <article
-                  className="bg-surface rounded-2xl p-8"
-                  style={{
-                    boxShadow: "var(--shadow-card)",
-                    border: "var(--border-surface)",
-                  }}
-                >
-                  <Icon
-                    size={32}
-                    strokeWidth={1.5}
-                    style={{ color: "var(--mist)" }}
-                    aria-hidden="true"
-                  />
-                  <h3 className="text-ivoire font-semibold text-lg mb-3 mt-4">
-                    {title}
-                  </h3>
-                  <p className="text-mist text-sm leading-relaxed">{body}</p>
-                </article>
-              </FadeIn>
-            ))}
-          </div>
-        </Section>
-
-        {/* ── Comment ça marche ────────────────────────────────── */}
-        <Section>
-          <FadeIn>
-            <p className="text-mist text-xl text-center mb-16">
-              Vous installez. Vous connectez. Vous pilotez.
-            </p>
-          </FadeIn>
-
           <div className="flex flex-col gap-10 max-w-2xl mx-auto">
-            {STEPS.map(({ num, title, body }, i) => (
+            {PILLARS.map(({ step, title, body }, i) => (
               <FadeIn key={i} delay={i * 80}>
                 <div className="flex flex-row gap-6 items-start">
                   <span
-                    className="font-semibold text-2xl shrink-0"
+                    className="font-semibold text-xl shrink-0"
                     style={{
                       fontFamily: "var(--font-mono), monospace",
                       color: "var(--terracotta)",
                     }}
                     aria-hidden="true"
                   >
-                    {num}
+                    {step}
                   </span>
                   <div>
                     <p className="text-ivoire font-semibold mb-1">{title}</p>
@@ -191,12 +156,6 @@ export default function LandingPage() {
               </FadeIn>
             ))}
           </div>
-
-          <FadeIn delay={280}>
-            <p className="text-mist text-sm italic text-center mt-12 max-w-2xl mx-auto">
-              Mobile et tablette disponibles. Dashboard web bientôt.
-            </p>
-          </FadeIn>
         </Section>
 
         {/* ── Pour qui ─────────────────────────────────────────── */}
@@ -214,6 +173,22 @@ export default function LandingPage() {
                 Que vous fassiez 30 ou 3&nbsp;000 commandes par mois.
               </p>
             </div>
+          </FadeIn>
+        </Section>
+
+        {/* ── Localisation ─────────────────────────────────── */}
+        <Section className="max-w-2xl text-center">
+          <FadeIn>
+            <MapPin
+              size={28}
+              strokeWidth={1.5}
+              style={{ color: "var(--mist)", margin: "0 auto 1rem" }}
+              aria-hidden="true"
+            />
+            <p className="text-mist text-sm leading-relaxed">
+              Mobile et tablette disponibles dès maintenant.
+              Dashboard web bientôt.
+            </p>
           </FadeIn>
         </Section>
 
