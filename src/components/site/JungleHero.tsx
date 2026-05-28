@@ -93,12 +93,12 @@ const CARD_STYLE: CSSProperties = {
 
 function CardWa({ text, time }: { text: string; time?: string }) {
   return (
-    <div style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem" }}>
-      <p style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
+    <div className="jh-card" style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem" }}>
+      <p className="jh-card-text" style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
         {text}
       </p>
       {time && (
-        <p style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "7px 0 0", textAlign: "right" }}>
+        <p className="jh-card-meta" style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "7px 0 0", textAlign: "right" }}>
           {time}
         </p>
       )}
@@ -108,8 +108,8 @@ function CardWa({ text, time }: { text: string; time?: string }) {
 
 function CardFb({ name, avatarColor, text }: Pick<CardData, "name" | "avatarColor" | "text">) {
   return (
-    <div style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem", display: "flex", gap: "0.875rem", alignItems: "flex-start" }}>
-      <div style={{
+    <div className="jh-card" style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem", display: "flex", gap: "0.875rem", alignItems: "flex-start" }}>
+      <div className="jh-avatar" style={{
         width: 34, height: 34, borderRadius: "50%",
         background: avatarColor ?? "var(--mist)",
         flexShrink: 0, display: "flex", alignItems: "center",
@@ -119,10 +119,10 @@ function CardFb({ name, avatarColor, text }: Pick<CardData, "name" | "avatarColo
         {name?.charAt(0)}
       </div>
       <div>
-        <p style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "0 0 4px", fontWeight: 600 }}>
+        <p className="jh-card-meta" style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "0 0 4px", fontWeight: 600 }}>
           {name}
         </p>
-        <p style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
+        <p className="jh-card-text" style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
           {text}
         </p>
       </div>
@@ -207,6 +207,12 @@ export default function JungleHero() {
 
         @media (max-width: 767px) {
           .jh-mob-hide { display: none !important; }
+
+          /* Cards mobile : tailles réduites, laissent respirer le H1 */
+          .jh-card      { max-width: 210px !important; padding: 0.7rem 0.9rem !important; }
+          .jh-card-text { font-size: 0.8125rem !important; }
+          .jh-card-meta { font-size: 0.625rem !important; }
+          .jh-avatar    { width: 24px !important; height: 24px !important; font-size: 0.5625rem !important; }
         }
 
         /* Reduced motion: keep scatter layout + rotations, cut all animation */
