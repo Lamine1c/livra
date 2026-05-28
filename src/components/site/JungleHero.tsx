@@ -11,40 +11,80 @@ type CardData = {
   time?: string;
 };
 
-const BACK_CARDS: CardData[] = [
-  { type: "fb", name: "Karim", avatarColor: "var(--mist)", text: "Krahna men colis en instance" },
-  { type: "wa", text: "chb3t krah fi liyyam", time: "08:14" },
-  { type: "fb", name: "Yasmine", avatarColor: "var(--sapin)", text: "Meta takol f l'budget" },
-  { type: "wa", text: "rassi tbloqua ya khawti", time: "hier" },
+type CardConfig = {
+  card: CardData;
+  pos: CSSProperties;
+  rotate: number;    // degrees, baked into the float keyframe via --jh-rot
+  floatDur: number;  // seconds — desync between cards
+  floatDel: number;  // seconds (negative = phase offset, starts mid-animation)
+  mobileHide?: boolean;
+};
+
+// ── Back layer (4 cards) — blurred, faded, corners + upper center ──
+const BACK_CONFIG: CardConfig[] = [
+  {
+    card: { type: "fb", name: "Karim", avatarColor: "var(--mist)", text: "Krahna men colis en instance" },
+    pos: { top: "7%", left: "4%" },
+    rotate: -5, floatDur: 7, floatDel: -2,
+  },
+  {
+    card: { type: "wa", text: "chb3t krah fi liyyam", time: "08:14" },
+    pos: { top: "5%", left: "56%" },
+    rotate: 4, floatDur: 5.5, floatDel: -4,
+    mobileHide: true,
+  },
+  {
+    card: { type: "fb", name: "Yasmine", avatarColor: "var(--sapin)", text: "Meta takol f l'budget" },
+    pos: { top: "66%", left: "8%" },
+    rotate: -3, floatDur: 8, floatDel: -1,
+    mobileHide: true,
+  },
+  {
+    card: { type: "wa", text: "rassi tbloqua ya khawti", time: "hier" },
+    pos: { top: "63%", left: "60%" },
+    rotate: 6, floatDur: 6, floatDel: -3.5,
+    mobileHide: true,
+  },
 ];
 
-const FRONT_CARDS: CardData[] = [
-  { type: "wa", text: "H24 connecté sur Messenger, tgoul rani nakhdem f central téléphonique", time: "il y a 2h" },
-  { type: "fb", name: "Sara", avatarColor: "var(--terracotta)", text: "L'livreur y3ayatlo ghir mara whda, ma yrépondich y9olo « retour »" },
-  { type: "wa", text: "L'tracking y9ol « en cours », w l'livreur y9oli « dfa3to l'barah »", time: "il y a 6h" },
-  { type: "fb", name: "Reda", avatarColor: "var(--ambre)", text: "30% de retour, hada machi business, hada rah tmaskhir b nass" },
-  { type: "wa", text: "Un lead Meta à 2$, pour qu'à la fin il te dise « bch7al hada ? »", time: "hier" },
+// ── Front layer (5 cards) — crisp, surround + slightly overlap H1 ──
+// Cards at 28-52% vertical overlap the H1's bounding box; halo + textShadow ensure readability.
+const FRONT_CONFIG: CardConfig[] = [
+  {
+    card: { type: "wa", text: "H24 connecté sur Messenger, tgoul rani nakhdem f central téléphonique", time: "il y a 2h" },
+    pos: { top: "28%", left: "2%" },
+    rotate: -7, floatDur: 6.5, floatDel: -5,
+  },
+  {
+    card: { type: "fb", name: "Sara", avatarColor: "var(--terracotta)", text: "L'livreur y3ayatlo ghir mara whda, ma yrépondich y9olo « retour »" },
+    pos: { top: "24%", right: "2%" },
+    rotate: 3, floatDur: 7.5, floatDel: -1.5,
+  },
+  {
+    card: { type: "wa", text: "L'tracking y9ol « en cours », w l'livreur y9oli « dfa3to l'barah »", time: "il y a 6h" },
+    pos: { top: "38%", left: "18%" },
+    rotate: 5, floatDur: 5, floatDel: -3,
+    mobileHide: true,
+  },
+  {
+    card: { type: "fb", name: "Reda", avatarColor: "var(--ambre)", text: "30% de retour, hada machi business, hada rah tmaskhir b nass" },
+    pos: { top: "66%", right: "4%" },
+    rotate: -4, floatDur: 8.5, floatDel: -0.5,
+  },
+  {
+    card: { type: "wa", text: "Un lead Meta à 2$, pour qu'à la fin il te dise « bch7al hada ? »", time: "hier" },
+    pos: { top: "52%", left: "20%" },
+    rotate: -6, floatDur: 6, floatDel: -4.5,
+    mobileHide: true,
+  },
 ];
 
-// Absolute positions within each layer (corners / edges, never dead-center)
-const BACK_POSITIONS: CSSProperties[] = [
-  { top: "4%", left: "0%" },    // top-left
-  { top: "60%", right: "0%" },  // lower-right
-  { bottom: "4%", left: "14%" },// bottom, slight inset
-  { top: "9%", right: "0%" },   // top-right
-];
-
-const FRONT_POSITIONS: CSSProperties[] = [
-  { top: "12%", left: "0%" },   // top-left, in front of back[0]
-  { top: "18%", right: "0%" },  // top-right, in front of back[3]
-  { bottom: "10%", left: "0%" },// bottom-left
-  { bottom: "16%", right: "0%" },// bottom-right
-  { top: "56%", left: "0%" },   // mid-left
-];
-
-const CARD_BASE: CSSProperties = {
-  background: "var(--surface)",
-  border: "1px solid rgba(255,255,255,0.05)",
+// Glass card style — glassmorphism now allowed on LP (see LIVRA_BRAND.md exception marketing)
+const CARD_STYLE: CSSProperties = {
+  background: "color-mix(in srgb, var(--surface) 78%, transparent)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+  border: "1px solid rgba(255,255,255,0.08)",
   borderRadius: "16px",
   boxShadow: "var(--shadow-card)",
   maxWidth: "272px",
@@ -53,7 +93,7 @@ const CARD_BASE: CSSProperties = {
 
 function CardWa({ text, time }: { text: string; time?: string }) {
   return (
-    <div style={{ ...CARD_BASE, padding: "0.75rem 1rem" }}>
+    <div style={{ ...CARD_STYLE, padding: "0.75rem 1rem" }}>
       <p style={{ color: "var(--ivoire)", fontSize: "0.8125rem", margin: 0, lineHeight: 1.45 }}>
         {text}
       </p>
@@ -68,23 +108,14 @@ function CardWa({ text, time }: { text: string; time?: string }) {
 
 function CardFb({ name, avatarColor, text }: Pick<CardData, "name" | "avatarColor" | "text">) {
   return (
-    <div style={{ ...CARD_BASE, padding: "0.75rem 1rem", display: "flex", gap: "0.625rem", alignItems: "flex-start" }}>
-      <div
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: "50%",
-          background: avatarColor ?? "var(--mist)",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "0.5625rem",
-          fontWeight: 600,
-          color: "var(--ivoire)",
-          opacity: 0.9,
-        }}
-      >
+    <div style={{ ...CARD_STYLE, padding: "0.75rem 1rem", display: "flex", gap: "0.625rem", alignItems: "flex-start" }}>
+      <div style={{
+        width: 26, height: 26, borderRadius: "50%",
+        background: avatarColor ?? "var(--mist)",
+        flexShrink: 0, display: "flex", alignItems: "center",
+        justifyContent: "center", fontSize: "0.5625rem",
+        fontWeight: 600, color: "var(--ivoire)", opacity: 0.9,
+      }}>
         {name?.charAt(0)}
       </div>
       <div>
@@ -113,11 +144,11 @@ export default function JungleHero() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
     const back = layerBackRef.current;
     const front = layerFrontRef.current;
     if (!back || !front) return;
 
+    // Find the scrollable parent set by (site)/layout.tsx
     const scrollEl =
       (containerRef.current?.closest(".overflow-y-auto") as HTMLElement | null) ?? null;
 
@@ -131,15 +162,11 @@ export default function JungleHero() {
         if (!back || !front) return;
         const sy = getScrollY();
         const isMobile = window.innerWidth < 768;
-        const backFactor = isMobile ? 0.25 : 0.5;
-        const frontFactor = isMobile ? 0.08 : 0.15;
-
-        back.style.transform = `translateY(${sy * backFactor}px)`;
-        front.style.transform = `translateY(${sy * frontFactor}px)`;
-
-        // Fade back layer progressively as user scrolls out of hero
-        const progress = Math.min(1, sy / (window.innerHeight * 0.5));
-        back.style.opacity = String(1 - progress * 0.65);
+        // Back disperses faster — the jungle "explodes" as you scroll out
+        back.style.transform = `translateY(${sy * (isMobile ? 0.2 : 0.45)}px)`;
+        front.style.transform = `translateY(${sy * (isMobile ? 0.07 : 0.12)}px)`;
+        // Back layer fades to let content below emerge
+        back.style.opacity = String(Math.max(0.1, 1 - Math.min(1, sy / (window.innerHeight * 0.5)) * 0.65));
       });
     }
 
@@ -154,12 +181,22 @@ export default function JungleHero() {
   return (
     <>
       <style>{`
-        .jh-back  { will-change: transform; }
-        .jh-front { will-change: transform; }
-        .jh-back-card {
-          filter: blur(3.5px);
-          opacity: 0.42;
+        /*
+         * Float keyframe: translateY oscillation + rotation baked via CSS var.
+         * rotation (--jh-rot) stays constant through the keyframe = stable tilt.
+         * scale (CSS individual transform property) composites independently
+         * from transform, so it doesn't conflict with the animation.
+         */
+        @keyframes jh-float {
+          0%, 100% { transform: translateY(0)    rotate(var(--jh-rot, 0deg)); }
+          50%       { transform: translateY(-9px) rotate(var(--jh-rot, 0deg)); }
         }
+
+        .jh-float {
+          animation: jh-float var(--jh-dur, 7s) ease-in-out var(--jh-del, 0s) infinite;
+        }
+
+        /* Pulse on scroll hint */
         .jh-pulse {
           animation: jh-pulse 2.5s ease-in-out infinite;
         }
@@ -168,21 +205,22 @@ export default function JungleHero() {
           50%       { opacity: 0.8;  transform: translateY(5px); }
         }
 
-        /* Mobile: hide extra back cards + shrink card width */
         @media (max-width: 767px) {
-          .jh-mob-hide  { display: none !important; }
-          .jh-card-wrap { max-width: 192px !important; }
+          .jh-mob-hide { display: none !important; }
         }
 
-        /* Reduced motion: static layout, no parallax */
+        /* Reduced motion: keep scatter layout + rotations, cut all animation */
         @media (prefers-reduced-motion: reduce) {
           .jh-back,
           .jh-front {
-            will-change: auto;
             transform: none !important;
             opacity: 1 !important;
           }
-          .jh-pulse { animation: none; opacity: 0.55; transform: none; }
+          .jh-float {
+            animation: none !important;
+            transform: rotate(var(--jh-rot, 0deg)) !important;
+          }
+          .jh-pulse { animation: none; opacity: 0.5; transform: none !important; }
         }
       `}</style>
 
@@ -190,43 +228,69 @@ export default function JungleHero() {
         ref={containerRef}
         style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "var(--onyx)" }}
       >
-        {/* ── Back layer — blurred, distant ─────────────────── */}
+        {/* ── Back layer — blurred + faded, disperses fast on scroll ── */}
         <div
           ref={layerBackRef}
           className="jh-back"
           aria-hidden="true"
           style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}
         >
-          {BACK_CARDS.map((card, i) => (
+          {BACK_CONFIG.map((cfg, i) => (
             <div
               key={i}
-              className={`jh-back-card jh-card-wrap${i >= 1 ? " jh-mob-hide" : ""}`}
-              style={{ position: "absolute", ...BACK_POSITIONS[i] }}
+              className={cfg.mobileHide ? "jh-mob-hide" : ""}
+              style={{
+                position: "absolute",
+                ...cfg.pos,
+                // CSS Individual Transform: scale composites separately from the
+                // animation's transform (translateY + rotate) — no conflict.
+                scale: "0.9",
+                filter: "blur(1.5px)",
+                opacity: 0.55,
+              }}
             >
-              <PainCard card={card} />
+              <div
+                className="jh-float"
+                style={{
+                  "--jh-rot": `${cfg.rotate}deg`,
+                  "--jh-dur": `${cfg.floatDur}s`,
+                  "--jh-del": `${cfg.floatDel}s`,
+                } as CSSProperties}
+              >
+                <PainCard card={cfg.card} />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* ── Front layer — crisp, nearer ───────────────────── */}
+        {/* ── Front layer — crisp, surround the H1, float at different rhythm ── */}
         <div
           ref={layerFrontRef}
           className="jh-front"
           aria-hidden="true"
           style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none" }}
         >
-          {FRONT_CARDS.map((card, i) => (
+          {FRONT_CONFIG.map((cfg, i) => (
             <div
               key={i}
-              className={`jh-card-wrap${i === 4 ? " jh-mob-hide" : ""}`}
-              style={{ position: "absolute", ...FRONT_POSITIONS[i] }}
+              className={cfg.mobileHide ? "jh-mob-hide" : ""}
+              style={{ position: "absolute", ...cfg.pos }}
             >
-              <PainCard card={card} />
+              <div
+                className="jh-float"
+                style={{
+                  "--jh-rot": `${cfg.rotate}deg`,
+                  "--jh-dur": `${cfg.floatDur}s`,
+                  "--jh-del": `${cfg.floatDel}s`,
+                } as CSSProperties}
+              >
+                <PainCard card={cfg.card} />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* ── Readability halo behind H1 ─────────────────────── */}
+        {/* ── Readability halo — dark radial behind H1 ── */}
         <div
           aria-hidden="true"
           style={{
@@ -234,13 +298,12 @@ export default function JungleHero() {
             inset: 0,
             zIndex: 9,
             pointerEvents: "none",
-            // Dark radial gradient from var(--onyx) → transparent, centered on H1
-            background: "radial-gradient(ellipse 68% 58% at 50% 50%, var(--onyx) 22%, transparent 72%)",
-            opacity: 0.9,
+            background: "radial-gradient(ellipse 65% 55% at 50% 50%, var(--onyx) 20%, transparent 70%)",
+            opacity: 0.88,
           }}
         />
 
-        {/* ── Center block: H1 + CTA + hint ─────────────────── */}
+        {/* ── Center block — H1 + CTA (z10, always above cards) ── */}
         <div
           style={{
             position: "relative",
@@ -254,15 +317,16 @@ export default function JungleHero() {
             padding: "6rem 1.5rem 3rem",
           }}
         >
+          {/* font-weight 700 allowed on Hero titles per LIVRA_BRAND.md exception marketing */}
           <h1
             style={{
               color: "var(--ivoire)",
-              fontSize: "clamp(3.5rem, 11vw, 8.5rem)",
-              fontWeight: 600,
+              fontSize: "clamp(3.5rem, 11vw, 9rem)",
+              fontWeight: 700,
               letterSpacing: "-0.03em",
               lineHeight: 0.95,
               margin: "0 0 2.5rem",
-              // Dark shadow reinforces readability over any card that bleeds through
+              // Dark shadow reinforces readability over any card that bleeds through the halo
               textShadow: "0 2px 40px var(--onyx), 0 0 100px var(--onyx)",
             }}
           >
