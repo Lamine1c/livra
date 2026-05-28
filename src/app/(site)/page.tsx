@@ -4,6 +4,7 @@ import Footer from "@/components/site/Footer";
 import Section from "@/components/site/Section";
 import WaitlistForm from "@/components/site/WaitlistForm";
 import FadeIn from "@/components/site/FadeIn";
+import JungleHero from "@/components/site/JungleHero";
 import PainMarquee from "@/components/site/PainMarquee";
 import WhatsAppWall from "@/components/site/WhatsAppWall";
 import CinemaMode from "@/components/site/CinemaMode";
@@ -52,52 +53,18 @@ export default function LandingPage() {
       <Header />
 
       <main>
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        <div className="pt-32 pb-24 md:pt-48 md:pb-32 px-6 text-center">
+        {/* ── Hero — Jungle de pains ───────────────────────── */}
+        <JungleHero />
+
+        {/* ── OS description ────────────────────────────────── */}
+        <Section className="text-center max-w-2xl">
           <FadeIn>
-            <h1
-              className="text-ivoire text-5xl md:text-7xl font-semibold leading-tight"
-              style={{ letterSpacing: "-0.03em" }}
-            >
-              Sortez de la jungle.
-            </h1>
-          </FadeIn>
-
-          <FadeIn delay={80}>
-            <p className="text-mist text-lg md:text-xl font-normal max-w-2xl mx-auto mt-6 leading-relaxed">
-              LIVRA est l&apos;OS de votre e-commerce. De la pub Facebook au scan
-              du colis, tout passe par un seul système.
+            <p className="text-ivoire text-xl md:text-2xl leading-relaxed">
+              LIVRA est l&apos;OS de votre e-commerce. De la pub Facebook au
+              scan du colis, tout passe par un seul système.
             </p>
           </FadeIn>
-
-          <FadeIn delay={160}>
-            <div className="mt-10">
-              <a
-                href="#waitlist"
-                className="bg-terracotta text-ivoire font-semibold rounded-[28px] px-8 py-4 inline-block hover:brightness-110 transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
-                style={{
-                  boxShadow: "var(--shadow-btn-primary)",
-                  minHeight: "52px",
-                  lineHeight: "1",
-                }}
-                aria-label="Rejoindre la liste d'attente"
-              >
-                Rejoindre la liste d&apos;attente
-              </a>
-            </div>
-          </FadeIn>
-
-          {/* scroll teaser */}
-          <FadeIn delay={280}>
-            <p
-              className="text-mist mt-16 text-sm"
-              style={{ opacity: 0.5 }}
-              aria-hidden="true"
-            >
-              Vous vous reconnaissez là-dedans ? ↓
-            </p>
-          </FadeIn>
-        </div>
+        </Section>
 
         {/* ── Wall of Pain — Marquee ────────────────────────── */}
         <div style={{ paddingBottom: "5rem", overflow: "hidden" }}>
