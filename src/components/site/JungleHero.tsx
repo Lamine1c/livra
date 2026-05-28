@@ -14,9 +14,10 @@ type CardData = {
 type CardConfig = {
   card: CardData;
   pos: CSSProperties;
-  rotate: number;    // degrees, baked into the float keyframe via --jh-rot
-  floatDur: number;  // seconds — desync between cards
-  floatDel: number;  // seconds (negative = phase offset, starts mid-animation)
+  rotate: number;
+  floatDur: number;
+  floatDel: number;
+  glowColor: string;  // CSS var — drives the directional color halo on the card
   mobileHide?: boolean;
 };
 
@@ -25,24 +26,24 @@ const BACK_CONFIG: CardConfig[] = [
   {
     card: { type: "fb", name: "Karim", avatarColor: "var(--mist)", text: "Krahna men colis en instance" },
     pos: { top: "7%", left: "4%" },
-    rotate: -5, floatDur: 7, floatDel: -2,
+    rotate: -5, floatDur: 7, floatDel: -2, glowColor: "var(--mist)",
   },
   {
     card: { type: "wa", text: "chb3t krah fi liyyam", time: "08:14" },
     pos: { top: "5%", left: "56%" },
-    rotate: 4, floatDur: 5.5, floatDel: -4,
+    rotate: 4, floatDur: 5.5, floatDel: -4, glowColor: "var(--coral)",
     mobileHide: true,
   },
   {
     card: { type: "fb", name: "Yasmine", avatarColor: "var(--sapin)", text: "Meta takol f l'budget" },
     pos: { top: "66%", left: "8%" },
-    rotate: -3, floatDur: 8, floatDel: -1,
+    rotate: -3, floatDur: 8, floatDel: -1, glowColor: "var(--sapin)",
     mobileHide: true,
   },
   {
     card: { type: "wa", text: "rassi tbloqua ya khawti", time: "hier" },
     pos: { top: "63%", left: "60%" },
-    rotate: 6, floatDur: 6, floatDel: -3.5,
+    rotate: 6, floatDur: 6, floatDel: -3.5, glowColor: "var(--mist)",
     mobileHide: true,
   },
 ];
@@ -53,40 +54,42 @@ const FRONT_CONFIG: CardConfig[] = [
   {
     card: { type: "wa", text: "H24 connecté sur Messenger, tgoul rani nakhdem f central téléphonique", time: "il y a 2h" },
     pos: { top: "28%", left: "2%" },
-    rotate: -7, floatDur: 6.5, floatDel: -5,
+    rotate: -7, floatDur: 6.5, floatDel: -5, glowColor: "var(--coral)",
   },
   {
     card: { type: "fb", name: "Sara", avatarColor: "var(--terracotta)", text: "L'livreur y3ayatlo ghir mara whda, ma yrépondich y9olo « retour »" },
     pos: { top: "24%", right: "2%" },
-    rotate: 3, floatDur: 7.5, floatDel: -1.5,
+    rotate: 3, floatDur: 7.5, floatDel: -1.5, glowColor: "var(--terracotta)",
   },
   {
     card: { type: "wa", text: "L'tracking y9ol « en cours », w l'livreur y9oli « dfa3to l'barah »", time: "il y a 6h" },
     pos: { top: "38%", left: "18%" },
-    rotate: 5, floatDur: 5, floatDel: -3,
+    rotate: 5, floatDur: 5, floatDel: -3, glowColor: "var(--ambre)",
     mobileHide: true,
   },
   {
     card: { type: "fb", name: "Reda", avatarColor: "var(--ambre)", text: "30% de retour, hada machi business, hada rah tmaskhir b nass" },
     pos: { top: "66%", right: "4%" },
-    rotate: -4, floatDur: 8.5, floatDel: -0.5,
+    rotate: -4, floatDur: 8.5, floatDel: -0.5, glowColor: "var(--ambre)",
   },
   {
     card: { type: "wa", text: "Un lead Meta à 2$, pour qu'à la fin il te dise « bch7al hada ? »", time: "hier" },
     pos: { top: "52%", left: "20%" },
-    rotate: -6, floatDur: 6, floatDel: -4.5,
+    rotate: -6, floatDur: 6, floatDel: -4.5, glowColor: "var(--terracotta)",
     mobileHide: true,
   },
 ];
 
-// Glass card style — glassmorphism now allowed on LP (see LIVRA_BRAND.md exception marketing)
+// Glass card style — glassmorphism + light gradient (LP exception, LIVRA_BRAND.md)
+// boxShadow is handled by the .jh-card CSS class (uses --jh-glow var for directional color halo)
 const CARD_STYLE: CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 78%, transparent)",
+  // Linear gradient creates top-lighting illusion: lighter surface at top, deeper at bottom
+  background: "linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent) 0%, color-mix(in srgb, var(--deep) 75%, transparent) 100%)",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  // Subtle border — inset highlight in .jh-card completes the top-lit look
+  border: "1px solid rgba(255,255,255,0.06)",
   borderRadius: "16px",
-  boxShadow: "var(--shadow-card)",
   maxWidth: "420px",
   width: "max-content",
 };
@@ -181,22 +184,43 @@ export default function JungleHero() {
   return (
     <>
       <style>{`
-        /*
-         * Float keyframe: translateY oscillation + rotation baked via CSS var.
-         * rotation (--jh-rot) stays constant through the keyframe = stable tilt.
-         * scale (CSS individual transform property) composites independently
-         * from transform, so it doesn't conflict with the animation.
-         */
         @keyframes jh-float {
           0%, 100% { transform: translateY(0)    rotate(var(--jh-rot, 0deg)); }
           50%       { transform: translateY(-9px) rotate(var(--jh-rot, 0deg)); }
         }
-
         .jh-float {
           animation: jh-float var(--jh-dur, 7s) ease-in-out var(--jh-del, 0s) infinite;
         }
 
-        /* Pulse on scroll hint */
+        /*
+         * Double shadow: deep drop (depth) + directional color halo (--jh-glow, set per-card).
+         * Inset highlight on top edge = light comes from above (consistent direction).
+         * All glows are STATIC — no pulse animation on light effects.
+         */
+        .jh-card {
+          box-shadow:
+            0 20px 50px -12px rgba(0,0,0,0.72),
+            0 0 40px -8px var(--jh-glow, transparent),
+            inset 0 1px 0 0 rgba(255,255,255,0.06);
+        }
+
+        /*
+         * Film grain overlay on the hero background.
+         * feTurbulence noise at 0.03 opacity — felt as material, not seen as texture.
+         * Kills the "flat digital black" and gives a premium/filmic quality.
+         */
+        .jh-noise::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.55;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 250px 250px;
+        }
+
         .jh-pulse {
           animation: jh-pulse 2.5s ease-in-out infinite;
         }
@@ -207,32 +231,45 @@ export default function JungleHero() {
 
         @media (max-width: 767px) {
           .jh-mob-hide { display: none !important; }
-
-          /* Cards mobile : tailles réduites, laissent respirer le H1 */
+          /* Smaller cards on mobile */
           .jh-card      { max-width: 210px !important; padding: 0.7rem 0.9rem !important; }
           .jh-card-text { font-size: 0.8125rem !important; }
           .jh-card-meta { font-size: 0.625rem !important; }
           .jh-avatar    { width: 24px !important; height: 24px !important; font-size: 0.5625rem !important; }
+          /* Lighter shadows on mobile for GPU budget */
+          .jh-card {
+            box-shadow:
+              0 10px 28px -8px rgba(0,0,0,0.6),
+              0 0 22px -6px var(--jh-glow, transparent),
+              inset 0 1px 0 0 rgba(255,255,255,0.05);
+          }
+          /* Grain halved on mobile */
+          .jh-noise::before { opacity: 0.3; }
         }
 
-        /* Reduced motion: keep scatter layout + rotations, cut all animation */
         @media (prefers-reduced-motion: reduce) {
-          .jh-back,
-          .jh-front {
-            transform: none !important;
-            opacity: 1 !important;
-          }
-          .jh-float {
-            animation: none !important;
-            transform: rotate(var(--jh-rot, 0deg)) !important;
-          }
+          .jh-back, .jh-front { transform: none !important; opacity: 1 !important; }
+          .jh-float { animation: none !important; transform: rotate(var(--jh-rot, 0deg)) !important; }
           .jh-pulse { animation: none; opacity: 0.5; transform: none !important; }
         }
       `}</style>
 
       <div
         ref={containerRef}
-        style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "var(--onyx)" }}
+        className="jh-noise"
+        style={{
+          position: "relative",
+          minHeight: "100vh",
+          overflow: "hidden",
+          // Rich deep background: onyx base + 3 very faint nebula tints (terracotta top-left,
+          // sapin bottom-right, mist center) at 5-6% — felt as depth, not seen as color.
+          background: [
+            "radial-gradient(ellipse 60% 45% at 12% 18%, color-mix(in srgb, var(--terracotta) 6%, transparent) 0%, transparent 65%)",
+            "radial-gradient(ellipse 55% 50% at 86% 82%, color-mix(in srgb, var(--sapin) 5%, transparent) 0%, transparent 60%)",
+            "radial-gradient(ellipse 35% 55% at 62% 28%, color-mix(in srgb, var(--mist) 3%, transparent) 0%, transparent 55%)",
+            "var(--onyx)",
+          ].join(", "),
+        }}
       >
         {/* ── Back layer — blurred + faded, disperses fast on scroll ── */}
         <div
@@ -248,9 +285,9 @@ export default function JungleHero() {
               style={{
                 position: "absolute",
                 ...cfg.pos,
-                // CSS Individual Transform: scale composites separately from the
-                // animation's transform (translateY + rotate) — no conflict.
-                scale: "0.9",
+                // perspective() + rotateX lean cards slightly back into 3D space;
+                // scale composites via CSS Individual Transform, no conflict with animation.
+                transform: "perspective(900px) rotateX(3deg) scale(0.9)",
                 filter: "blur(0.8px)",
                 opacity: 0.55,
               }}
@@ -261,6 +298,8 @@ export default function JungleHero() {
                   "--jh-rot": `${cfg.rotate}deg`,
                   "--jh-dur": `${cfg.floatDur}s`,
                   "--jh-del": `${cfg.floatDel}s`,
+                  // Back cards: glow at 8% — barely felt, not seen
+                  "--jh-glow": `color-mix(in srgb, ${cfg.glowColor} 8%, transparent)`,
                 } as CSSProperties}
               >
                 <PainCard card={cfg.card} />
@@ -288,6 +327,8 @@ export default function JungleHero() {
                   "--jh-rot": `${cfg.rotate}deg`,
                   "--jh-dur": `${cfg.floatDur}s`,
                   "--jh-del": `${cfg.floatDel}s`,
+                  // Front cards: glow at 15% — subtle but perceptible, never above 0.18
+                  "--jh-glow": `color-mix(in srgb, ${cfg.glowColor} 15%, transparent)`,
                 } as CSSProperties}
               >
                 <PainCard card={cfg.card} />
