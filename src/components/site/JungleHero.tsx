@@ -87,18 +87,18 @@ const CARD_STYLE: CSSProperties = {
   border: "1px solid rgba(255,255,255,0.08)",
   borderRadius: "16px",
   boxShadow: "var(--shadow-card)",
-  maxWidth: "272px",
+  maxWidth: "420px",
   width: "max-content",
 };
 
 function CardWa({ text, time }: { text: string; time?: string }) {
   return (
-    <div style={{ ...CARD_STYLE, padding: "0.75rem 1rem" }}>
-      <p style={{ color: "var(--ivoire)", fontSize: "0.8125rem", margin: 0, lineHeight: 1.45 }}>
+    <div style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem" }}>
+      <p style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
         {text}
       </p>
       {time && (
-        <p style={{ color: "var(--mist)", fontSize: "0.625rem", margin: "5px 0 0", textAlign: "right" }}>
+        <p style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "7px 0 0", textAlign: "right" }}>
           {time}
         </p>
       )}
@@ -108,21 +108,21 @@ function CardWa({ text, time }: { text: string; time?: string }) {
 
 function CardFb({ name, avatarColor, text }: Pick<CardData, "name" | "avatarColor" | "text">) {
   return (
-    <div style={{ ...CARD_STYLE, padding: "0.75rem 1rem", display: "flex", gap: "0.625rem", alignItems: "flex-start" }}>
+    <div style={{ ...CARD_STYLE, padding: "1.125rem 1.375rem", display: "flex", gap: "0.875rem", alignItems: "flex-start" }}>
       <div style={{
-        width: 26, height: 26, borderRadius: "50%",
+        width: 34, height: 34, borderRadius: "50%",
         background: avatarColor ?? "var(--mist)",
         flexShrink: 0, display: "flex", alignItems: "center",
-        justifyContent: "center", fontSize: "0.5625rem",
+        justifyContent: "center", fontSize: "0.75rem",
         fontWeight: 600, color: "var(--ivoire)", opacity: 0.9,
       }}>
         {name?.charAt(0)}
       </div>
       <div>
-        <p style={{ color: "var(--mist)", fontSize: "0.625rem", margin: "0 0 3px", fontWeight: 600 }}>
+        <p style={{ color: "var(--mist)", fontSize: "0.75rem", margin: "0 0 4px", fontWeight: 600 }}>
           {name}
         </p>
-        <p style={{ color: "var(--ivoire)", fontSize: "0.8125rem", margin: 0, lineHeight: 1.45 }}>
+        <p style={{ color: "var(--ivoire)", fontSize: "1rem", margin: 0, lineHeight: 1.45 }}>
           {text}
         </p>
       </div>
@@ -245,7 +245,7 @@ export default function JungleHero() {
                 // CSS Individual Transform: scale composites separately from the
                 // animation's transform (translateY + rotate) — no conflict.
                 scale: "0.9",
-                filter: "blur(1.5px)",
+                filter: "blur(0.8px)",
                 opacity: 0.55,
               }}
             >
