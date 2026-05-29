@@ -1,0 +1,433 @@
+/* ─── Stage ──────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: max(100vh, 900px);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--onyx);
+  color: var(--ivoire);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -38vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130vw;
+  height: 120vh;
+  background: radial-gradient(
+    ellipse 50% 42% at 50% 35%,
+    rgba(245, 240, 232, 0.10) 0%,
+    rgba(245, 240, 232, 0.045) 32%,
+    rgba(14, 14, 16, 0) 64%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 8, 10, 0) 55%, var(--noir-deep) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Hero centre ────────────────────────────────────────── */
+.heroCore {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px clamp(20px, 5vw, 48px) 96px;
+  gap: 0;
+}
+
+.kicker {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin-bottom: clamp(28px, 5vh, 52px);
+  opacity: 0;
+  animation: rise 700ms ease-out 120ms forwards;
+}
+
+.pip {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  margin-right: 12px;
+  vertical-align: middle;
+  box-shadow: 0 0 12px 1px rgba(var(--terracotta-rgb), 0.7);
+}
+
+.heroCore h1 {
+  position: relative;
+  font-weight: 700;
+  font-size: clamp(3.5rem, 12vw, 10rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--ivoire);
+  max-width: 13ch;
+  text-wrap: balance;
+  opacity: 0;
+  animation: rise 800ms ease-out 220ms forwards;
+}
+
+.heroCore h1::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 132%;
+  height: 165%;
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 50%,
+    rgba(245, 240, 232, 0.04) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.cta {
+  position: relative;
+  z-index: 6;
+  margin-top: clamp(40px, 7vh, 72px);
+  opacity: 0;
+  animation: rise 800ms ease-out 420ms forwards;
+}
+
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  background: var(--terracotta);
+  color: var(--ivoire);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  padding: 19px 40px;
+  border-radius: 14px;
+  box-shadow:
+    0 0 50px -10px rgba(var(--terracotta-rgb), 0.38),
+    0 0 16px -5px rgba(var(--terracotta-rgb), 0.28);
+  transition: transform 320ms ease-out, box-shadow 320ms ease-out, filter 320ms ease-out;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 60px -8px rgba(var(--terracotta-rgb), 0.50),
+    0 0 22px -5px rgba(var(--terracotta-rgb), 0.35);
+  transform: translateY(-2px);
+}
+
+.subtitle {
+  margin-top: clamp(28px, 4.5vh, 40px);
+  max-width: 46ch;
+  font-size: clamp(15px, 1.4vw, 17px);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--mist);
+  text-wrap: pretty;
+  opacity: 0;
+  animation: rise 800ms ease-out 560ms forwards;
+}
+
+.subtitle strong {
+  color: var(--ivoire);
+  font-weight: 500;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Jungle cards — social comments ─────────────────────── */
+.cards {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.jcard {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 15px 17px;
+  border-radius: 16px;
+  background: rgba(40, 42, 52, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  opacity: 0;
+  transform: rotate(var(--rot, 0deg)) translateY(12px);
+  animation: jcRise 760ms ease-out var(--delay, 0ms) forwards;
+}
+
+.jcHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jcAv {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--av, #555);
+  color: #0e0e10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.jcName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ivoire);
+  letter-spacing: -0.005em;
+}
+
+.jcText {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #c7cad2;
+  letter-spacing: 0.002em;
+  text-wrap: pretty;
+}
+
+.jcTime {
+  font-size: 11px;
+  opacity: 0.5;
+  color: var(--mist);
+  text-align: right;
+}
+
+/* Card types */
+.tSharp { --op: 0.92; }
+
+.tSemi {
+  filter: blur(4px);
+  --op: 0.55;
+}
+
+.tGhost {
+  filter: blur(7px);
+  --op: 0.42;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* THE breach card — passes IN FRONT of H1 */
+.breach {
+  z-index: 7;
+  --op: 0.8;
+  background: rgba(44, 46, 57, 0.62);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  filter: none;
+}
+
+@keyframes jcRise {
+  to {
+    opacity: var(--op, 0.6);
+    transform: rotate(var(--rot, 0deg)) translateY(0);
+  }
+}
+
+/* ─── Card positions — desktop ────────────────────────────── */
+/* edge / corners */
+.c1  { top: 13%;   left: 6%;      width: 316px; --rot: -7deg; --delay: 160ms; z-index: 2; }
+.c3  { top: 16%;   right: 9.5%;   width: 308px; --rot:  6deg; --delay: 220ms; z-index: 2; }
+.c9  { bottom: 8%; left: 12%;     width: 330px; --rot:  4deg; --delay: 420ms; z-index: 2; }
+.c11 { bottom: 7%; right: 11%;    width: 300px; --rot:  0deg; --delay: 500ms; z-index: 2; }
+/* mid-periphery */
+.c2  { top: calc(34% + 100px); left: 5%;   width: 208px; --rot:  5deg; --delay: 300ms; z-index: 2; }
+.c4  { top: 46%;   right: 13%;   width: 208px; --rot: -6deg; --delay: 360ms; z-index: 2; }
+/* penetrate centre (behind H1 / behind CTA) */
+.c5  { top: calc(37% + 100px); left: 15%;  width: 248px; --rot:  4deg; --delay: 540ms; z-index: 1; }
+.c7  { top: 6%;    left: 38%;    width: 264px; --rot:  3deg; --delay: 600ms; z-index: 1; }
+.c8  { top: 40%;   left: 33%;    width: 264px; --rot: -5deg; --delay: 680ms; z-index: 1; }
+.c10 { bottom: 12%; left: 38%;   width: 240px; --rot:  7deg; --delay: 720ms; z-index: 1; }
+/* THE breach — sibling of heroCore, NOT inside .cards */
+.c6  { top: 32%;   left: 60%;    width: 218px; --rot: -4deg; --delay: 880ms; }
+
+/* ─── Scroll hint ─────────────────────────────────────────── */
+.scrollHint {
+  position: relative;
+  z-index: 4;
+  text-align: center;
+  padding-bottom: 36px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mist);
+  opacity: 0;
+  animation: rise 800ms ease-out 800ms forwards;
+}
+
+.line {
+  display: block;
+  width: 1px;
+  height: 34px;
+  margin: 0 auto 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(156, 163, 175, 0) 0%,
+    rgba(156, 163, 175, 0.6) 100%
+  );
+}
+
+/* ─── Responsive — 1024px ─────────────────────────────────── */
+@media (max-width: 1024px) {
+  .c2, .c4 { width: 196px; }
+  .c5 { width: 228px; }
+  .c1, .c3, .c9, .c11 { width: 282px; }
+}
+
+/* ─── Responsive — 720px ──────────────────────────────────── */
+@media (max-width: 720px) {
+  .c2, .c4, .c5, .c10 { display: none; }
+  .c1, .c3, .c9, .c11 { width: 248px; }
+  .jcText { font-size: 13px; }
+}
+
+/* ─── Responsive — 480px (mobile natif) ──────────────────── */
+@media (max-width: 480px) {
+  .hero {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .hero::before {
+    top: -22%;
+    width: 150%;
+    height: 75%;
+    background: radial-gradient(
+      ellipse 52% 60% at 50% 30%,
+      rgba(245, 240, 232, 0.11) 0%,
+      rgba(245, 240, 232, 0.045) 34%,
+      rgba(14, 14, 16, 0) 68%
+    );
+  }
+
+  .heroCore { padding-top: 4vh; }
+
+  .heroCore h1 {
+    font-size: clamp(3rem, 13vw, 3.4rem);
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    max-width: 9ch;
+  }
+
+  .kicker { font-size: 11px; letter-spacing: 0.2em; margin-bottom: 26px; }
+
+  .cta { margin-top: 40px; }
+
+  .btn {
+    font-size: 15px;
+    padding: 16px 34px;
+    border-radius: 13px;
+    box-shadow:
+      0 0 56px -10px rgba(var(--terracotta-rgb), 0.55),
+      0 0 18px -5px rgba(var(--terracotta-rgb), 0.40);
+  }
+
+  .btn:active { transform: translateY(1px); }
+
+  .subtitle {
+    margin-top: 22px;
+    max-width: 33ch;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  /* Cards mobiles : réduire taille base */
+  .jcard { padding: 12px 13px; border-radius: 14px; gap: 6px; }
+  .jcAv  { width: 28px; height: 28px; font-size: 11.5px; }
+  .jcName { font-size: 12px; }
+  .jcText { font-size: 12.5px; line-height: 1.45; }
+  .jcTime { font-size: 10px; }
+
+  /* Masquer les cards desktop-only non reprises sur mobile */
+  .c8, .c9, .c11 { display: none; }
+
+  /* c1 Karim B. — top-left */
+  .c1 { top: calc(5% + 30px); left: 6%; width: 200px; --rot: -5deg; }
+
+  /* c3 Yacine T. — repositionné bottom-right sur mobile */
+  .c3 { top: auto; bottom: 10%; right: 4%; width: 168px; --rot: 4deg; }
+
+  /* c4 Sami O. — ghost sur mobile (override display:none du 720px) */
+  .c4 {
+    display: flex;
+    top: 27%;
+    left: 8%;
+    width: 184px;
+    --rot: 3deg;
+    filter: blur(5px);
+    --op: 0.42;
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* c7 Ryad B. — sharp sur mobile (override ghost + display:none du 480px) */
+  .c7 {
+    display: flex;
+    top: auto;
+    bottom: 10%;
+    left: 4%;
+    width: 180px;
+    --rot: 4deg;
+    filter: none;
+    --op: 0.90;
+    background: rgba(40, 42, 52, 0.42);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  /* c6 breach Sofiane M. — centre-droite */
+  .c6 { top: calc(33% + 90px); left: calc(34% + 100px); width: 132px; --op: 0.65; }
+
+  /* Masquer scroll hint sur mobile */
+  .scrollHint { display: none; }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .hero * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .jcard { opacity: var(--op, 0.6); transform: rotate(var(--rot, 0deg)); }
+  .kicker,
+  .heroCore h1,
+  .cta,
+  .subtitle,
+  .scrollHint { opacity: 1; }
+}
