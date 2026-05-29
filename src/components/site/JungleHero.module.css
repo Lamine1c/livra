@@ -378,8 +378,9 @@
   /* Masquer les cards desktop-only non reprises sur mobile */
   .c8, .c9, .c11 { display: none; }
 
-  /* c1 Karim B. — top-left */
-  .c1 { top: calc(5% + 30px); left: 6%; width: 200px; --rot: -5deg; }
+  /* c1 Karim B. — haut du hero, top légèrement négatif (clippé par overflow:hidden)
+     garantit ≥20px de dégagement avec le kicker sur tous les iPhones 667-930px */
+  .c1 { top: -8px; left: 6%; width: 200px; --rot: -5deg; }
 
   /* c3 Yacine T. — repositionné bottom-right sur mobile */
   .c3 { top: auto; bottom: 10%; right: 4%; width: 168px; --rot: 4deg; }
@@ -411,8 +412,10 @@
     border-color: rgba(255, 255, 255, 0.07);
   }
 
-  /* c6 breach Sofiane M. — centre-droite */
-  .c6 { top: calc(33% + 90px); left: calc(34% + 100px); width: 132px; --op: 0.65; }
+  /* c6 breach Sofiane M. — à droite du H1 "jungle.", au-dessus du CTA
+     top: 38% cible la 2ème ligne du H1 sur 667-930px ; left: auto + right: 5%
+     positionne la card à droite du texte sans déborder du viewport */
+  .c6 { top: 38%; left: auto; right: 5%; width: 132px; --rot: -4deg; --op: 0.65; }
 
   /* Masquer scroll hint sur mobile */
   .scrollHint { display: none; }
