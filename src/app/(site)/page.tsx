@@ -56,16 +56,6 @@ export default function LandingPage() {
         {/* ── Hero — Jungle de pains ───────────────────────── */}
         <JungleHero />
 
-        {/* ── OS description ────────────────────────────────── */}
-        <Section className="text-center max-w-2xl">
-          <FadeIn>
-            <p className="text-ivoire text-xl md:text-2xl leading-relaxed">
-              LIVRA est l&apos;OS de votre e-commerce. De la pub Facebook au
-              scan du colis, tout passe par un seul système.
-            </p>
-          </FadeIn>
-        </Section>
-
         {/* ── Wall of Pain — Marquee ────────────────────────── */}
         <div style={{ paddingBottom: "5rem", overflow: "hidden" }}>
           <PainMarquee />
