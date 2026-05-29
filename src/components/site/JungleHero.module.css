@@ -378,57 +378,46 @@
   /* Masquer les cards desktop-only non reprises sur mobile */
   .c8, .c9, .c11 { display: none; }
 
-  /* c1 Karim B. — top négatif : card émerge du bord supérieur du hero (clippé par
-     overflow:hidden). bottom = 104px ← 14px de dégagement avec le kicker à ~118px
-     sur iPhone SE 667px ; 95px+ de gap sur tous les iPhones plus hauts */
-  .c1 { top: -24px; left: 6%; width: 200px; --rot: -5deg; }
+  /* c1 Karim B. — 50px sous la status bar / nav (top: 26px = -24px + 50px) */
+  .c1 { top: 26px; left: 6%; width: 200px; --rot: -5deg; }
 
-  /* c3 Yacine T. — zone bottom, texte clampé 2 lignes */
-  .c3 { top: auto; bottom: 4%; right: 4%; width: 168px; --rot: 4deg; }
+  /* c3 Yacine T. — zone bottom, compact, 1 ligne */
+  .c3 { top: auto; bottom: 6%; right: 4%; width: 145px; --rot: 4deg; padding: 10px; }
 
   /* c4 Sami O. — supprimé sur mobile (dans la zone sanctuaire) */
   .c4 { display: none; }
 
-  /* c7 Ryad B. — zone bottom, texte clampé 2 lignes */
+  /* c7 Ryad B. — zone bottom, compact, 1 ligne */
   .c7 {
     display: flex;
     top: auto;
-    bottom: 4%;
+    bottom: 6%;
     left: 4%;
-    width: 180px;
+    width: 145px;
     --rot: 4deg;
+    padding: 10px;
     filter: none;
     --op: 0.90;
     background: rgba(40, 42, 52, 0.42);
     border-color: rgba(255, 255, 255, 0.07);
   }
 
-  /* Limiter Ryad + Yacine à 2 lignes pour contraindre la hauteur des cards */
+  /* Limiter Ryad + Yacine à 1 ligne */
   .c7 .jcText,
   .c3 .jcText {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  /* c6 breach Sofiane M. — 1 seule ligne visible, pas de timestamp
-     top: 30% → hauteur card ~76px → bottom jamais au-delà du H1 / au-dessus du CTA
-     667px : top=200px(H1), bottom=276px, CTA=292px → 16px gap
-     844px : top=253px(H1), bottom=329px, CTA=387px → 58px gap */
-  .c6 { top: 30%; left: auto; right: 5%; width: 132px; --rot: -4deg; --op: 0.65; }
+  /* c6 breach Sofiane M. — derrière le H1 sur mobile (z-index: 1 < heroCore z-index: 5) */
+  .c6 { top: 30%; left: auto; right: 5%; width: 132px; --rot: -4deg; --op: 0.65; z-index: 1; }
   .c6 .jcText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .c6 .jcTime { display: none; }
 
   /* Masquer scroll hint sur mobile */
   .scrollHint { display: none; }
-}
-
-/* Masquer Ryad + Yacine sur petits iPhones (≤720px hauteur = iPhone SE)
-   Le sous-titre se termine trop bas sur ces viewports courts pour avoir
-   les 40px de dégagement requis avec les cards de bas de page */
-@media (max-width: 480px) and (max-height: 720px) {
-  .c7, .c3 { display: none; }
 }
 
 /* Respirations supplémentaires uniquement sur iPhones suffisamment hauts
