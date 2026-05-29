@@ -376,7 +376,7 @@
   .jcTime { font-size: 10px; }
 
   /* Masquer les cards desktop-only non reprises sur mobile */
-  .c8, .c9, .c11 { display: none; }
+  .c9 { display: none; }
 
   /* c1 Karim B. — 50px sous la status bar / nav (top: 26px = -24px + 50px) */
   .c1 { top: 26px; left: 6%; width: 200px; --rot: -5deg; }
@@ -415,6 +415,46 @@
   .c6 { top: 30%; left: auto; right: 5%; width: 132px; --rot: -4deg; --op: 0.65; z-index: 1; }
   .c6 .jcText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .c6 .jcTime { display: none; }
+
+  /* c8 Mehdi L. — fantôme background gauche, derrière tout (z-index 0 dans .cards) */
+  .c8 {
+    display: flex;
+    top: 26%;
+    left: 4%;
+    bottom: auto;
+    width: 140px;
+    --rot: -3deg;
+    filter: blur(7px);
+    --op: 0.30;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    z-index: 0;
+  }
+
+  /* c11 Anis F. — fantôme background droite, derrière tout (z-index 0 dans .cards) */
+  .c11 {
+    display: flex;
+    top: 63%;
+    right: 4%;
+    left: auto;
+    bottom: auto;
+    width: 140px;
+    --rot: 3deg;
+    filter: blur(7px);
+    --op: 0.30;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    z-index: 0;
+  }
+
+  /* Tronquer le texte des fantômes à 2 lignes (hauteur prévisible) */
+  .c8 .jcText,
+  .c11 .jcText {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 
   /* Masquer scroll hint sur mobile */
   .scrollHint { display: none; }
