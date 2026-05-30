@@ -274,7 +274,7 @@ export default function ProductDemo() {
                         <span className={styles.sheetBox}>📦</span>
                         <span className={styles.sheetBadge}>En route vers vous</span>
                       </div>
-                      <p className={styles.sheetShop}>test1</p>
+                      <p className={styles.sheetShop}>Oussama</p>
                     </div>
                   </div>
                 </div>

@@ -20,7 +20,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: var(--onyx);
+  background: var(--noir-deep);
   padding: 60px 20px 64px;
   font-family: var(--font-inter, 'Inter'), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -564,7 +564,8 @@
 
 /* ── Responsive : 721px+ — triptyque 3D ────────────────────── */
 @media (min-width: 721px) {
-  .section1 { padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 60px); }
+  /* overflow: visible allows preserve-3d to work (hidden would flatten it) */
+  .section1 { padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 60px); overflow: visible; }
 
   .inner {
     display: grid;
