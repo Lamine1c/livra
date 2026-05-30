@@ -37,7 +37,6 @@
 
   position: relative;
   min-height: 100vh;
-  padding-top: 80px;
   display: flex;
   flex-direction: column;
   isolation: isolate;
@@ -74,6 +73,40 @@
   pointer-events: none;
   z-index: 0;
 }
+
+/* ── Nav ── */
+.nav {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(34px, 5vh, 52px) clamp(22px, 5vw, 72px) 0;
+}
+.brand {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivoire);
+  text-decoration: none;
+}
+.navLinks {
+  display: flex;
+  gap: 38px;
+  align-items: center;
+}
+.navLinks a {
+  color: var(--mist);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  transition: color 320ms ease-out;
+}
+.navLinks a:hover { color: var(--ivoire); }
+.navLogin { color: var(--ivoire) !important; font-weight: 500; }
+.navBurger { display: none; }
 
 /* ── Stage ── */
 .stage {
@@ -329,11 +362,12 @@
    flex children of .stage; order CSS places them correctly.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1280px) {
-  .hero { overflow: visible; padding-top: 0; }
+  .hero { overflow: visible; }
+  .navLinks a:not(.navLogin) { display: none; }
 
   .stage {
     justify-content: safe center;
-    padding: clamp(72px, 8vh, 100px) 0 clamp(20px, 3vh, 36px);
+    padding: clamp(16px, 3.6vh, 40px) 0 clamp(20px, 3vh, 36px);
     gap: clamp(20px, 3.4vh, 40px);
   }
   /* Invariant 2: order property positions rails around core */
@@ -385,10 +419,21 @@
    Dense ghost jungle — 10 cards behind core.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 720px) {
-  .hero { --ghost-op: 0.46; padding-top: 0; }
+  .hero { --ghost-op: 0.46; }
+  .nav { padding: 22px 22px 0; }
+  .navLinks { display: none; }
+  .navBurger {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 24px;
+    cursor: pointer;
+  }
+  .navBurger span { height: 1.6px; border-radius: 2px; background: var(--mist); }
+  .navBurger span:last-child { width: 15px; }
 
   .stage { justify-content: center; padding: 0; gap: 0; }
-  .core  { flex: 1 1 auto; max-width: 100%; justify-content: center; padding: 60px 24px 0; }
+  .core  { flex: 1 1 auto; max-width: 100%; justify-content: center; padding: 0 24px; }
 
   /* Gutter back to absolute */
   .gutter { position: absolute; inset: 0; display: block; z-index: 3; }

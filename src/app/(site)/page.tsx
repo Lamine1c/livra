@@ -1,5 +1,4 @@
 import { MapPin } from "lucide-react";
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Section from "@/components/site/Section";
 import WaitlistForm from "@/components/site/WaitlistForm";
@@ -52,8 +51,6 @@ const PILLARS = [
 export default function LandingPage() {
   return (
     <>
-      <Header />
-
       <main>
         {/* ── Hero — Jungle de pains ───────────────────────── */}
         <JungleHeroV2 />

@@ -26,6 +26,21 @@ function Card({ card }: { card: CardData }) {
 export default function JungleHeroV2() {
   return (
     <section className={styles.hero}>
+
+      {/* Nav */}
+      <nav className={styles.nav}>
+        <Link href="/" className={styles.brand}>LIVRA</Link>
+        <div className={styles.navLinks}>
+          <a href="#">Produit</a>
+          <a href="#">Tarifs</a>
+          <a href="#">Wilayas</a>
+          <Link href="/auth/login" className={styles.navLogin}>Se connecter</Link>
+        </div>
+        <div className={styles.navBurger} aria-label="Menu">
+          <span /><span /><span />
+        </div>
+      </nav>
+
       <div className={styles.stage}>
 
         {/* Ghost atmosphere — deep background, faint + blurred, slow float */}
