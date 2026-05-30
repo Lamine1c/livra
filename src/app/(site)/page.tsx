@@ -6,6 +6,7 @@ import WaitlistForm from "@/components/site/WaitlistForm";
 import FadeIn from "@/components/site/FadeIn";
 import JungleHero from "@/components/site/JungleHero";
 import ProductDemo from "@/components/site/ProductDemo";
+import PainWall from "@/components/site/PainWall";
 import PainMarquee from "@/components/site/PainMarquee";
 import WhatsAppWall from "@/components/site/WhatsAppWall";
 import CinemaMode from "@/components/site/CinemaMode";
@@ -59,6 +60,9 @@ export default function LandingPage() {
 
         {/* ── Section 1 — Démo produit ─────────────────────── */}
         <ProductDemo />
+
+        {/* ── Section 2 — Mur de commentaires DZ ──────────── */}
+        <PainWall />
 
         {/* ── Wall of Pain — Marquee ────────────────────────── */}
         <div style={{ paddingBottom: "5rem", overflow: "hidden" }}>
