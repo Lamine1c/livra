@@ -448,7 +448,7 @@
   }
   .gutter .cText { font-size: 12.5px; }
   .pTr, .pMl { display: none; }
-  .pTl { left: 3.6vw;  right: auto; top: 26px;    bottom: auto; --w: clamp(208px, 61vw, 240px); --rot: -8deg; }
+  .pTl { left: 3.6vw;  right: auto; top: 88px;    bottom: auto; --w: clamp(208px, 61vw, 240px); --rot: -8deg; }
   .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
   .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
 
