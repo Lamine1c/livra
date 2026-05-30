@@ -442,13 +442,16 @@
     position: absolute;
     width: var(--w);
     max-width: none;
-    padding: 13px 14px 11px;
+    padding: 10px 11px 9px;
     transform: rotate(var(--rot, 0deg)) translateY(12px);
     animation: cardRise 760ms ease-out var(--delay, 0ms) forwards;
   }
-  .gutter .cText { font-size: 12.5px; }
+  .gutter .cAv   { width: 24px; height: 24px; font-size: 10px; }
+  .gutter .cName { font-size: 12px; }
+  .gutter .cText { font-size: 11px; }
+  .gutter .cTime { font-size: 10px; }
   .pTr, .pMl { display: none; }
-  .pTl { left: 3.6vw;  right: auto; top: 88px;    bottom: auto; --w: clamp(208px, 61vw, 240px); --rot: -8deg; }
+  .pTl { left: 3.6vw;  right: auto; top: 30px;    bottom: auto; --w: clamp(140px, 42vw, 165px); --rot: -8deg; }
   .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
   .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
 
@@ -479,7 +482,7 @@
 /* ── Very narrow phones (≤390px) ── */
 @media (max-width: 390px) {
   .pBl, .pBr { bottom: 24px; }
-  .pTl { --w: clamp(192px, 60vw, 222px); }
+  .pTl { --w: clamp(130px, 40vw, 155px); top: 24px; }
   .btn { max-width: 300px; }
 }
 
