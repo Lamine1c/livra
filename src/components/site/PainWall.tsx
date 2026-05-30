@@ -144,7 +144,7 @@ export default function PainWall() {
 
         {/* ── Punchline ── */}
         <p className={styles.punch}>
-          Ce chaos, <span className={styles.brand}>LIVRA</span> l&apos;a résolu.
+          Ce chaos, <span className={styles.brand}>LIVRA</span>{' '}l&apos;a résolu.
         </p>
 
       </div>

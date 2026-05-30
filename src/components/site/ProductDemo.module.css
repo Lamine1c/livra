@@ -234,11 +234,11 @@
 .phoneCenter {
   position: relative;
   width: 320px;
-  height: 692px;
+  height: 760px;
   z-index: 3;
   transform: scale(0.74);
   transform-origin: center center;
-  margin: -90px 0;
+  margin: -99px 0;
   animation: floatCMobile 6.5s ease-in-out infinite;
 }
 
@@ -556,7 +556,7 @@
 
 /* ── Responsive : petits téléphones ────────────────────────── */
 @media (max-width: 360px) {
-  .phoneCenter { transform: scale(0.66); margin: -118px 0; animation: none; }
+  .phoneCenter { transform: scale(0.66); margin: -129px 0; animation: none; }
   .phoneLeft   { transform: translate(calc(-50% - 100px), -50%) scale(0.56); }
   .phoneRight  { transform: translate(calc(-50% + 100px), -50%) scale(0.56); }
   .pill        { padding: 7px 9px; }
