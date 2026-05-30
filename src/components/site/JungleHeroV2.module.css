@@ -419,7 +419,7 @@
    Dense ghost jungle — 10 cards behind core.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 720px) {
-  .hero { --ghost-op: 0.46; }
+  .hero { --ghost-op: 0.46; overflow: hidden; }
   .nav { padding: 22px 22px 0; }
   .navLinks { display: none; }
   .navBurger {
@@ -432,8 +432,8 @@
   .navBurger span { height: 1.6px; border-radius: 2px; background: var(--mist); }
   .navBurger span:last-child { width: 15px; }
 
-  .stage { justify-content: center; padding: 0; gap: 0; }
-  .core  { flex: 1 1 auto; max-width: 100%; justify-content: center; padding: 0 24px; }
+  .stage { justify-content: center; padding: 0 0 160px; gap: 0; }
+  .core  { max-width: 100%; padding: 0 24px; }
 
   /* Gutter back to absolute */
   .gutter { position: absolute; inset: 0; display: block; z-index: 3; }
@@ -449,8 +449,8 @@
   .gutter .cText { font-size: 12.5px; }
   .pTr, .pMl { display: none; }
   .pTl { left: 3.6vw;  right: auto; top: 26px;    bottom: auto; --w: clamp(208px, 61vw, 240px); --rot: -8deg; }
-  .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 60px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
-  .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 60px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
+  .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
+  .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
 
   /* Dense ghost jungle — 10 cards */
   .ghosts { z-index: 0; }
@@ -478,7 +478,7 @@
 
 /* ── Very narrow phones (≤390px) ── */
 @media (max-width: 390px) {
-  .pBl, .pBr { bottom: 52px; }
+  .pBl, .pBr { bottom: 24px; }
   .pTl { --w: clamp(192px, 60vw, 222px); }
   .btn { max-width: 300px; }
 }
