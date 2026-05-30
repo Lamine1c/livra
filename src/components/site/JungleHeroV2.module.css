@@ -432,8 +432,8 @@
   .navBurger span { height: 1.6px; border-radius: 2px; background: var(--mist); }
   .navBurger span:last-child { width: 15px; }
 
-  .stage { justify-content: center; padding: 0 0 160px; gap: 0; }
-  .core  { max-width: 100%; padding: 0 24px; }
+  .stage { justify-content: center; padding: 0; gap: 0; }
+  .core  { flex: 1 1 auto; max-width: 100%; justify-content: center; padding: 0 24px; }
 
   /* Gutter back to absolute */
   .gutter { position: absolute; inset: 0; display: block; z-index: 3; }
@@ -451,9 +451,9 @@
   .gutter .cText { font-size: 11px; }
   .gutter .cTime { font-size: 10px; }
   .pTr, .pMl { display: none; }
-  .pTl { left: 3.6vw;  right: auto; top: 30px;    bottom: auto; --w: clamp(140px, 42vw, 165px); --rot: -8deg; }
-  .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
-  .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 36px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
+  .pTl { left: 3.6vw;  right: auto; top: 26px;    bottom: auto; --w: clamp(140px, 42vw, 165px); --rot: -8deg; }
+  .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 14px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
+  .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 14px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
 
   /* Dense ghost jungle — 10 cards */
   .ghosts { z-index: 0; }
@@ -481,7 +481,7 @@
 
 /* ── Very narrow phones (≤390px) ── */
 @media (max-width: 390px) {
-  .pBl, .pBr { bottom: 24px; }
+  .pBl, .pBr { bottom: 8px; }
   .pTl { --w: clamp(130px, 40vw, 155px); top: 24px; }
   .btn { max-width: 300px; }
 }
