@@ -582,7 +582,7 @@
 
   .stage {
     perspective: 2200px;
-    min-height: 720px;
+    min-height: 780px;
   }
 
   .mockups { transform-style: preserve-3d; }
@@ -613,7 +613,7 @@
   .phoneCenter {
     position: relative;
     width: 320px;
-    height: 692px;
+    height: 760px;
     z-index: 3;
     transform: translateZ(60px);
     transform-origin: center center;
@@ -642,7 +642,7 @@
   .sub { margin-left: 0; margin-right: 0; margin-top: 26px; font-size: clamp(15px, 1.15vw, 17px); }
   .pills { justify-content: flex-start; margin-top: 38px; gap: clamp(7px, 0.9vw, 12px); }
   .pill { font-size: clamp(12px, 1vw, 13px); padding: 8px clamp(11px, 1.2vw, 15px); }
-  .stage { min-height: 760px; }
+  .stage { min-height: 800px; }
 }
 
 /* ── Reduced motion ─────────────────────────────────────────── */
