@@ -4,7 +4,7 @@ import Footer from "@/components/site/Footer";
 import Section from "@/components/site/Section";
 import WaitlistForm from "@/components/site/WaitlistForm";
 import FadeIn from "@/components/site/FadeIn";
-import JungleHero from "@/components/site/JungleHero";
+import JungleHeroV2 from "@/components/site/JungleHeroV2";
 import ProductDemo from "@/components/site/ProductDemo";
 import PainWall from "@/components/site/PainWall";
 import PainMarquee from "@/components/site/PainMarquee";
@@ -56,7 +56,7 @@ export default function LandingPage() {
 
       <main>
         {/* ── Hero — Jungle de pains ───────────────────────── */}
-        <JungleHero />
+        <JungleHeroV2 />
 
         {/* ── Section 1 — Démo produit ─────────────────────── */}
         <ProductDemo />
