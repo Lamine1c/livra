@@ -1,0 +1,494 @@
+/* ══════════════════════════════════════════════════════════════
+   LIVRA — JungleHero V2  "Sortez de la jungle."
+   3 invariants:
+     1. Desktop >1280px : sharp cards at calc(50% + var(--gutter))
+     2. ≤1280px : gutter → static display:contents, rails vertical
+     3. Ghosts z-index 0/1, core z-index 5 — always behind text
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes at module level ── */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardRise {
+  to { opacity: 1; transform: rotate(var(--rot, 0deg)) translateY(0); }
+}
+@keyframes cardRiseM {
+  from { opacity: 0; transform: rotate(var(--rot, 0deg)) translateY(12px); }
+  to   { opacity: 1; transform: rotate(var(--rot, 0deg)) translateY(0); }
+}
+@keyframes ghostFade {
+  to { opacity: var(--ghost-op, 0.30); }
+}
+@keyframes float {
+  0%, 100% { transform: rotate(var(--rot, 0deg)) translateY(0); }
+  50%       { transform: rotate(var(--rot, 0deg)) translateY(-12px); }
+}
+
+/* ── Hero shell ── */
+.hero {
+  --accent:       #D97757;
+  --accent-rgb:   217, 119, 87;
+  --ghost-op:     0.30;
+  --gutter:       340px;
+  --card-surface: rgba(38, 40, 50, 0.55);
+  --card-border:  rgba(255, 255, 255, 0.08);
+
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--onyx);
+  color: var(--ivoire);
+  font-family: var(--font-inter, 'Inter'), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* spotlight from top */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -36vh; left: 50%;
+  transform: translateX(-50%);
+  width: 130vw; height: 118vh;
+  background: radial-gradient(
+    ellipse 46% 42% at 50% 38%,
+    rgba(245, 240, 232, 0.085) 0%,
+    rgba(245, 240, 232, 0.035) 34%,
+    rgba(14, 14, 16, 0) 66%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* floor fade to noir-deep — seam with next section */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,8,10,0) 52%, var(--noir-deep) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Nav ── */
+.nav {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(34px, 5vh, 52px) clamp(22px, 5vw, 72px) 0;
+}
+.brand {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivoire);
+  text-decoration: none;
+}
+.navLinks {
+  display: flex;
+  gap: 38px;
+  align-items: center;
+}
+.navLinks a {
+  color: var(--mist);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  transition: color 320ms ease-out;
+}
+.navLinks a:hover { color: var(--ivoire); }
+.navLogin { color: var(--ivoire) !important; font-weight: 500; }
+.navBurger { display: none; }
+
+/* ── Stage ── */
+.stage {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Core — protected centre column ── */
+.core {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 40px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kicker {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mist);
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  animation: rise 700ms ease-out 120ms forwards;
+}
+.kicker .pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 12px;
+  box-shadow: 0 0 12px 1px rgba(var(--accent-rgb), 0.75);
+}
+
+.h1 {
+  margin-top: clamp(26px, 4.6vh, 46px);
+  font-weight: 700;
+  font-size: clamp(3.4rem, 9vw, 7.6rem);
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  color: var(--ivoire);
+  opacity: 0;
+  animation: rise 800ms ease-out 220ms forwards;
+}
+.h1 .hl1 {
+  display: block;
+  font-size: 0.5em;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin-bottom: 0.05em;
+}
+.h1 .hl2 { display: block; }
+
+.subtitle {
+  margin-top: clamp(22px, 3.4vh, 34px);
+  max-width: 50ch;
+  font-size: clamp(15px, 1.3vw, 18px);
+  font-weight: 400;
+  line-height: 1.62;
+  color: var(--mist);
+  text-wrap: pretty;
+  opacity: 0;
+  animation: rise 800ms ease-out 360ms forwards;
+}
+.subtitle strong { color: var(--ivoire); font-weight: 500; }
+
+.cta {
+  position: relative;
+  margin-top: clamp(30px, 4.4vh, 46px);
+  opacity: 0;
+  animation: rise 800ms ease-out 500ms forwards;
+}
+.cta::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px; height: 150px;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(var(--accent-rgb), 0.15) 0%, transparent 72%);
+  filter: blur(8px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  background: var(--accent);
+  color: #1c100a;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  padding: 18px 38px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.18) inset,
+    0 0 26px -14px rgba(var(--accent-rgb), 0.32),
+    0 14px 30px -16px rgba(0,0,0,0.7);
+  transition: transform 300ms ease-out, box-shadow 300ms ease-out, filter 300ms ease-out;
+}
+.btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.22) inset,
+    0 0 34px -12px rgba(var(--accent-rgb), 0.42),
+    0 18px 36px -16px rgba(0,0,0,0.7);
+}
+
+.micro {
+  margin-top: clamp(18px, 2.6vh, 26px);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(156, 163, 175, 0.7);
+  opacity: 0;
+  animation: rise 800ms ease-out 640ms forwards;
+}
+
+/* ── Cards shared ── */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px 17px 13px;
+  border-radius: 22px;
+  background: var(--card-surface);
+  border: 1px solid var(--card-border);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 22px 44px -28px rgba(0,0,0,0.85);
+}
+.cHead { display: flex; align-items: center; gap: 10px; }
+.cAv {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--av, #555);
+  color: #0E0E10;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; flex-shrink: 0;
+}
+.cName {
+  font-size: 13.5px; font-weight: 600;
+  color: var(--ivoire); letter-spacing: -0.005em;
+}
+.cText {
+  font-size: 13.5px; font-weight: 400;
+  line-height: 1.5; color: #C7CAD2; text-wrap: pretty;
+}
+.cTime { font-size: 11px; color: var(--mist); opacity: 0.55; text-align: right; }
+
+/* ── Gutter — sharp peripheral cards, anchored outside safe corridor ── */
+.gutter {
+  position: absolute; inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.gutter .card {
+  position: absolute;
+  width: var(--w, 300px);
+  transform: rotate(var(--rot, 0deg)) translateY(14px);
+  opacity: 0;
+  animation: cardRise 760ms ease-out var(--delay, 0ms) forwards;
+}
+
+/* Invariant 1: cards anchored at calc(50% + var(--gutter)) */
+.pTl { right: calc(50% + var(--gutter)); top: 13%;     --w: 300px; --rot: -5deg; --delay: 180ms; }
+.pTr { left:  calc(50% + var(--gutter)); top: 9%;      --w: 300px; --rot: 5deg;  --delay: 260ms; }
+.pBl { right: calc(50% + var(--gutter)); bottom: 13%;  --w: 300px; --rot: 4deg;  --delay: 340ms; }
+.pBr { left:  calc(50% + var(--gutter)); bottom: 16%;  --w: 290px; --rot: -4deg; --delay: 420ms; }
+.pMl { right: calc(50% + var(--gutter)); top: 42%;     --w: 284px; --rot: -4deg; --delay: 300ms; }
+
+/* Rail — desktop: inert wrapper; tablet: flex row for cards */
+.rail { display: contents; }
+
+/* ── Ghosts — atmosphere, blurred, slow float — Invariant 3: z-index 1 ── */
+.ghosts {
+  position: absolute; inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ghosts .card {
+  position: absolute;
+  width: var(--w, 280px);
+  filter: blur(var(--gb, 6px));
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  opacity: 0;
+  animation:
+    ghostFade 1100ms ease-out var(--delay, 0ms) forwards,
+    float var(--float, 24s) ease-in-out var(--delay, 0ms) infinite;
+}
+
+.g1  { right: calc(50% + 430px); top: 7%;     --w: 280px; --rot: -8deg;  --delay: 540ms;  --float: 26s; }
+.g2  { left:  calc(50% + 440px); bottom: 7%;  --w: 268px; --rot: 7deg;   --delay: 680ms;  --float: 30s; }
+.g3  { left:  calc(50% + 410px); top: 38%;    --w: 250px; --rot: -5deg;  --delay: 820ms;  --float: 22s; }
+.g4  { right: calc(50% + 420px); bottom: 9%;  --w: 244px; --rot: 6deg;   --delay: 760ms;  --float: 28s; }
+.g5  { right: calc(50% + 600px); top: 16%;    --w: 240px; --rot: -11deg; --gb: 8px;  --delay: 600ms;  --float: 27s; }
+.g6  { right: calc(50% + 380px); top: 62%;    --w: 232px; --rot: 6deg;   --gb: 7px;  --delay: 880ms;  --float: 24s; }
+.g7  { right: calc(50% + 660px); bottom: 20%; --w: 250px; --rot: -6deg;  --gb: 9px;  --delay: 720ms;  --float: 31s; }
+.g8  { right: calc(50% + 500px); top: 2%;     --w: 220px; --rot: 9deg;   --gb: 9px;  --delay: 960ms;  --float: 29s; }
+.g9  { left:  calc(50% + 600px); top: 24%;    --w: 240px; --rot: 8deg;   --gb: 8px;  --delay: 640ms;  --float: 25s; }
+.g10 { left:  calc(50% + 470px); top: 60%;    --w: 232px; --rot: -9deg;  --gb: 7px;  --delay: 900ms;  --float: 23s; }
+.g11 { left:  calc(50% + 660px); bottom: 18%; --w: 250px; --rot: 5deg;   --gb: 9px;  --delay: 700ms;  --float: 32s; }
+.g12 { left:  calc(50% + 500px); top: 3%;     --w: 220px; --rot: -10deg; --gb: 9px;  --delay: 1000ms; --float: 28s; }
+.g13 { left:  calc(50% - 340px); top: 19%;    --w: 250px; --rot: -7deg;  --gb: 11px; --delay: 1080ms; --float: 30s; }
+.g14 { left:  calc(50% + 70px);  top: 30%;    --w: 244px; --rot: 6deg;   --gb: 11px; --delay: 1160ms; --float: 26s; }
+.g15 { left:  calc(50% - 200px); top: 66%;    --w: 236px; --rot: 8deg;   --gb: 12px; --delay: 1240ms; --float: 33s; }
+.g16 { left:  calc(50% - 90px);  top: 6%;     --w: 224px; --rot: -4deg;  --gb: 11px; --delay: 1320ms; --float: 24s; }
+
+/* ── Scroll hint ── */
+.scrollHint {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  padding-bottom: clamp(24px, 3.4vh, 40px);
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mist);
+  opacity: 0;
+  animation: rise 800ms ease-out 760ms forwards;
+}
+.scrollHint .line {
+  display: block;
+  width: 1px; height: 32px;
+  margin: 0 auto 13px;
+  background: linear-gradient(180deg, rgba(156,163,175,0) 0%, rgba(156,163,175,0.55) 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ≤1280px — TABLET: Invariant 2 — gutters leave fixed position,
+   cards become vertical rails above/below core.
+   display:contents on .gutter makes railTop/railBottom direct
+   flex children of .stage; order CSS places them correctly.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .hero { overflow: visible; }
+  .navLinks a:not(.navLogin) { display: none; }
+
+  .stage {
+    justify-content: safe center;
+    padding: clamp(16px, 3.6vh, 40px) 0 clamp(20px, 3vh, 36px);
+    gap: clamp(20px, 3.4vh, 40px);
+  }
+  /* Invariant 2: order property positions rails around core */
+  .railTop    { order: 1; }
+  .core       { order: 2; flex: 1 1 auto; justify-content: center; }
+  .railBottom { order: 3; }
+
+  .rail {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: clamp(14px, 2.2vw, 26px);
+    width: 100%;
+    padding: 0 clamp(20px, 5vw, 56px);
+    position: relative;
+    z-index: 4;
+  }
+
+  .gutter { position: static; display: contents; }
+  .gutter .card {
+    position: static;
+    width: 100%;
+    max-width: 300px;
+    transform: rotate(var(--rot, 0deg));
+    animation: cardRiseM 700ms ease-out var(--delay, 0ms) forwards;
+  }
+
+  .pTl { --rot: -3deg; }
+  .pTr { --rot: 3deg; }
+  .pBl { --rot: -3deg; }
+  .pBr { --rot: 3deg; }
+  .pMl { display: none; }
+
+  /* Ghosts: keep only 2 faint corner cards.
+     Specificity fix: .ghosts .gN (0,2,0) wins over .ghosts .card (0,2,0)
+     via source order — must use .ghosts .g1 not .g1 alone. */
+  .ghosts { z-index: 0; }
+  .ghosts .card { display: none; }
+  .ghosts .g1 { display: flex; right: auto; left: -48px;  top: 14%;   --w: 250px; }
+  .ghosts .g2 { display: flex; left: auto;  right: -48px; bottom: 8%; --w: 250px; }
+
+  .h1   { font-size: clamp(3rem, 7.4vw, 4.6rem); }
+  .core { max-width: 720px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ≤720px — MOBILE: not a shrunken desktop.
+   Gutter cards back to absolute with vw/clamp units.
+   Dense ghost jungle — 10 cards behind core.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .hero { --ghost-op: 0.46; overflow: hidden; }
+  .nav { padding: 22px 22px 0; }
+  .navLinks { display: none; }
+  .navBurger {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 24px;
+    cursor: pointer;
+  }
+  .navBurger span { height: 1.6px; border-radius: 2px; background: var(--mist); }
+  .navBurger span:last-child { width: 15px; }
+
+  .stage { justify-content: center; padding: 0; gap: 0; }
+  .core  { flex: 1 1 auto; max-width: 100%; justify-content: center; padding: 0 24px; }
+
+  /* Gutter back to absolute */
+  .gutter { position: absolute; inset: 0; display: block; z-index: 3; }
+  .rail   { display: contents; }
+  .gutter .card {
+    position: absolute;
+    width: var(--w);
+    max-width: none;
+    padding: 10px 11px 9px;
+    transform: rotate(var(--rot, 0deg)) translateY(12px);
+    animation: cardRise 760ms ease-out var(--delay, 0ms) forwards;
+  }
+  .gutter .cAv   { width: 24px; height: 24px; font-size: 10px; }
+  .gutter .cName { font-size: 12px; }
+  .gutter .cText { font-size: 11px; }
+  .gutter .cTime { font-size: 10px; }
+  .pTr, .pMl { display: none; }
+  .pTl { left: 3.6vw;  right: auto; top: 26px;    bottom: auto; --w: clamp(140px, 42vw, 165px); --rot: -8deg; }
+  .pBl { left: 3.6vw;  right: auto; top: auto;    bottom: 14px; --w: clamp(140px, 40vw, 172px); --rot: -3deg; }
+  .pBr { right: 3.6vw; left: auto;  top: auto;    bottom: 14px; --w: clamp(140px, 40vw, 172px); --rot: 3deg;  }
+
+  /* Dense ghost jungle — 10 cards */
+  .ghosts { z-index: 0; }
+  .ghosts .card { display: none; }
+  .ghosts .g1,  .ghosts .g2,  .ghosts .g3,  .ghosts .g4,  .ghosts .g5,
+  .ghosts .g6,  .ghosts .g7,  .ghosts .g8,  .ghosts .g9,  .ghosts .g10 { display: flex; }
+  .g1  { left: -12vw;  right: auto; top: 5%;    bottom: auto; --w: clamp(168px, 49vw, 195px); --rot: -9deg;  --gb: 8px;  }
+  .g2  { right: -11vw; left: auto;  top: 3%;    bottom: auto; --w: clamp(166px, 48vw, 190px); --rot: 8deg;   --gb: 8px;  }
+  .g3  { left: 27vw;   right: auto; top: 15%;   bottom: auto; --w: clamp(158px, 46vw, 180px); --rot: -5deg;  --gb: 11px; }
+  .g4  { left: -9vw;   right: auto; top: 31%;   bottom: auto; --w: clamp(170px, 50vw, 196px); --rot: 6deg;   --gb: 11px; }
+  .g5  { right: -9vw;  left: auto;  top: 36%;   bottom: auto; --w: clamp(170px, 50vw, 196px); --rot: -6deg;  --gb: 11px; }
+  .g6  { left: 20vw;   right: auto; top: 54%;   bottom: auto; --w: clamp(154px, 45vw, 174px); --rot: 4deg;   --gb: 12px; }
+  .g7  { left: -7vw;   right: auto; top: 65%;   bottom: auto; --w: clamp(166px, 49vw, 190px); --rot: 8deg;   --gb: 11px; }
+  .g8  { right: -9vw;  left: auto;  top: 69%;   bottom: auto; --w: clamp(166px, 49vw, 190px); --rot: -7deg;  --gb: 11px; }
+  .g9  { left: -11vw;  right: auto; top: auto;  bottom: 3%;   --w: clamp(172px, 51vw, 198px); --rot: 5deg;   --gb: 8px;  }
+  .g10 { right: -12vw; left: auto;  top: auto;  bottom: 1%;   --w: clamp(172px, 51vw, 198px); --rot: -8deg;  --gb: 9px;  }
+
+  .core    { max-width: 100%; }
+  .h1      { font-size: clamp(2.9rem, 12.5vw, 3.6rem); line-height: 0.92; }
+  .subtitle { font-size: 14.5px; max-width: 34ch; }
+  .micro   { margin-top: 16px; }
+  .btn     { width: 100%; max-width: 340px; padding: 17px 28px; }
+  .scrollHint { display: none; }
+}
+
+/* ── Very narrow phones (≤390px) ── */
+@media (max-width: 390px) {
+  .pBl, .pBr { bottom: 8px; }
+  .pTl { --w: clamp(130px, 40vw, 155px); top: 24px; }
+  .btn { max-width: 300px; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .gutter .card  { opacity: 1; transform: rotate(var(--rot, 0deg)); }
+  .ghosts .card  { opacity: var(--ghost-op, 0.30); transform: rotate(var(--rot, 0deg)); }
+  .kicker, .h1, .subtitle, .cta, .micro, .scrollHint { opacity: 1; animation: none; }
+}
