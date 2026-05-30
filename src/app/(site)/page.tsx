@@ -5,6 +5,7 @@ import Section from "@/components/site/Section";
 import WaitlistForm from "@/components/site/WaitlistForm";
 import FadeIn from "@/components/site/FadeIn";
 import JungleHero from "@/components/site/JungleHero";
+import ProductDemo from "@/components/site/ProductDemo";
 import PainMarquee from "@/components/site/PainMarquee";
 import WhatsAppWall from "@/components/site/WhatsAppWall";
 import CinemaMode from "@/components/site/CinemaMode";
@@ -55,6 +56,9 @@ export default function LandingPage() {
       <main>
         {/* ── Hero — Jungle de pains ───────────────────────── */}
         <JungleHero />
+
+        {/* ── Section 1 — Démo produit ─────────────────────── */}
+        <ProductDemo />
 
         {/* ── Wall of Pain — Marquee ────────────────────────── */}
         <div style={{ paddingBottom: "5rem", overflow: "hidden" }}>
