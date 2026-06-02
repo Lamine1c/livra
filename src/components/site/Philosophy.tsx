@@ -1,7 +1,7 @@
 import styles from './Philosophy.module.css';
 
 /* Philosophy — porté depuis la maquette HTML validée.
-   Composant serveur : aucune interactivité JS (animations en CSS, FAQ en <details> natif).
+   Composant serveur : aucune interactivité JS (animations en CSS).
    Police Inter via next/font ; tokens couleur via globals.css. */
 export default function Philosophy() {
   return (
@@ -11,14 +11,15 @@ export default function Philosophy() {
           <p className={styles['s75-eyebrow']}><span className={styles['s75-pip']}></span>Notre philosophie</p>
 
           <h2 className={styles['s75-statement']}>
-            On n'a pas créé LIVRA pour livrer des colis.<br className={styles['brk']} />
-            <span className={styles['dim']}>On l'a créé pour</span> <em>rendre leur métier</em> <span className={styles['dim']}>aux vendeurs algériens.</span>
+            On n'est pas obsédés par ce que font les autres.
+            On est obsédés par ce dont <em>nos clients ont besoin</em>.
+            C'est de là qu'on part.
           </h2>
 
           <p className={styles['s75-body']}>
             Pendant des années, vendre en ligne en Algérie voulait dire encaisser les coups&nbsp;:
             fausses commandes, colis perdus, clients fantômes, livreurs injoignables.
-            <strong>On a décidé que ça suffisait.</strong> Pas avec une promesse — avec des outils.
+            <strong>On a dit STOP&nbsp;!!</strong><br />Pas avec une promesse — avec des outils.
           </p>
 
           <hr className={styles['s75-rule']} />

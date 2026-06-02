@@ -1,7 +1,7 @@
 /* Philosophy.module.css — porté depuis LIVRA_Section7_5_Philosophie.html
    • Tokens globaux (--onyx, --noir-deep, --ivoire, --mist, --terracotta, --emerald…) : globals.css.
    • Police Inter : charger via next/font dans layout.tsx (retirer le <link> Google Fonts).
-   • Classes accédées en bracket-notation côté TSX : styles['s7-card'] (fidélité 1:1 avec la maquette). */
+   • Classes accédées en bracket-notation côté TSX : styles['s75-tenet'] (fidélité 1:1 avec la maquette). */
 
 /* ════════════════════════════════════════════════════════════════
      SECTION 7.5 — NOTRE PHILOSOPHIE (manifeste · chapitre calme)
@@ -61,8 +61,8 @@
      produit. L'emphase terracotta porte le sens. */
   .s75-statement {
     font-weight: 400;
-    font-size: clamp(1.9rem, 5.4vw, 3.4rem);
-    line-height: 1.16;
+    font-size: clamp(1.8rem, 5vw, 3.15rem);
+    line-height: 1.2;
     letter-spacing: -0.025em;
     color: var(--ivoire);
     text-wrap: balance;
@@ -170,6 +170,6 @@
     .s75 { padding: clamp(130px, 15vw, 210px) clamp(24px, 5vw, 80px); }
     .s75-inner { max-width: 1080px; }
     .s75-eyebrow { font-size: 13px; margin-bottom: 48px; }
-    .s75-statement { font-size: clamp(2.8rem, 4.2vw, 4rem); letter-spacing: -0.03em; line-height: 1.12; }
+    .s75-statement { font-size: clamp(2.5rem, 3.8vw, 3.6rem); letter-spacing: -0.03em; line-height: 1.16; }
     .s75-body { font-size: clamp(16px, 1.15vw, 18px); }
   }
