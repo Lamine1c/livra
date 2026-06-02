@@ -18,7 +18,7 @@ export default function Philosophy() {
 
           <p className={styles['s75-body']}>
             Pendant des années, vendre en ligne en Algérie voulait dire encaisser les coups&nbsp;:
-            fausses commandes, colis perdus, clients fantômes, livreurs injoignables.
+            fausses commandes, colis perdus, clients fantômes, livreurs injoignables.{' '}
             <strong>On a dit STOP&nbsp;!!</strong><br />Pas avec une promesse — avec des outils.
           </p>
 
