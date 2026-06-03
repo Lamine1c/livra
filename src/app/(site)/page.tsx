@@ -1,5 +1,6 @@
 import Footer from "@/components/site/Footer";
 import JungleHeroV2 from "@/components/site/JungleHeroV2";
+import PourquoiLivra from "@/components/site/PourquoiLivra";
 import ProductDemo from "@/components/site/ProductDemo";
 import PainWall from "@/components/site/PainWall";
 import Otp from "@/components/site/Otp";
@@ -33,6 +34,7 @@ export default function LandingPage() {
     <>
       <main>
         <JungleHeroV2 />
+        <PourquoiLivra />
         <ProductDemo />
         <PainWall />
         <Otp />
