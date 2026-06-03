@@ -5,7 +5,6 @@ import PainWall from "@/components/site/PainWall";
 import Otp from "@/components/site/Otp";
 import Pinpoint from "@/components/site/Pinpoint";
 import Tracking from "@/components/site/Tracking";
-import DzMarket from "@/components/site/DzMarket";
 import Philosophy from "@/components/site/Philosophy";
 import FinalCta from "@/components/site/FinalCta";
 
@@ -39,7 +38,6 @@ export default function LandingPage() {
         <Otp />
         <Pinpoint />
         <Tracking />
-        <DzMarket />
         <Philosophy />
         <FinalCta />
       </main>
