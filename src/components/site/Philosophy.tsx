@@ -8,6 +8,7 @@
 // • Icônes = line-icons SVG inline (système « Ombre sur glace »), pas d'emoji.
 // ────────────────────────────────────────────────────────────────
 import styles from './Philosophy.module.css';
+import SectionCta from './SectionCta';
 
 const WILAYAS = ['Alger', 'Oran', 'Constantine', 'Annaba'] as const;
 
@@ -89,6 +90,7 @@ const CARDS: Card[] = [
 
 export default function Philosophy() {
   return (
+    <>
     <section className={styles.section} data-screen-label="Section 7.5 — Notre philosophie">
       <div className={styles.inner}>
 
@@ -148,5 +150,10 @@ export default function Philosophy() {
 
       </div>
     </section>
+    <SectionCta
+      label="Devenez un vrai professionnel"
+      subtext="7 jours gratuit. Aucun contrat."
+    />
+    </>
   );
 }

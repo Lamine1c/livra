@@ -1,10 +1,12 @@
 import styles from './Pinpoint.module.css';
+import SectionCta from './SectionCta';
 
 /* Pinpoint — porté depuis la maquette HTML validée.
    Composant serveur : aucune interactivité JS (animations en CSS, FAQ en <details> natif).
    Police Inter via next/font ; tokens couleur via globals.css. */
 export default function Pinpoint() {
   return (
+    <>
     <section className={styles['s5']} data-screen-label="Section 5 — Pinpoint">
         <div className={styles['s5-inner']}>
 
@@ -226,5 +228,10 @@ export default function Pinpoint() {
 
         </div>
       </section>
+      <SectionCta
+        label="Localisé, confirmé, le livreur déjà parti !!"
+        subtext="7 jours gratuit. Aucun contrat."
+      />
+    </>
   );
 }

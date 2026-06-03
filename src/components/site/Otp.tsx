@@ -1,10 +1,12 @@
 import styles from './Otp.module.css';
+import SectionCta from './SectionCta';
 
 /* Otp — porté depuis la maquette HTML validée.
    Composant serveur : aucune interactivité JS (animations en CSS, FAQ en <details> natif).
    Police Inter via next/font ; tokens couleur via globals.css. */
 export default function Otp() {
   return (
+    <>
     <section className={styles['section4']} data-screen-label="Section 4 — OTP anti fausses commandes">
         <div className={styles['section4__inner']}>
 
@@ -187,5 +189,10 @@ export default function Otp() {
           <p className={styles['s4-caption']}>Aperçu réel du flow OTP LIVRA — vendeur, client, vendeur.</p>
         </div>
       </section>
+      <SectionCta
+        label="Éliminez les fausses commandes"
+        subtext="7 jours gratuit. Aucun contrat."
+      />
+    </>
   );
 }

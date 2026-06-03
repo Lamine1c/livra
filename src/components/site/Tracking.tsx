@@ -1,10 +1,12 @@
 import styles from './Tracking.module.css';
+import SectionCta from './SectionCta';
 
 /* Tracking — porté depuis la maquette HTML validée.
    Composant serveur : aucune interactivité JS (animations en CSS, FAQ en <details> natif).
    Police Inter via next/font ; tokens couleur via globals.css. */
 export default function Tracking() {
   return (
+    <>
     <section className={styles['s6']} data-screen-label="Section 6 — Tracking">
         <div className={styles['s6-inner']}>
 
@@ -249,5 +251,10 @@ export default function Tracking() {
 
         </div>
       </section>
+      <SectionCta
+        label="+ Ventes, + fidélisation"
+        subtext="7 jours gratuit. Aucun contrat."
+      />
+    </>
   );
 }
