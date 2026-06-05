@@ -5,8 +5,8 @@
   --onyx:       #0E0E10;
   --surface:    #161618;
   --deep:       #0A0A0C;
-  --terracotta: #A8472B;
-  --ivoire:     #F5F1EA;
+  --terracotta: #D97757;
+  --ivoire:     #F5F0E8;
   --mist:       #8A8A8E;
   --sapin:      #5A8B6B;
   --ambre:      #C9954D;
@@ -15,8 +15,14 @@
   --noir-deep:   #08080a;
   --emerald:     #1F8A5B;
   --emerald-lt:  #34d399;
-  --terracotta-rgb: 168, 71, 43;
-  --ivoire-rgb:  245, 241, 234;
+  --terracotta-rgb: 217, 119, 87;
+  --ivoire-rgb:  245, 240, 232;
+  --accent-rgb:  217, 119, 87;
+  --card-surface: rgba(38, 40, 50, 0.55);
+  --card-border:  rgba(255, 255, 255, 0.08);
+  --card-hi:      #1B1D24;
+  --hair:         rgba(255, 255, 255, 0.07);
+  --ghost-op:     0.42;
 
   --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4);
   --shadow-btn-primary: 0 1px 0 rgba(255,255,255,0.12) inset, 0 4px 12px rgba(168,71,43,0.25);

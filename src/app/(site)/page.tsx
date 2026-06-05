@@ -1,13 +1,18 @@
-import Footer from "@/components/site/Footer";
-import JungleHeroV2 from "@/components/site/JungleHeroV2";
-import PourquoiLivra from "@/components/site/PourquoiLivra";
-import ProductDemo from "@/components/site/ProductDemo";
-import PainWall from "@/components/site/PainWall";
-import Otp from "@/components/site/Otp";
-import Pinpoint from "@/components/site/Pinpoint";
-import Tracking from "@/components/site/Tracking";
-import Philosophy from "@/components/site/Philosophy";
-import FinalCta from "@/components/site/FinalCta";
+import '@/styles/livra-landing.css';
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
+import HeroV4 from '@/components/landing/HeroV4';
+import PourquoiLivra from '@/components/landing/PourquoiLivra';
+import ProductDemo from '@/components/landing/ProductDemo';
+import PainWall from '@/components/landing/PainWall';
+import Otp from '@/components/landing/Otp';
+import Pinpoint from '@/components/landing/Pinpoint';
+import Tracking from '@/components/landing/Tracking';
+import Philosophy from '@/components/landing/Philosophy';
+import FinalCta from '@/components/landing/FinalCta';
+import Footer from '@/components/landing/Footer';
+
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata = {
   title: "LIVRA — L'OS de votre e-commerce",
@@ -31,9 +36,9 @@ export const metadata = {
 
 export default function LandingPage() {
   return (
-    <>
-      <main>
-        <JungleHeroV2 />
+    <div className={inter.className}>
+      <main className="lp">
+        <HeroV4 />
         <PourquoiLivra />
         <ProductDemo />
         <PainWall />
@@ -44,6 +49,21 @@ export default function LandingPage() {
         <FinalCta />
       </main>
       <Footer />
-    </>
+      <Script id="lp-anim" strategy="afterInteractive">
+        {`(function () {
+          var root = document.documentElement, mq = matchMedia('(prefers-reduced-motion: reduce)');
+          function upd(){ (document.hidden || mq.matches) ? root.classList.remove('anim') : root.classList.add('anim'); }
+          upd(); document.addEventListener('visibilitychange', upd);
+          var io = ('IntersectionObserver' in window && !mq.matches) ? new IntersectionObserver(function (es) {
+            es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+          }, { threshold: 0.18 }) : null;
+          document.querySelectorAll('.pql').forEach(function (el) {
+            if (io) { io.observe(el); var r = el.getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) el.classList.add('is-in'); }
+            else el.classList.add('is-in');
+          });
+          setTimeout(function () { document.querySelectorAll('.pql').forEach(function (el) { el.classList.add('is-in'); }); }, 900);
+        })();`}
+      </Script>
+    </div>
   );
 }
