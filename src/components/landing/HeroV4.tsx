@@ -1,3 +1,5 @@
+import { getWaLink } from '@/lib/whatsapp-link';
+
 export default function HeroV4() {
   return (
     <>
@@ -5,8 +7,8 @@ export default function HeroV4() {
         <nav className="nav">
           <span className="brand">LIVRA</span>
           <div className="nav-links">
-            <a href="#">Produit</a><a href="#">Tarifs</a><a href="#">Wilayas</a>
-            <a href="#" className="nav-login">Se connecter</a>
+            <a href="#produit">Produit</a><a href="#tarifs">Tarifs</a><a href="#wilayas">Wilayas</a>
+            <a href={getWaLink('menu_login')} target="_blank" rel="noopener" className="nav-login">Se connecter</a>
           </div>
           <div className="nav-burger" aria-label="Menu"><span></span><span></span><span></span></div>
         </nav>
@@ -38,7 +40,7 @@ export default function HeroV4() {
             <p className="kicker an" style={{ '--d': '120ms' } as React.CSSProperties}><span className="pip"></span>L&rsquo;OS de votre e-commerce</p>
             <h1 className="an" style={{ '--d': '220ms' } as React.CSSProperties}><span className="hl-1">Sortez de la</span><span className="hl-2"><span className="accent">jungle.</span></span></h1>
             <p className="subtitle an" style={{ '--d': '360ms' } as React.CSSProperties}><strong>Commandes en auto, confirmations, Tracking Uber style, Suivi COD.</strong> Une seule app pour tout piloter.</p>
-            <div className="cta an" style={{ '--d': '500ms' } as React.CSSProperties}><button className="btn">Commencer gratuitement</button></div>
+            <div className="cta an" style={{ '--d': '500ms' } as React.CSSProperties}><a className="btn" href={getWaLink('hero')} target="_blank" rel="noopener">Commencer gratuitement</a></div>
             <p className="micro an" style={{ '--d': '640ms' } as React.CSSProperties}>Rejoignez les vendeurs qui ont quitté la jungle.</p>
           </div>
 

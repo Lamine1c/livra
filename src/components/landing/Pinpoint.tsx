@@ -1,3 +1,5 @@
+import { getWaLink } from '@/lib/whatsapp-link';
+
 const SbLight = () => (
   <span className="s5-sbR">
     <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#F5F0E8"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
@@ -175,7 +177,7 @@ export default function Pinpoint() {
           </div>
           <p className="s5-caption">Aperçu réel du flow Pinpoint LIVRA — vendeur, client, livreur.</p>
           <div className="lp-cta-wrap">
-            <a className="lp-cta" href="#">Localisé, confirmé, le livreur déjà parti</a>
+            <a className="lp-cta" href={getWaLink('s5_pinpoint')} target="_blank" rel="noopener">Localisé, confirmé, le livreur déjà parti</a>
             <p className="lp-cta-sub">7 jours gratuit. Aucun contrat.</p>
           </div>
         </div>

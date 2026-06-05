@@ -1,7 +1,7 @@
 export default function Philosophy() {
   return (
     <>
-      <section className="s75" data-screen-label="Section 7.5 — Notre philosophie">
+      <section id="wilayas" className="s75" data-screen-label="Section 7.5 — Notre philosophie" style={{ scrollMarginTop: '20px' }}>
         <div className="s75-inner">
           <p className="s75-eyebrow"><span className="s75-pip"></span>Notre philosophie</p>
           <h2 className="s75-statement">

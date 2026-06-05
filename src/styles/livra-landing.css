@@ -2930,7 +2930,7 @@
    LIVRA — ASSEMBLAGE LANDING PAGE · overrides globaux (one-shot)
    ════════════════════════════════════════════════════════════════ */
 :root { --noir: #08080A; --charcoal: #0E0E10; --card-surface: rgba(38,40,50,0.55); --card-border: rgba(255,255,255,0.08); --card-hi: #1B1D24; --hair: rgba(255,255,255,0.07); --ghost-op: 0.42; --accent-rgb: 217,119,87; }
-html { overflow-x: hidden; height: auto !important; }
+html { overflow-x: hidden; height: auto !important; scroll-behavior: smooth; }
 body {
   margin: 0 !important; min-height: 0 !important; height: auto !important;
   background: var(--noir-deep);
@@ -2990,13 +2990,27 @@ body {
 @media (max-width: 600px) { .lp-cta { width: 100%; padding-left: 24px; padding-right: 24px; } }
 
 /* ── FOOTER ── */
-.lp-footer { background: var(--noir-deep); border-top: 1px solid rgba(255,255,255,0.07); padding: clamp(40px,6vw,64px) clamp(24px,5vw,80px); position: relative; z-index: 2; }
-.lp-footer-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; }
-.lp-footer-brand { font-size: 15px; font-weight: 600; letter-spacing: 0.30em; color: var(--ivoire); }
-.lp-footer-nav { display: flex; gap: 28px; flex-wrap: wrap; }
-.lp-footer-nav a { color: var(--mist); text-decoration: none; font-size: 14px; transition: color .3s; }
-.lp-footer-nav a:hover { color: var(--ivoire); }
-.lp-footer-copy { font-size: 12.5px; color: var(--mist); letter-spacing: 0.01em; }
+.lp-footer { background: var(--noir-deep); border-top: 1px solid var(--hair, rgba(255,255,255,0.07)); padding: 56px 24px 32px; color: rgba(245,240,232,0.7); font-family: 'Inter', sans-serif; position: relative; z-index: 2; }
+.lp-footer-inner { max-width: 1180px; margin: 0 auto; }
+.lp-footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; flex-wrap: wrap; margin-bottom: 32px; }
+.lp-footer-brand-block { flex: 1; min-width: 240px; }
+.lp-footer-brand { font-size: 24px; font-weight: 800; color: var(--ivoire, #F5F0E8); letter-spacing: -0.02em; display: block; margin-bottom: 8px; }
+.lp-footer-tagline { font-size: 14px; color: rgba(245,240,232,0.55); margin: 0; }
+.lp-footer-contact-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.lp-footer-wa { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(217,119,87,0.08); border: 1px solid rgba(217,119,87,0.2); border-radius: 9999px; color: var(--ivoire, #F5F0E8); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
+.lp-footer-wa:hover { background: rgba(217,119,87,0.15); border-color: rgba(217,119,87,0.4); }
+.lp-footer-wa svg { color: #25D366; flex-shrink: 0; }
+.lp-footer-divider { height: 1px; background: var(--hair, rgba(255,255,255,0.07)); margin: 24px 0; }
+.lp-footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.lp-footer-nav { display: flex; gap: 24px; flex-wrap: wrap; }
+.lp-footer-nav a { color: rgba(245,240,232,0.55); font-size: 13px; text-decoration: none; transition: color 0.2s ease; }
+.lp-footer-nav a:hover { color: var(--ivoire, #F5F0E8); }
+.lp-footer-copy { font-size: 12px; color: rgba(245,240,232,0.4); margin: 0; }
+@media (max-width: 700px) {
+  .lp-footer-top { flex-direction: column; gap: 24px; }
+  .lp-footer-contact-block { align-items: flex-start; }
+  .lp-footer-bottom { flex-direction: column; align-items: flex-start; gap: 20px; }
+}
 
 /* ════════════════════════════════════════════════════════════════
    ITÉRATION 2 — Hero lisible + recentré · captions collées · CTA détaché
