@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LivraLogoHorizontal from "@/components/brand/LivraLogoHorizontal";
 
 export default function Footer() {
   return (
@@ -10,12 +11,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
           {/* Brand */}
           <div>
-            <p
-              className="text-ivoire font-medium tracking-widest text-sm mb-2"
-              style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
-            >
-              LIVRA
-            </p>
+            <LivraLogoHorizontal height={24} className="mb-3" />
             <p className="text-mist text-sm">
               L&apos;OS de votre e-commerce.
             </p>

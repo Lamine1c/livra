@@ -1,0 +1,11 @@
+{
+  "name": "LIVRA",
+  "short_name": "LIVRA",
+  "icons": [
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "theme_color": "#0E0E10",
+  "background_color": "#0E0E10",
+  "display": "standalone"
+}

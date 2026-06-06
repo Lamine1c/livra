@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LivraLogoHorizontal from "@/components/brand/LivraLogoHorizontal";
 
 export default function Header() {
   return (
@@ -10,13 +11,8 @@ export default function Header() {
       }}
     >
       <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-ivoire font-medium tracking-widest text-sm"
-          style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
-          aria-label="LIVRA — Accueil"
-        >
-          LIVRA
+        <Link href="/" aria-label="LIVRA — Accueil">
+          <LivraLogoHorizontal height={22} />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-8" aria-label="Navigation principale">

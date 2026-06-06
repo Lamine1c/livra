@@ -5,11 +5,13 @@
   --onyx:       #0E0E10;
   --surface:    #161618;
   --deep:       #0A0A0C;
+  --terra-deep: #1a0f0a;
   --terracotta: #D97757;
   --ivoire:     #F5F0E8;
   --mist:       #8A8A8E;
   --sapin:      #5A8B6B;
-  --ambre:      #C9954D;
+  --ambre:      #E0A340;
+  --ambre-rgb:  224, 163, 64;
   --coral:      #D17861;
 
   --noir-deep:   #08080a;
@@ -25,6 +27,7 @@
   --ghost-op:     0.42;
 
   --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-card-lg: 0 1px 0 rgba(255,255,255,0.05) inset, 0 30px 70px -34px rgba(0,0,0,0.85);
   --shadow-btn-primary: 0 1px 0 rgba(255,255,255,0.12) inset, 0 4px 12px rgba(168,71,43,0.25);
   --border-surface: 1px solid rgba(255,255,255,0.05);
   --border-faint: 1px solid rgba(255,255,255,0.04);
