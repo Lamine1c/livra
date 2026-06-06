@@ -112,10 +112,10 @@ export default function Pinpoint() {
                         <div className="brand">LIV<b>R</b>A</div>
                         <p className="lt">Confirme ta position</p>
                         <p className="ls">Pour que le livreur arrive direct, sans appel.</p>
-                        <a className="s5-locate-btn" href="#">
+                        <span className="s5-locate-btn" aria-hidden="true">
                           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-6.4-7-11a7 7 0 0 1 14 0c0 4.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
                           Confirmer ma position
-                        </a>
+                        </span>
                         <p className="bsub">1 tap. Aucune adresse à taper.</p>
                       </div>
                     </div>
