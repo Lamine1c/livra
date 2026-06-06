@@ -13,7 +13,7 @@ export default function ProductDemo() {
         <div className="section1__inner">
           <div className="section1__anchor">
             <p className="section1__eyebrow"><span className="section1__pip"></span>Une seule app</p>
-            <h2 className="section1__h2">De la commande au scan, tout dans une app.</h2>
+            <h2 className="section1__h2">De la commande au client, tout dans une app.</h2>
             <p className="section1__sub">
               Une commande créée. Un QR généré. Un livreur qui scanne. Un colis suivi en direct.
               <strong>Plus de cahier, plus de capture d&rsquo;écran, plus de colis perdu.</strong>
