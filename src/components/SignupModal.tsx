@@ -97,10 +97,16 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
   const [resendTimer, setResendTimer] = useState(30);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null, null, null, null]);
 
+  // Step 2 temp token (never stored in localStorage)
+  const [tempToken, setTempToken] = useState("");
+
   // Step 3 password
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  // Step 4 founder info
+  const [founderIndex, setFounderIndex] = useState<number | null>(null);
 
   // ── Reset on open ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -113,6 +119,8 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
       setConfirmPassword("");
       setPasswordError("");
       setOtpError("");
+      setTempToken("");
+      setFounderIndex(null);
     }
   }, [isOpen]);
 
@@ -146,14 +154,43 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
     return errs;
   };
 
+  const callSignup = async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          full_name: form.fullName,
+          business_name: form.boutique,
+          wilaya: form.wilaya,
+        }),
+      });
+
+      if (res.ok) return true;
+
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setErrors((prev) => ({ ...prev, email: "Tu es déjà inscrit·e avec cet email" }));
+      } else if (res.status === 429) {
+        setErrors((prev) => ({ ...prev, email: "Patiente 1 minute avant de redemander un code" }));
+      } else {
+        setErrors((prev) => ({ ...prev, email: data?.error ?? "Une erreur est survenue, réessaie" }));
+      }
+      return false;
+    } catch {
+      setErrors((prev) => ({ ...prev, email: "Une erreur est survenue, réessaie" }));
+      return false;
+    }
+  };
+
   const handleStep1Submit = async () => {
     const errs = validateStep1();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setLoading(true);
-    console.log("[SignupModal] Step1 submit", { ...form, plan: selectedPlan });
-    await new Promise<void>((r) => setTimeout(r, 1000));
+    const ok = await callSignup();
     setLoading(false);
-    setStep(2);
+    if (ok) setStep(2);
   };
 
   const updateField = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -166,14 +203,37 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
     const code = digits.join("");
     setLoading(true);
     setOtpError("");
-    await new Promise<void>((r) => setTimeout(r, 800));
-    setLoading(false);
-    if (code === "123456") {
-      setStep(3);
-    } else {
-      setOtpError("Code incorrect. Pour tester : 123456");
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, code }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        setTempToken(data.tempToken ?? "");
+        setStep(3);
+      } else if (res.status === 429) {
+        setOtpError("Trop de tentatives — renvoie un nouveau code");
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else if (res.status === 400 && typeof data?.error === "string" && data.error.startsWith("Code expiré")) {
+        setOtpError("Code expiré, recommence");
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        setOtpError(data?.error ?? "Code incorrect");
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      }
+    } catch {
+      setOtpError("Une erreur est survenue, réessaie");
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -190,11 +250,35 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
     if (e.key === "Backspace" && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setOtp(["", "", "", "", "", ""]);
     setOtpError("");
-    setStep(1);
-    setTimeout(() => setStep(2), 0);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          full_name: form.fullName,
+          business_name: form.boutique,
+          wilaya: form.wilaya,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          setOtpError("Patiente 1 minute avant de redemander un code");
+        } else {
+          setOtpError(data?.error ?? "Une erreur est survenue, réessaie");
+        }
+      }
+    } catch {
+      setOtpError("Une erreur est survenue, réessaie");
+    } finally {
+      setLoading(false);
+      inputRefs.current[0]?.focus();
+    }
   };
 
   // ── Step 3 ──────────────────────────────────────────────────────────────────
@@ -203,10 +287,35 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
     if (password !== confirmPassword) { setPasswordError("Les mots de passe ne correspondent pas"); return; }
     setPasswordError("");
     setLoading(true);
-    console.log("[SignupModal] Account created", { email: form.email, plan: selectedPlan });
-    await new Promise<void>((r) => setTimeout(r, 1000));
-    setLoading(false);
-    setStep(4);
+    try {
+      const res = await fetch("/api/auth/set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempToken, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        setFounderIndex(data.founder_index ?? null);
+        setStep(4);
+      } else if (res.status === 401) {
+        setPasswordError("Session expirée, recommence l'inscription");
+        setTimeout(() => {
+          setStep(1);
+          setTempToken("");
+          setPassword("");
+          setConfirmPassword("");
+          setPasswordError("");
+        }, 2000);
+      } else {
+        setPasswordError(data?.error ?? "Une erreur est survenue, réessaie");
+      }
+    } catch {
+      setPasswordError("Une erreur est survenue, réessaie");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Guard ───────────────────────────────────────────────────────────────────
@@ -427,7 +536,21 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                 ))}
               </div>
 
-              {otpError && <p className="text-xs text-red-400 text-center" role="alert">{otpError}</p>}
+              {otpError && (
+                <p className="text-xs text-center" role="alert" style={{ color: "#D97757" }}>
+                  {otpError}{" "}
+                  {(otpError.startsWith("Code expiré") || otpError.startsWith("Trop de tentatives") || otpError.startsWith("Patiente")) && (
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleResend}
+                      style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "3px", cursor: loading ? "not-allowed" : "pointer", background: "none", border: "none", fontSize: "inherit", padding: 0 }}
+                    >
+                      Renvoyer un code
+                    </button>
+                  )}
+                </p>
+              )}
               {loading && <p className="text-xs text-center" aria-live="polite" style={{ color: "#8A8A8E" }}>Vérification…</p>}
 
               {/* Resend */}
@@ -435,8 +558,9 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                 {canResend ? (
                   <button
                     type="button"
+                    disabled={loading}
                     onClick={handleResend}
-                    style={{ color: "#8A8A8E", textDecoration: "underline", textUnderlineOffset: "3px", opacity: 0.85, cursor: "pointer", background: "none", border: "none" }}
+                    style={{ color: "#8A8A8E", textDecoration: "underline", textUnderlineOffset: "3px", opacity: loading ? 0.4 : 0.85, cursor: loading ? "not-allowed" : "pointer", background: "none", border: "none" }}
                   >
                     Renvoyer le code
                   </button>
@@ -565,12 +689,25 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
-                Bienvenue chez LIVRA
-              </h2>
-              <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                Ton compte est créé. Tu vas recevoir un email avec tes accès.
-              </p>
+              {founderIndex != null ? (
+                <>
+                  <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
+                    🎉 Tu es fondateur LIVRA #{founderIndex} !
+                  </h2>
+                  <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
+                    Ton tarif fondateur 1999 DA/mois est verrouillé à vie.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
+                    Bienvenue dans LIVRA !
+                  </h2>
+                  <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
+                    Ton compte est créé.
+                  </p>
+                </>
+              )}
               <Link
                 href="/telecharger"
                 onClick={onClose}
@@ -584,7 +721,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   transition: "transform .2s ease, filter .2s ease",
                 }}
               >
-                Voir où télécharger
+                Télécharger l&apos;app
               </Link>
             </div>
           )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { Resend } from "resend";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateOtp } from "@/lib/auth/otp";
 import { renderOtpEmail } from "@/lib/email/templates/otp-email";
 
@@ -24,6 +24,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   console.log("[signup] Received request");
+  const supabaseAdmin = createAdminClient();
 
   let body: z.infer<typeof bodySchema>;
   try {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyTempToken } from "@/lib/auth/jwt";
 
 const CORS_HEADERS = {
@@ -21,6 +21,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   console.log("[set-password] Received request");
+  const supabaseAdmin = createAdminClient();
 
   let body: z.infer<typeof bodySchema>;
   try {

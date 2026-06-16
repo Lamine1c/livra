@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SignupModal from "@/components/SignupModal";
@@ -32,9 +32,44 @@ function FeatItem({ variant, children }: { variant: "terra" | "mist"; children: 
   );
 }
 
+type FoundersData = { count: number; max: number };
+type FoundersState =
+  | { status: "loading" }
+  | { status: "ok"; count: number; max: number }
+  | { status: "error" };
+
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [founders, setFounders] = useState<FoundersState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/founders-count")
+      .then((res) => {
+        if (!res.ok) throw new Error("fetch failed");
+        return res.json() as Promise<FoundersData>;
+      })
+      .then((data) => {
+        if (!cancelled) setFounders({ status: "ok", count: data.count, max: data.max });
+      })
+      .catch(() => {
+        if (!cancelled) setFounders({ status: "error" });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Derived values for the founders card
+  const foundersCount = founders.status === "ok" ? founders.count : null;
+  const foundersMax = founders.status === "ok" ? founders.max : 100;
+  const isFull = foundersCount !== null && foundersCount >= foundersMax;
+  const remaining = foundersCount !== null ? Math.max(0, foundersMax - foundersCount) : null;
+  const barWidth = foundersCount !== null ? `${Math.min(100, (foundersCount / foundersMax) * 100)}%` : "17%";
+  const barColor = foundersCount !== null && foundersCount >= 80 ? "#F59E0B" : "#D97757";
+  const barGlow = foundersCount !== null && foundersCount >= 80
+    ? "0 0 10px 0 rgba(245,158,11,0.7)"
+    : "0 0 10px 0 rgba(217,119,87,0.7)";
+  const counterColor = foundersCount !== null && foundersCount >= 80 ? "#F59E0B" : "#E0A340";
 
   function openModal(plan: PlanKey) {
     setSelectedPlan(plan);
@@ -152,11 +187,23 @@ export default function PricingPage() {
             </span>
 
             {/* scarcity counter */}
-            <div style={{ marginTop: "14px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#E0A340", display: "flex", alignItems: "center", gap: "9px" }}>
-              <span style={{ whiteSpace: "nowrap" }}>Plus que 17 places</span>
-              <span style={{ flex: 1, height: "4px", borderRadius: "9999px", background: "rgba(255,255,255,0.07)", overflow: "hidden", maxWidth: "120px", display: "block" }}>
-                <i className="counter-bar-fill" style={{ display: "block", height: "100%", width: "83%", borderRadius: "9999px", background: "#E0A340", boxShadow: "0 0 10px 0 rgba(224,163,64,0.7)", animation: "counterPulse 2.2s ease-in-out infinite" }} />
-              </span>
+            <div style={{ marginTop: "14px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: counterColor, display: "flex", alignItems: "center", gap: "9px" }}>
+              {founders.status === "loading" ? (
+                <span style={{ whiteSpace: "nowrap", color: "#8A8A8E", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>
+                  <span style={{ display: "inline-block", width: "110px", height: "12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", verticalAlign: "middle" }} />
+                </span>
+              ) : founders.status === "error" ? (
+                <span style={{ whiteSpace: "nowrap", color: "#8A8A8E", fontWeight: 500, textTransform: "none", letterSpacing: 0, fontSize: "11px" }}>Places limitées</span>
+              ) : isFull ? (
+                <span style={{ whiteSpace: "nowrap", color: "#D97757" }}>COMPLET</span>
+              ) : (
+                <span style={{ whiteSpace: "nowrap" }}>PLUS QUE {remaining} PLACE{remaining === 1 ? "" : "S"}</span>
+              )}
+              {founders.status === "ok" && !isFull && (
+                <span style={{ flex: 1, height: "4px", borderRadius: "9999px", background: "rgba(255,255,255,0.07)", overflow: "hidden", maxWidth: "120px", display: "block" }}>
+                  <i className="counter-bar-fill" style={{ display: "block", height: "100%", width: barWidth, borderRadius: "9999px", background: barColor, boxShadow: barGlow, animation: "counterPulse 2.2s ease-in-out infinite" }} />
+                </span>
+              )}
             </div>
 
             <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8A8E", marginTop: "18px" }}>Fondateur</div>
@@ -178,21 +225,42 @@ export default function PricingPage() {
               <FeatItem variant="terra">Badge <strong style={{ color: "#F5F0E8", fontWeight: 600 }}>« Fondateur »</strong> dans ton compte</FeatItem>
             </div>
             <div style={{ marginTop: "26px" }}>
-              <button
-                type="button"
-                onClick={() => openModal("founders")}
-                style={{
-                  appearance: "none", border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px",
-                  fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
-                  background: "#D97757", color: "#1a0f0a",
-                  boxShadow: BTN_SHADOW,
-                  transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease",
-                }}
-              >
-                Devenir fondateur
-              </button>
+              {isFull ? (
+                <button
+                  type="button"
+                  onClick={() => openModal("monthly")}
+                  style={{
+                    appearance: "none", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: "100%", padding: "16px", borderRadius: "14px",
+                    fontSize: "15px", fontWeight: 600, letterSpacing: "-0.005em",
+                    background: "rgba(255,255,255,0.02)", color: "#F5F0E8",
+                    transition: "transform .2s ease, border-color .2s ease",
+                  }}
+                >
+                  Passer au mensuel
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openModal("founders")}
+                  disabled={founders.status === "loading"}
+                  style={{
+                    appearance: "none", border: "none",
+                    cursor: founders.status === "loading" ? "default" : "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: "100%", padding: "16px", borderRadius: "14px",
+                    fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
+                    background: founders.status === "loading" ? "rgba(217,119,87,0.5)" : "#D97757",
+                    color: "#1a0f0a",
+                    boxShadow: founders.status === "loading" ? "none" : BTN_SHADOW,
+                    transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease",
+                    opacity: founders.status === "loading" ? 0.7 : 1,
+                  }}
+                >
+                  Devenir fondateur
+                </button>
+              )}
             </div>
           </article>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { signTempToken } from "@/lib/auth/jwt";
 
 const CORS_HEADERS = {
@@ -20,6 +20,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   console.log("[verify-otp] Received request");
+  const supabaseAdmin = createAdminClient();
 
   let body: z.infer<typeof bodySchema>;
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "https://golivra.app",
@@ -13,6 +13,7 @@ export async function OPTIONS() {
 
 export async function GET() {
   console.log("[founders-count] Received request");
+  const supabaseAdmin = createAdminClient();
 
   const { data, error } = await supabaseAdmin.rpc("get_founders_count");
 
