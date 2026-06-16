@@ -115,8 +115,13 @@
   .route-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .route-bg{fill:none; stroke:rgba(255,255,255,.16); stroke-width:3; stroke-linecap:round; stroke-dasharray:1 8;}
   .route-fg{fill:none; stroke:var(--terracotta); stroke-width:3; stroke-linecap:round; filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.75));}
-  .dest{position:absolute; top:0; left:0; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18); offset-path:path('M 24 124 C 70 118, 58 78, 120 78 S 210 68, 248 25'); offset-distance:100%;}
-  .courier{position:absolute; top:0; left:0; width:14px; height:14px; margin:-7px; border-radius:50%; background:var(--terracotta); border:2px solid #0b0d12; offset-path:path('M 24 124 C 70 118, 58 78, 120 78 S 210 68, 248 25'); offset-distance:66%; z-index:3;}
+  /* Pastilles en % dérivés du viewBox 288×146 du route-svg.
+     Le SVG est étiré (preserveAspectRatio:none) pour remplir .map ; en CSS px
+     ou via offset-path la pastille NE suit PAS cet étirement → décalage.
+     En % (coordX/288, coordY/146) elles se déforment à l'identique du tracé. */
+  .dest{position:absolute; left:86.11%; top:17.12%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18);}
+  /* 66% du tracé (= pointe de la portion orange route-fg, dasharray 66/100) */
+  .courier{position:absolute; left:61.63%; top:49.74%; width:14px; height:14px; margin:-7px; border-radius:50%; background:var(--terracotta); border:2px solid #0b0d12; z-index:3;}
   .courier::before{content:''; position:absolute; inset:-4px; border-radius:50%; background:rgba(var(--accent-rgb),.85); z-index:-1; animation:ping 2.2s ease-out infinite;}
   .map-badge{position:absolute; top:11px; left:11px; z-index:4; display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ivoire); background:rgba(11,13,18,.7); border:1px solid rgba(255,255,255,.1); padding:4px 9px; border-radius:7px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);}
   .map-badge .live{width:6px; height:6px; border-radius:50%; background:#4ade80; box-shadow:0 0 0 0 rgba(74,222,128,.5); animation:pulse 2s infinite;}
@@ -277,6 +282,7 @@
   .pql-inner {
     position: relative; z-index: 2;
     max-width: 1240px; margin: 0 auto; width: 100%;
+    text-align: center;
   }
 
   /* ── Eyebrow — terracotta, pip rond à gauche ── */
@@ -304,6 +310,7 @@
     color: var(--ivoire);
     max-width: 1240px;
     margin: 0 auto;
+    text-align: center;
   }
 
   /* ── Corps : LEFT-ALIGN, colonne lisible centrée (v2 polish) ── */
@@ -474,6 +481,13 @@
   gap: clamp(40px, 6vw, 96px);
   align-items: center;
 }
+
+/* Garde-fou : le triptyque fait ~880px intrinsèques. Sans min-width:0 le grid
+   item refuse de shrinker (min-width:auto par défaut) → débordement / rognage
+   LATÉRAL des téléphones aux largeurs desktop serrées.
+   NB : sans effet sur le crop BAS du CTA (= Fix B, hauteur interne). */
+.section1__inner > * { min-width: 0; }
+.section1__stage     { min-width: 0; }
 
 /* ── 3. HEADER H2 + SOUS-TITRE (texte ancre) ───────────────────────── */
 .section1__anchor { max-width: 460px; }
@@ -659,13 +673,13 @@
 .s1-detBar { display: flex; align-items: center; gap: 12px; padding: 10px 18px 6px; color: var(--ivoire); }
 .s1-detBar__back { font-size: 22px; color: var(--ivoire); line-height: 1; }
 .s1-detBar__ref  { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-.s1-detStatus { margin: 8px 18px 0; border-radius: 16px; background: var(--s1-card); padding: 14px 15px; display: flex; align-items: center; justify-content: space-between; }
+.s1-detStatus { margin: 8px 18px 0; border-radius: 16px; background: var(--s1-card); padding: 11px 15px; display: flex; align-items: center; justify-content: space-between; }
 .s1-detStatus__lbl { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ivoire); }
 .s1-detStatus__lbl .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--s1-accent); box-shadow: 0 0 8px 1px rgba(var(--s1-accent-rgb), 0.5); }
 .s1-detStatus__chg { font-size: 12px; font-weight: 500; color: var(--s1-accent); border: 1px solid rgba(var(--s1-accent-rgb), 0.4); border-radius: 999px; padding: 6px 12px; }
-.s1-detBlock { margin: 8px 18px 0; border-radius: 18px; background: var(--s1-card); padding: 13px 16px; }
+.s1-detBlock { margin: 8px 18px 0; border-radius: 18px; background: var(--s1-card); padding: 11px 16px; }
 .s1-detBlock__sec { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: var(--s1-mist-dim); text-transform: uppercase; margin-bottom: 10px; }
-.s1-detRow { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; margin-bottom: 8px; }
+.s1-detRow { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; margin-bottom: 6px; }
 .s1-detRow:last-child { margin-bottom: 0; }
 .s1-detRow .k { color: var(--mist); }
 .s1-detRow .v { color: var(--ivoire); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -673,18 +687,18 @@
 .s1-detArt__nm { color: var(--ivoire); font-weight: 500; max-width: 55%; }
 .s1-detArt__calc { color: var(--mist); text-align: right; font-variant-numeric: tabular-nums; }
 .s1-detArt__calc b { display: block; color: var(--ivoire); font-weight: 600; }
-.s1-detSep { height: 1px; background: var(--s1-hairline); margin: 10px 0; }
+.s1-detSep { height: 1px; background: var(--s1-hairline); margin: 7px 0; }
 .s1-detTot { display: flex; justify-content: space-between; font-size: 15px; }
 .s1-detTot .k { font-weight: 700; color: var(--ivoire); }
 .s1-detTot .v { font-weight: 700; color: var(--s1-accent); font-variant-numeric: tabular-nums; }
-.s1-qrWrap { display: flex; flex-direction: column; align-items: center; padding: 2px 0 0; }
-.s1-qr { width: 44%; aspect-ratio: 1; margin: 2px 0 4px; color: var(--ivoire); }
+.s1-qrWrap { display: flex; flex-direction: column; align-items: center; padding: 0; }
+.s1-qr { width: 35%; aspect-ratio: 1; margin: 0 0 3px; color: var(--ivoire); }
 .s1-qr svg { display: block; width: 100%; height: 100%; }
 .s1-qrCap { font-size: 12px; color: var(--mist); }
 .s1-wa {
   margin: 8px 18px 0;
   border: 1px solid rgba(var(--s1-accent-rgb), 0.45);
-  border-radius: 16px; padding: 11px;
+  border-radius: 16px; padding: 10px;
   display: flex; align-items: center; justify-content: center; gap: 10px;
   color: var(--s1-accent); font-size: 13.5px; font-weight: 600; text-align: center;
 }
@@ -3139,9 +3153,6 @@ body {
    ════════════════════════════════════════════════════════════════════ */
 
 /* 1) « UNE SEULE APP » (.section1) — CTA + filet terracotta */
-.section1 .lp-cta-wrap {
-  margin-top: clamp(40px, 5vw, 68px);
-}
 @media (min-width: 1081px) {
   .section1__sub {
     border-left: 2px solid rgba(217, 119, 87, 0.45);
