@@ -115,7 +115,7 @@
   .route-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .route-bg{fill:none; stroke:rgba(255,255,255,.16); stroke-width:3; stroke-linecap:round; stroke-dasharray:1 8;}
   .route-fg{fill:none; stroke:var(--terracotta); stroke-width:3; stroke-linecap:round; filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.75));}
-  .dest{position:absolute; left:calc(248/288*100%); top:25px; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18);}
+  .dest{position:absolute; top:0; left:0; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18); offset-path:path('M 24 124 C 70 118, 58 78, 120 78 S 210 68, 248 25'); offset-distance:100%;}
   .courier{position:absolute; top:0; left:0; width:14px; height:14px; margin:-7px; border-radius:50%; background:var(--terracotta); border:2px solid #0b0d12; offset-path:path('M 24 124 C 70 118, 58 78, 120 78 S 210 68, 248 25'); offset-distance:66%; z-index:3;}
   .courier::before{content:''; position:absolute; inset:-4px; border-radius:50%; background:rgba(var(--accent-rgb),.85); z-index:-1; animation:ping 2.2s ease-out infinite;}
   .map-badge{position:absolute; top:11px; left:11px; z-index:4; display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ivoire); background:rgba(11,13,18,.7); border:1px solid rgba(255,255,255,.1); padding:4px 9px; border-radius:7px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);}
@@ -3060,7 +3060,7 @@ body {
 .s4-stage { min-height: 700px !important; }
 .s4-caption { margin-top: clamp(6px, 1.2vw, 16px) !important; }
 @media (min-width: 721px) {
-  .s5-inner, .s6-inner { gap: 24px !important; }
+  .s5-inner, .s6-inner { gap: 24px; }
   .s5-stage, .s6-stage { min-height: 772px !important; }
 }
 @media (min-width: 1081px) {
@@ -3225,4 +3225,26 @@ body {
 @media (max-width: 1080px) {
   .s5-copy { align-items: center; text-align: center; max-width: 46ch; margin-left: auto; margin-right: auto; }
   .s5-copy .pain-sol { border-left: 0; padding-left: 0; align-items: center; }
+}
+
+/* 4) « LA CONFIANCE » (.s6) — horizontal en miroir (même pattern que .section4) */
+@media (min-width: 1081px) {
+  .s6 .s6-inner {
+    display: grid;
+    grid-template-columns: 1.4fr minmax(320px, 0.78fr);
+    gap: clamp(40px, 6vw, 96px);
+    align-items: center;
+  }
+  .s6 .s6-stage { grid-column: 1; grid-row: 1; }
+  .s6 .s6-anchor {
+    grid-column: 2; grid-row: 1;
+    margin: 0;
+    max-width: 460px;
+    text-align: left;
+  }
+  .s6 .s6-eyebrow { justify-content: flex-start; }
+  .s6 .s6-sub { margin-left: 0; margin-right: 0; max-width: 40ch; border-left: 2px solid rgba(217, 119, 87, 0.45); padding-left: 16px; }
+  .s6 .s6-pills { justify-content: flex-start; }
+  .s6 .s6-caption  { grid-column: 1 / -1; grid-row: 2; }
+  .s6 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
 }

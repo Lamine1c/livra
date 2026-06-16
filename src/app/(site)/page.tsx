@@ -39,8 +39,8 @@ export default function LandingPage() {
     <div className={inter.className}>
       <main className="lp">
         <HeroV4 />
-        <PourquoiLivra />
         <ProductDemo />
+        <PourquoiLivra />
         <PainWall />
         <Otp />
         <Pinpoint />
