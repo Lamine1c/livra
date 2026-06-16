@@ -21,10 +21,13 @@ export default function Pinpoint() {
           <header className="s5-anchor">
             <p className="s5-eyebrow"><span className="s5-pip"></span>Le wedge LIVRA</p>
             <h2 className="s5-h2">LIVRA <em>tue</em> les colis perdus.</h2>
-            <p className="s5-sub">
-              Adresses inutiles, livreurs perdus, clients qui ne répondent plus.
-              <strong>LIVRA partage la position GPS du client par WhatsApp</strong> — en un tap.
-            </p>
+            <div className="s5-copy">
+              <div className="pain-sol">
+                <p className="pain">Adresse écrite à l&apos;arrache. Livreur qui tourne en rond. Client qui décroche pas. 3 appels pour une seule livraison.</p>
+                <p className="sol">Avec LIVRA, ton client partage sa position GPS par <span className="wa">WhatsApp</span> en un tap. Le livreur le trouve <strong>direct — sans un seul appel</strong>.</p>
+              </div>
+              <p className="punch"><em>Zéro</em> adresse à taper. <em>Zéro</em> appel. <em>Zéro</em> colis perdu.</p>
+            </div>
             <div className="s5-pills">
               <span className="s5-pill">Lien WA</span><span className="s5-arr">→</span>
               <span className="s5-pill s5-pill-pivot">Tap</span><span className="s5-arr">→</span>

@@ -177,6 +177,10 @@ export default function ProductDemo() {
           </div>
         </div>
         <p className="section1__caption">Aperçu réel de l&rsquo;application LIVRA — vendeur, livreur, acheteur.</p>
+        <div className="lp-cta-wrap">
+          <a className="lp-cta" href="/pricing">Essaie — c&apos;est gratuit</a>
+          <p className="lp-cta-sub">Pas de carte. Pas de contrat. 7 jours offerts.</p>
+        </div>
       </section>
       <div className="lp-seam"></div>
     </>

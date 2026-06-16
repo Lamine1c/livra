@@ -115,7 +115,7 @@
   .route-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .route-bg{fill:none; stroke:rgba(255,255,255,.16); stroke-width:3; stroke-linecap:round; stroke-dasharray:1 8;}
   .route-fg{fill:none; stroke:var(--terracotta); stroke-width:3; stroke-linecap:round; filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.75));}
-  .dest{position:absolute; left:248px; top:25px; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18);}
+  .dest{position:absolute; left:calc(248/288*100%); top:25px; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--ivoire); border:2px solid #0b0d12; box-shadow:0 0 0 3px rgba(245,240,232,.18);}
   .courier{position:absolute; top:0; left:0; width:14px; height:14px; margin:-7px; border-radius:50%; background:var(--terracotta); border:2px solid #0b0d12; offset-path:path('M 24 124 C 70 118, 58 78, 120 78 S 210 68, 248 25'); offset-distance:66%; z-index:3;}
   .courier::before{content:''; position:absolute; inset:-4px; border-radius:50%; background:rgba(var(--accent-rgb),.85); z-index:-1; animation:ping 2.2s ease-out infinite;}
   .map-badge{position:absolute; top:11px; left:11px; z-index:4; display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ivoire); background:rgba(11,13,18,.7); border:1px solid rgba(255,255,255,.1); padding:4px 9px; border-radius:7px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);}
@@ -3067,7 +3067,7 @@ body {
   .s5-stage, .s6-stage { min-height: 800px !important; }
 }
 .s5-caption, .s6-caption { margin-top: 0 !important; }
-.lp-cta-wrap { margin-top: clamp(48px, 6vw, 80px) !important; }
+.lp-cta-wrap { margin-top: clamp(48px, 6vw, 80px); }
 
 /* ── PAINWALL : mur de plaintes floutées en périphérie (effet « tout le monde galère ») ── */
 .s2-ghosts {
@@ -3130,3 +3130,99 @@ body {
 /* V4 hero — contenu toujours visible (anti-blank background/PDF/export) */
 .hero .sharp .card { opacity: 1 !important; }
 .hero .ghosts .card { opacity: var(--ghost-op, 0.42) !important; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   REWORKS SECTIONS — deltas par-dessus livra-landing.css
+   Principe zigzag : section1 (texte G / mockup D) · section4 miroir ·
+   s5 (texte G / mockup D). Breakpoint 1081px, palette terracotta/ivoire.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 1) « UNE SEULE APP » (.section1) — CTA + filet terracotta */
+.section1 .lp-cta-wrap {
+  margin-top: clamp(40px, 5vw, 68px);
+}
+@media (min-width: 1081px) {
+  .section1__sub {
+    border-left: 2px solid rgba(217, 119, 87, 0.45);
+    padding-left: 16px;
+  }
+}
+
+/* 2) « LE BOUCLIER » (.section4) — horizontal en miroir */
+@media (min-width: 1081px) {
+  .section4__inner {
+    display: grid;
+    grid-template-columns: 1.4fr minmax(320px, 0.78fr);
+    gap: clamp(40px, 6vw, 96px);
+    align-items: center;
+  }
+  .section4 .s4-stage { grid-column: 1; grid-row: 1; }
+  .section4__header {
+    grid-column: 2; grid-row: 1;
+    margin: 0;
+    max-width: 460px;
+    text-align: left;
+  }
+  .section4 .s4-eyebrow { justify-content: flex-start; }
+  .section4 .s4-sub { margin-left: 0; margin-right: 0; max-width: 40ch; border-left: 2px solid rgba(217, 119, 87, 0.45); padding-left: 16px; }
+  .section4 .s4-flow { justify-content: flex-start; }
+  .section4 .s4-caption  { grid-column: 1 / -1; grid-row: 2; }
+  .section4 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* 3) « LE WEDGE » (.s5) — horizontal + nouveau copy */
+@media (min-width: 1081px) {
+  .s5 .s5-inner {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.78fr) 1.4fr;
+    gap: clamp(40px, 6vw, 96px);
+    align-items: center;
+    max-width: 1320px;
+  }
+  .s5-anchor {
+    grid-column: 1; grid-row: 1;
+    max-width: 460px;
+    margin: 0;
+    text-align: left;
+  }
+  .s5 .s5-eyebrow { justify-content: flex-start; }
+  .s5 .s5-pills { justify-content: flex-start; margin-top: 30px; }
+  .s5 .s5-stage { grid-column: 2; grid-row: 1; }
+  .s5 .s5-mockups { transform: translateX(clamp(70px, 9vw, 170px)); }
+  .s5 .s5-caption  { grid-column: 1 / -1; grid-row: 2; }
+  .s5 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* Bloc copy Wedge (Douleur / Solution / Punch) */
+.s5-copy { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+.s5-copy .pain,
+.s5-copy .sol {
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.6;
+  text-wrap: pretty;
+  margin: 0;
+}
+.s5-copy .pain { color: var(--mist); }
+.s5-copy .sol  { color: #D8D4CC; }
+.s5-copy .sol strong { color: var(--ivoire); font-weight: 600; }
+.s5-copy .sol .wa { color: var(--terracotta); font-weight: 600; }
+.s5-copy .punch {
+  margin: 4px 0 0;
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ivoire);
+  text-wrap: balance;
+}
+.s5-copy .punch em { color: var(--terracotta); font-style: normal; }
+.s5-copy .pain-sol {
+  display: flex; flex-direction: column; gap: 12px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(217, 119, 87, 0.45);
+}
+@media (max-width: 1080px) {
+  .s5-copy { align-items: center; text-align: center; max-width: 46ch; margin-left: auto; margin-right: auto; }
+  .s5-copy .pain-sol { border-left: 0; padding-left: 0; align-items: center; }
+}

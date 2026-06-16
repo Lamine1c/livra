@@ -79,7 +79,7 @@ export default function Philosophy() {
             </article>
           </div>
           <hr className="s75-rule" />
-          <p className="s75-sign"><span className="em-dash">—</span>L&rsquo;équipe <b>LIVRA</b>, Alger.</p>
+          <p className="s75-sign"><span className="em-dash">—</span>L&rsquo;équipe <b>LIVRA</b>.</p>
         </div>
       </section>
       <div className="lp-seam"></div>

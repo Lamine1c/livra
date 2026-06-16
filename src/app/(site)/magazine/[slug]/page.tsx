@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPost(slug);
   if (!post) return {};
   return {
-    title: `${post.title} — Blog LIVRA`,
+    title: `${post.title} — Magazine LIVRA`,
     description: post.excerpt,
   };
 }
@@ -34,7 +34,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default async function BlogArticlePage({ params }: Props) {
+export default async function MagazineArticlePage({ params }: Props) {
   const { slug } = await params;
   const post = getPost(slug);
 
@@ -47,8 +47,8 @@ export default async function BlogArticlePage({ params }: Props) {
       <Header />
       <main className="max-w-2xl mx-auto px-6 pt-24 pb-32">
         {/* Back link */}
-        <Link href="/blog" className="blog-back-link block text-sm mb-12">
-          &larr; Blog
+        <Link href="/magazine" className="blog-back-link block text-sm mb-12">
+          &larr; Magazine
         </Link>
 
         {/* Article header */}
