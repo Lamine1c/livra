@@ -22,8 +22,8 @@ export default function Footer() {
             className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-mist"
             aria-label="Liens du pied de page"
           >
-            <Link href="/blog" className="hover:text-ivoire transition-colors duration-200">
-              Blog
+            <Link href="/magazine" className="hover:text-ivoire transition-colors duration-200">
+              Magazine
             </Link>
             <Link href="/privacy" className="hover:text-ivoire transition-colors duration-200">
               Privacy
@@ -41,12 +41,9 @@ export default function Footer() {
         </div>
 
         <div
-          className="mt-10 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          className="mt-10 pt-8"
           style={{ borderTop: "var(--border-faint)" }}
         >
-          <p className="text-mist text-sm">
-            Conçu en Algérie. Hébergé en Europe.
-          </p>
           <p className="text-mist text-xs">
             &copy; 2026 LIVRA. Tous droits réservés.
           </p>

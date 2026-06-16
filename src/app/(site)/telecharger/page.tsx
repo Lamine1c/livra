@@ -136,6 +136,19 @@ export default function TelechargerPage() {
           />
         </div>
 
+        {/* ── Already registered note ── */}
+        <p style={{
+          position: "relative", zIndex: 1,
+          textAlign: "center",
+          margin: "clamp(20px,2.5vw,28px) auto 0",
+          maxWidth: "420px",
+          padding: "0 24px",
+          fontSize: "13px",
+          color: "#8A8A8E",
+        }}>
+          Déjà inscrit·e ? La connexion se fait directement dans l&apos;app.
+        </p>
+
         {/* ── Trust ── */}
         <div style={{
           position: "relative", zIndex: 1,

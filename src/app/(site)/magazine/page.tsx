@@ -5,7 +5,7 @@ import Footer from "@/components/site/Footer";
 import { getAllPosts, type BlogPost } from "@/lib/blog";
 
 export const metadata: Metadata = {
-  title: "Blog LIVRA — Conseils e-commerce et livraison en Algérie",
+  title: "Magazine LIVRA — Conseils e-commerce et livraison en Algérie",
   description:
     "Analyses, stratégies et chiffres réels du marché e-commerce algérien, par l'équipe LIVRA.",
 };
@@ -20,10 +20,10 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function BlogCard({ post }: { post: BlogPost }) {
+function ArticleCard({ post }: { post: BlogPost }) {
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={`/magazine/${post.slug}`}
       className="blog-card block rounded-2xl overflow-hidden cursor-pointer"
       style={{
         background: "var(--surface)",
@@ -77,7 +77,7 @@ function BlogCard({ post }: { post: BlogPost }) {
   );
 }
 
-export default function BlogIndexPage() {
+export default function MagazineIndexPage() {
   const posts = getAllPosts();
 
   return (
@@ -88,7 +88,7 @@ export default function BlogIndexPage() {
           className="text-4xl font-semibold mb-2"
           style={{ color: "var(--ivoire)" }}
         >
-          Blog
+          Magazine
         </h1>
         <p className="text-lg mb-16" style={{ color: "var(--mist)" }}>
           Analyses et strat&eacute;gies pour l&apos;e-commerce alg&eacute;rien.
@@ -101,7 +101,7 @@ export default function BlogIndexPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
-              <BlogCard key={post.slug} post={post} />
+              <ArticleCard key={post.slug} post={post} />
             ))}
           </div>
         )}

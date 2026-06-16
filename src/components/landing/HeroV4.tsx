@@ -7,7 +7,7 @@ export default function HeroV4() {
         <nav className="nav">
           <LivraLogoHorizontal height={22} />
           <div className="nav-links">
-            <a href="#produit">Produit</a><a href="/pricing">Tarifs</a><a href="#wilayas">Wilayas</a><a href="/telecharger">Télécharger</a>
+            <a href="#produit">Produit</a><a href="/pricing">Tarifs</a><a href="/telecharger">Télécharger</a>
             <a href="/telecharger" className="nav-login">Se connecter</a>
           </div>
           <div className="nav-burger" aria-label="Menu"><span></span><span></span><span></span></div>

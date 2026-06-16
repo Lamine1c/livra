@@ -17,8 +17,6 @@ export default function PourquoiLivra() {
             <p className="pql-turn">Alors on a arrêté de chercher un sauveur.</p>
             <p>On a ouvert nos PC et on a construit LIVRA. Pas dans un bureau climatisé, mais pour sortir notre propre business de la jungle.</p>
           </div>
-          <hr className="pql-rule pql-anim" />
-          <p className="pql-sign pql-anim"><span className="flag">🇩🇿</span>Fait en Algérie. Pour le e-commerce DZ.</p>
         </div>
       </section>
       <div className="lp-seam"></div>
