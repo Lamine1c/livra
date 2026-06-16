@@ -1,146 +1,180 @@
-# CLAUDE.md
+# CLAUDE.md — Règles permanentes du repo LIVRA web
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Lu par Claude Code à chaque session. Règles forgées par l'expérience et
+les erreurs passées. À respecter SANS exception.
 
-## Variables d'environnement critiques
+## AVANT D'AGIR (lecture obligatoire)
 
-- **QR_SIGNING_SECRET** : secret HMAC pour signer les tokens QR smart. Avant tout deploy Vercel, ajouter une valeur aléatoire de 32+ caractères (`openssl rand -hex 32`). Sans cette variable, le build passe mais l'API `/api/scan` et `/api/orders/[id]/generate-qr` throwent en runtime.
+Avant TOUTE modification de code, lis attentivement et intégralement :
 
-## Commands
+1. **Ce fichier CLAUDE.md** — relire si plus de 30 min depuis la
+   dernière lecture de la session.
+2. **Tous les fichiers que tu vas modifier** — pas un survol, lecture
+   complète. Si le fichier est long, lis au moins les ~50 lignes
+   autour de chaque point d'édition pour comprendre le contexte.
+3. **Tous les fichiers de référence dans un bundle CD** (README,
+   `CC-PORTING-NOTES.md`, HTML mockup, CSS source). Pas un coup d'œil —
+   analyse.
+4. **L'historique git récent** (`git log -p -5 <fichier>`) quand tu
+   touches à du legacy non documenté.
 
-```bash
-npm run dev          # Start dev server (http://localhost:3000)
-npm run build        # Production build
-npm run lint         # ESLint on src/
-npx tsc --noEmit    # Type-check without emitting
-```
+Si une instruction te paraît contredire un fichier de référence :
+**STOP.** Demande à Lamine ou Claudy avant de procéder.
 
-## Architecture
+## RÈGLE DES 2 TENTATIVES
 
-**Stack:** Next.js 16 App Router · TypeScript · Tailwind CSS v4 · Supabase (auth + DB)
+Si un fix ne résout pas le problème après 2 tentatives :
 
-### Directory layout
+- **STOP toute autre tentative.**
+- Reviens à l'état d'avant.
+- Cherche la cause ROOT au niveau **architectural**, pas cosmétique :
+  - Le bug est-il dans le code que tu vises, ou en amont (attributs
+    SVG, pipeline de rendu, systèmes de coordonnées CSS, etc.) ?
+  - Les hypothèses de tes 2 premières tentatives partagent-elles un
+    présupposé commun qui est faux ?
 
-```
-src/
-  app/                        # Next.js App Router pages
-    auth/{login,register,callback}/   # Public auth pages
-    dashboard/                # Protected area (layout wraps all)
-      orders/{new,[id]}/      # Order list, creation, detail
-      clients/                # Client list
-      settings/               # Profile settings
-  app/
-    api/orders/[id]/
-      send-otp/route.ts   # POST — génère OTP, stocke en DB, envoie WhatsApp
-      verify-otp/route.ts # POST { code } — vérifie OTP, passe commande en "confirmed"
-  components/
-    ui/          # Primitive UI: Button, Input, Select, Card, StatusBadge
-    layout/      # Sidebar (client, nav + sign-out), Header
-    dashboard/   # StatsCard
-    orders/      # OrdersTable, OrderStatusSelect, OtpVerifyWidget
-  lib/
-    supabase/
-      client.ts   # Browser Supabase client (createBrowserClient)
-      server.ts   # Server Supabase client (createServerClient + cookies)
-      middleware.ts  # Session refresh + auth redirect logic
-    whatsapp.ts   # generateOTP(), normalizeAlgerianPhone(), sendOtpWhatsApp()
-    utils.ts      # cn(), formatCurrency() (DZD), formatDate(), generateReference(),
-                  # ORDER_STATUS_LABELS/COLORS, WILAYAS map (01–58)
-  types/index.ts  # Shared TS types: Order, Client, Product, OrderItem, Profile, DashboardStats
-  middleware.ts   # Next.js middleware — delegates to lib/supabase/middleware.ts
-supabase/
-  migrations/001_initial_schema.sql   # Full schema + RLS + trigger
-  migrations/002_otp_columns.sql      # Ajout otp_code, otp_expires_at, otp_verified_at sur orders
-```
+**Exemple réel à mémoriser** : le hero orange dot a pris 3 tentatives
+ratées (`left:248px` → `left:calc(248/288*100%)` →
+`offset-path:100%`) avant que CD diagnostique le vrai problème : le
+SVG route utilise `preserveAspectRatio="none"` qui étire le path,
+mais les coords CSS sont en pixels bruts non étirés. Les 3 tentatives
+partageaient toutes le même faux présupposé (le path n'est PAS étiré).
+Solution : ancrer les dots en `%` dérivés du viewBox.
 
-### Auth flow
+## ARCHITECTURE INVIOLABLE
 
-Middleware (`src/middleware.ts`) runs on every request except static assets. It calls `updateSession()` which:
-- Redirects unauthenticated users away from `/dashboard/**` → `/auth/login`
-- Redirects authenticated users away from `/auth/**` → `/dashboard`
+- **Ce repo (`~/livra`) = SITE WEB UNIQUEMENT.** LP, /pricing,
+  /telecharger, /privacy, /cgu, /magazine, pages tracking acheteur
+  publiques (/track, /locate), API auth signup vendeur. ZÉRO flow
+  opérationnel vendeur/livreur sur web.
+- **App native = repo `~/livra-mobile`** (Expo SDK 54). Vendeur +
+  livreur 100% in-app. Ne JAMAIS proposer un flow opérationnel web.
+- **Pas de login web.** "Se connecter" → `/telecharger` (l'utilisateur
+  télécharge l'app et se connecte dedans).
 
-Auth callback at `/auth/callback` (route handler) exchanges the code for a session.
+## PALETTE & DESIGN
 
-### Database schema
+- **LP marketing = Onyx v1 + glassmorphism + terracotta.** Tokens dans
+  `src/app/globals.css` :
+  - `--onyx #0E0E10` (bg page)
+  - `--surface #161618` (cards solides)
+  - `--deep #0A0A0C` (bg deeper, inputs)
+  - `--terracotta #D97757` (accent, max 1 par écran)
+  - `--ivoire #F5F0E8` (texte primaire)
+  - `--mist #8A8A8E` (texte secondaire)
+- **JAMAIS d'emerald sur surface marketing.** L'emerald est réservé à
+  l'app native.
+- **États succès/erreur = terracotta ou ambre, jamais vert.**
+- **Pas de hex hardcodé dans le code.** Toujours via CSS variables.
 
-Five tables, all with RLS policies scoped to `auth.uid()`:
+## RÈGLES ANTI-MENSONGE (AUDIT)
 
-| Table | Key relationships |
-|---|---|
-| `profiles` | 1:1 with `auth.users`, auto-created via trigger |
-| `clients` | belongs to `user_id` |
-| `products` | belongs to `user_id` (optional catalog) |
-| `orders` | belongs to `user_id` + `client_id`, has a unique `reference` (format `LV-YYMM-XXXX`) |
-| `order_items` | belongs to `order_id`, RLS checked via parent order |
+Un self-audit est une PREUVE, pas une déclaration.
 
-Order status values: `pending` → `confirmed` → `processing` → `shipped` → `delivered` / `cancelled` / `returned`.
+- ❌ "Piège X — Pas de min-width manquant. Géré par le translateX."
+- ✅ "Piège X — `.s5-stage { min-width: 0 }` ligne 3192. Triptyque
+  880px peut désormais shrinker dans grid column 786px."
 
-### Key conventions
+Pour chaque case d'une checklist (README CD, CC-PORTING-NOTES.md,
+audit demandé) :
+- Cite la LIGNE EXACTE dans ton code où le point est résolu.
+- Si tu ne peux pas citer une ligne, c'est que tu n'as pas appliqué
+  le fix. N'écris JAMAIS "✅ géré" sans preuve ligne+fichier.
 
-- **Server components** fetch data directly via `createClient()` from `lib/supabase/server.ts`. No API routes needed for reads.
-- **Client components** (marked `"use client"`) use `createClient()` from `lib/supabase/client.ts` for mutations (e.g. `OrderStatusSelect`, auth forms).
-- **Currency:** always format with `formatCurrency()` — outputs DZD with `fr-DZ` locale.
-- **Wilayas:** use the `WILAYAS` map in `utils.ts` (`"01"` → `"Adrar"`, …, `"58"` → `"El Meniaa"`). The code (01–58) is what is stored in the DB.
-- **Tailwind v4** is used — no `tailwind.config.js`; configuration is in CSS with `@theme` blocks if needed.
+## RÉFLEXES CSS
 
-## WhatsApp OTP flow
+- **Grid item qui re-parente un mockup CD (triptyque, dashboard) →
+  `min-width: 0` AUTOMATIQUE.** Sinon le contenu intrinsèque > la
+  colonne → overflow / clip latéral. Exemples canoniques :
+  `.s4-stage`, `.s5-stage`, `.s6-stage` en grid layout.
+- **MAIS : un crop VERTICAL d'un mockup vient souvent de la hauteur
+  interne fixe de la coque, PAS de la grid.** Vérifie d'abord la
+  hauteur du contenu interne vs hauteur de l'écran téléphone +
+  border-radius. (Cf. mockup "Une seule app" — content 686px dans
+  écran 692px avec border-radius:42px qui bouffait les coins du CTA
+  WhatsApp.)
+- **`!important` cosmétique = anti-pattern.**
+  - "Je rajoute `!important` pour gagner" → STOP. Cause root ailleurs.
+  - Un `!important` existant qui bloque → enquêter sa raison AVANT
+    d'en ajouter un. Souvent legacy cosmétique à retirer.
+- **Spécificité bat l'ordre.** `.section1 .lp-cta-wrap` (0,2,0) gagne
+  contre `.lp-cta-wrap` (0,1,0) sans `!important`.
+- **Pas d'`overflow:hidden`, `filter`, ou `transform` sur un ancêtre
+  3D.** Casse le contexte `preserve-3d` et flatten les mockups.
+- **SVG avec `preserveAspectRatio="none"` → le contenu est étiré.**
+  Positionner des éléments overlay en pixels CSS bruts ne marchera
+  pas. Utiliser des coords en `%` dérivés du viewBox.
 
-### Variables d'environnement
-```
-WHATSAPP_ACCESS_TOKEN=          # Token permanent Meta (jamais le token temporaire)
-WHATSAPP_OTP_TEMPLATE_NAME=     # Nom du template approuvé, ou vide pour mode texte (dev)
-```
+## PORT DE MOCKUPS CD
 
-### Flow
-1. Création commande → `POST /api/orders/[id]/send-otp` déclenché automatiquement
-2. OTP généré (6 chiffres, `crypto.randomInt`), stocké en clair avec expiry 10 min dans `orders.otp_code`
-3. Message envoyé à `normalizeAlgerianPhone(client.phone)` → format `213XXXXXXXXX`
-4. Widget `OtpVerifyWidget` affiché sur `/dashboard/orders/[id]` tant que `otp_verified_at IS NULL` et `status = 'pending'`
-5. `POST /api/orders/[id]/verify-otp` { code } → vérifie, met `status = 'confirmed'`, efface `otp_code`
+Quand un bundle CD est livré dans `~/Downloads/design_handoff_*` :
 
-### Template Meta (production)
-Créer dans WhatsApp Business Manager > Message Templates :
-- **Catégorie :** UTILITY
-- **Langue :** Français (fr)
-- **Corps :** `Bonjour {{1}},\n\nVotre code de confirmation LIVRA est : *{{2}}*\n\nCe code expire dans 10 minutes. Ne le communiquez à personne.`
-- Paramètre 1 = prénom client, Paramètre 2 = code OTP
+1. Lire `CC-PORTING-NOTES.md` EN PREMIER (si présent). Pas un survol —
+   applique chaque piège, point par point.
+2. Lire `README.md` ensuite.
+3. Visualiser le HTML mockup (`*.html`) avant de coder.
+4. **Scope CSS strict sous la classe section parente** (`.section1`,
+   `.section4`, `.s5`, `.s6`). JAMAIS de classes génériques (`.row`,
+   `.card`, `.map`, `.msg`, `.nm`) partagées entre composants.
+5. **Visuels statiques uniquement** — pas de bindings de données, pas
+   d'i18n, pas d'onClick fonctionnels sur les mockups.
+6. **Conserver `opacity: 1 !important`** sur les hero cards et
+   mockups (anti-écran-blanc).
 
-### Mode développement
-Laisser `WHATSAPP_OTP_TEMPLATE_NAME` vide → message texte libre (fonctionne uniquement avec les numéros de test enregistrés dans Meta Developer Console).
+## BACKEND / API
 
-### Normalisation des numéros algériens
-`normalizeAlgerianPhone()` dans `lib/whatsapp.ts` gère : `0XXXXXXXXX` → `213XXXXXXXXX`, `+213XXXXXXXXX` → `213XXXXXXXXX`, `9 chiffres` → `213XXXXXXXXX`.
+- **`SUPABASE_SERVICE_ROLE_KEY` UNIQUEMENT côté server.** Jamais
+  exposée client-side.
+- **Client Supabase admin = lazy-init.** Factory `createAdminClient()`
+  appelée DANS le handler, jamais au module level — sinon le build
+  pète quand les env vars ne sont pas présentes au build time.
+- **Validation Zod sur TOUS les inputs API.**
+- **Pas de catch silencieux.** Jamais `.catch(() => {})`. Toujours
+  logger ou propager avec un statut HTTP cohérent.
+- **Migrations SQL = fichier versionné**
+  (`supabase/migrations/XXX_*.sql`). Appliquées via SQL Editor
+  Supabase manuellement, pas via Studio UI ad-hoc.
+- **CORS strict** sur les routes auth/signup : origine `golivra.app`,
+  pas `*`.
 
-## Environment setup
+## FRONT-END
 
-Copy `.env.example` to `.env.local` and fill in all variables.
+- **Pas de `localStorage` / `sessionStorage`.** State React uniquement.
+- **TypeScript strict.** Pas de `any`. `npx tsc --noEmit` propre
+  obligatoire avant chaque diff.
+- **Loading + error states sur CHAQUE appel réseau.**
 
-Run migrations in order in your Supabase SQL editor:
-1. `supabase/migrations/001_initial_schema.sql` — tables, RLS, trigger
-2. `supabase/migrations/002_otp_columns.sql` — colonnes OTP sur orders
+## WORKFLOW
 
----
+1. **Diff d'abord, commit après validation Lamine.** Jamais de commit
+   sans diff montré + validation explicite.
+2. **1-2 fixes max par session pour les visuels.** Pas de
+   parallélisation sub-agents quand les fixes partagent du CSS —
+   chaque sub-agent croit son truc OK, l'ensemble visuel casse.
+3. **Sub-agents OK pour fichiers indépendants.** Pas pour reworks
+   visuels couplés.
+4. **`npx tsc --noEmit && npm run build` verts AVANT diff final.**
+5. **Branche dédiée par sprint**
+   (`feature/sprint-N-xxx`, `feature/lp-polish`). Pas de commit
+   direct sur `main` jour de prod.
 
-## Règles Claude Code — LIVRA Mobile
+## GIT — RÉSEAU DZ
 
-### Palette dark mode
-- bg global : #0D0D0D
-- cards : #161618, border : #252525
-- text primary : #F0EDE8, text secondary : #8A8780, text muted : #B8B5B0
-- accent : #10B981, danger : #F87171
+Si `git push` timeout port 443 (throttling ISP DZ fréquent) :
 
-### Règles de travail obligatoires
-1. Lire chaque fichier EN ENTIER avant toute modification
-2. Après tout changement CSS/Tailwind, lister mentalement tous les 
-   classNames et vérifier qu'aucun élément ne dépasse 100vw sur 390px
-3. tsc propre ≠ layout correct — vérifier la logique visuelle mobile
-4. Toute card mobile : w-full + overflow-hidden
-   Enfants : flex-1 min-w-0 (texte) + shrink-0 (montants/actions)
-5. Tout <main> scrollable : overflow-y-auto overflow-x-hidden 
-   overscroll-contain [-webkit-overflow-scrolling:touch] pb-40
-6. Architecture scroll iOS : layout h-dvh overflow-hidden,
-   pages flex flex-1 flex-col min-h-0, main gère son propre scroll
-7. Fix crop iOS Safari dans un contexte flex :
-   Le div enfant qui wrap le contenu principal doit avoir
-   w-0 flex-1 (pas seulement flex-1) pour forcer iOS 
-   à respecter la largeur disponible sans dépassement.
+    git config --global http.version HTTP/1.1
+
+Garder ce réglage activé en permanence. `nc -zv github.com 443` peut
+répondre `succeeded` alors que le push HTTP/2 hang.
+
+## SOURCES DE VÉRITÉ
+
+- `LIVRA_BIBLE.md` — architecture produit
+- `LIVRA_ROADMAP.md` — priorités V1/V1.5/V2
+- `CLAUDE.md` (ce fichier) — règles permanentes
+- `src/styles/livra-landing.css` — single source LP CSS
+- `src/app/globals.css` — design tokens
+- `public/brand/` — SVG sources brand kit (Bouclier + Wordmark +
+  Lockup)
+- Bundles CD dans `~/Downloads/design_handoff_*` pour les livraisons
+  visuelles

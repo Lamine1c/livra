@@ -47,3 +47,4 @@ next-env.d.ts
 LIVRA_Section*.html
 design_handoff_*/
 .claude/
+CLAUDE.md.backup-*
