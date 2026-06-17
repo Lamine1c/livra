@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 17 juin 2026, 19:00 Montréal
+**Dernière mise à jour** : 17 juin 2026, 22:30 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -26,7 +26,7 @@ Site marketing (audit en cours) :
 - ✅ `/pricing` — fermée 17 juin
 - 🗑️ `/tarifs` — supprimée, redirige 301 vers `/pricing`
 - 🟡 `/telecharger` — **prochaine**
-- ✅ `/magazine` + `/magazine/[slug]` — route live, mais lien manquant dans Header global + LP Footer
+- ✅ `/magazine` + `/magazine/[slug]` — route live + lien dans Header et Footer ✅
 - ✅ `/privacy` — v2 live 17 juin
 - ✅ `/cgu` — v2 live 17 juin
 
@@ -52,6 +52,9 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - 2 fondateurs test en DB (#1 lamine@golivra.app, #2 godzillamarketing514@gmail.com) → **à wiper avant trafic public**
 - Acceptance contractuelle : checkbox CGU obligatoire dans SignupModal, preuve stockée (timestamp + IP + UA + version) dans `vendors_waitlist` (migration 016 appliquée)
 - Tarifs alignés 499/999 partout (Fondateur / Standard), annuel retiré
+- Header global unifié : HeaderGlobal.tsx sticky onyx+blur appliqué via `(site)/layout.tsx`, palette Onyx v1, active-state propre, Magazine ajouté à la nav (commit `426d99b`, merge `aa80cf3`)
+- Footer global unifié : visuel pleine largeur identique LP↔site (inner 1180px), wordmark LIVRA + tagline + copyright Godzii Media, 6 liens cohérents partout (Produit·Tarifs·Magazine·Confidentialité·CGU·Contact)
+- Sticky-footer flexbox : `(site)/layout.tsx` en flex flex-col + Footer `mt-auto` → footer épinglé en bas sur pages courtes (/pricing, /magazine)
 
 ---
 
@@ -80,12 +83,6 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 ### Web — à fixer pendant l'audit page-par-page
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
-
-### Inter-pages (cohérence) :
-
-- Logo LIVRA position incohérente entre pages (parfois centré au lieu d'aligné à gauche)
-- Nav globale paraît différente selon les pages (alignement, espacement)
-- Magazine absent du Header global (`src/components/site/Header.tsx`) ET du Footer LP (`src/components/landing/Footer.tsx`). Présent uniquement dans `site/Footer.tsx`.
 
 ### `/telecharger` — chantier dédié (page #3) :
 
@@ -171,9 +168,9 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Cohérence Header inter-pages** (logo + nav + Magazine manquant) — session dédiée courte
-2. **Auditer `/telecharger`** (page #3) — desktop + Universal Links + reframe waitlist + dropdown indicatifs WhatsApp
-3. **Auditer `/magazine`** (page #4) — vérifier que la route 404 ou page placeholder propre
+1. **Auditer `/telecharger`** (page #3) — desktop + Universal Links iOS/Android + reframe CTA stores en waitlist + dropdown indicatifs WhatsApp (+213 lock)
+2. **Auditer `/magazine` + `/magazine/[slug]`** (page #4)
+3. **Wipe data fondateurs test** avant trafic public (2 entrées : lamine@golivra.app, godzillamarketing514@gmail.com)
 4. **Quand toutes pages desktop fermées** → phase Tablet/Mobile responsive
 5. **PUIS app polish** (5 store blockers triviaux)
 6. **PUIS décision date launch**
