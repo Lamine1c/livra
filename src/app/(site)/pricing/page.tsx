@@ -5,30 +5,48 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SignupModal from "@/components/SignupModal";
 
-type PlanKey = "founders" | "monthly" | "annual";
+type PlanKey = "founders" | "monthly";
 
-const BTN_SHADOW = "0 1px 0 rgba(255,255,255,0.12) inset, 0 4px 12px rgba(168,71,43,0.25)";
+// ── Icons (inline SVG — no emoji, brand rule) ────────────────────────────────
+function FeatIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
 
-const CheckSvg = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M20 6L9 17l-5-5" />
+const ArrowSvg = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14" /><path d="M13 6l6 6-6 6" />
   </svg>
 );
 
-function FeatItem({ variant, children }: { variant: "terra" | "mist"; children: React.ReactNode }) {
-  const isTerra = variant === "terra";
+// ── Features (markup identique entre les 2 cards — la teinte de la puce est
+//    gérée par le sélecteur parent .pv-card--founder, cf. CSS) ───────────────
+const FEATURES: { icon: React.ReactNode; label: React.ReactNode }[] = [
+  { icon: <FeatIcon><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></FeatIcon>, label: <><strong>Bouclier anti-scam</strong> — OTP + signal système</> },
+  { icon: <FeatIcon><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></FeatIcon>, label: "Tracking GPS style Uber + partage position client par WhatsApp" },
+  { icon: <FeatIcon><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" /></FeatIcon>, label: "WhatsApp automatique — confirmation, en route, livraison" },
+  { icon: <FeatIcon><path d="M10 17h4V5H2v12h3" /><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></FeatIcon>, label: "Compatible avec la plupart des transporteurs nationaux" },
+  { icon: <FeatIcon><path d="M3 3v18h18" /><rect x="7" y="11" width="3" height="6" /><rect x="13" y="7" width="3" height="10" /></FeatIcon>, label: "Suivi du cash en circulation" },
+  { icon: <FeatIcon><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /></FeatIcon>, label: "Mises à jour à vie" },
+  { icon: <FeatIcon><path d="M3 18v-6a9 9 0 0 1 18 0v6" /><path d="M21 19a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h3zM3 19a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H3z" /></FeatIcon>, label: "Support 24/7" },
+];
+
+function FeatureList() {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "11px", fontSize: "14px", lineHeight: "1.4", color: "#D2CEC6" }}>
-      <span style={{
-        width: "20px", height: "20px", flexShrink: 0, marginTop: "1px",
-        display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%",
-        color: isTerra ? "#D97757" : "#8A8A8E",
-        background: isTerra ? "rgba(217,119,87,0.14)" : "rgba(255,255,255,0.06)",
-      }}>
-        <CheckSvg />
-      </span>
-      <span>{children}</span>
-    </div>
+    <>
+      <div className="pv-incl">Tout est inclus</div>
+      <div className="pv-feats">
+        {FEATURES.map((f, i) => (
+          <div className="pv-feat" key={i}>
+            <span className="ic">{f.icon}</span>
+            <span>{f.label}</span>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -59,17 +77,11 @@ export default function PricingPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // Derived values for the founders card
+  // Founders counter — branché sur l'API existante (même source que la v précédente)
   const foundersCount = founders.status === "ok" ? founders.count : null;
   const foundersMax = founders.status === "ok" ? founders.max : 100;
   const isFull = foundersCount !== null && foundersCount >= foundersMax;
   const remaining = foundersCount !== null ? Math.max(0, foundersMax - foundersCount) : null;
-  const barWidth = foundersCount !== null ? `${Math.min(100, (foundersCount / foundersMax) * 100)}%` : "17%";
-  const barColor = foundersCount !== null && foundersCount >= 80 ? "#F59E0B" : "#D97757";
-  const barGlow = foundersCount !== null && foundersCount >= 80
-    ? "0 0 10px 0 rgba(245,158,11,0.7)"
-    : "0 0 10px 0 rgba(217,119,87,0.7)";
-  const counterColor = foundersCount !== null && foundersCount >= 80 ? "#F59E0B" : "#E0A340";
 
   function openModal(plan: PlanKey) {
     setSelectedPlan(plan);
@@ -79,268 +91,282 @@ export default function PricingPage() {
   return (
     <>
       <style>{`
-        @keyframes counterPulse{0%,100%{box-shadow:0 0 8px 0 rgba(224,163,64,0.45);}50%{box-shadow:0 0 16px 1px rgba(224,163,64,0.8);}}
-        @media(prefers-reduced-motion:reduce){.counter-bar-fill{animation:none!important;}}
-        .pr-grid{display:flex;justify-content:center;align-items:center;gap:24px;max-width:1140px;margin:0 auto;padding:0 24px;}
-        .pcard-side{flex:0 0 332px;z-index:2;}
-        .pcard-hl{flex:0 0 380px;z-index:1;}
-        .pcard-side:hover,.pcard-hl:hover{transform:translateY(-4px);}
-        @media(max-width:980px){
-          .pr-grid{flex-direction:column;max-width:440px;}
-          .pcard-side,.pcard-hl{flex:0 0 auto;width:100%;}
-          .pcard-hl{order:-1;}
+        .pv {
+          --accent: var(--terracotta);
+          --accent-rgb: var(--terracotta-rgb);
+          --mist-dim: #6b6b70;
+          --hair: rgba(255,255,255,0.07);
+          --card-bd: rgba(255,255,255,0.08);
+          --radius: 26px;
+          position: relative; isolation: isolate; overflow: hidden;
+          background: var(--onyx); color: var(--ivoire); -webkit-font-smoothing: antialiased;
+        }
+        .pv-hero {
+          position: relative; text-align: center;
+          padding: clamp(40px,7vw,80px) 24px clamp(30px,4vw,44px);
+          max-width: 760px; margin: 0 auto;
+        }
+        .pv-eyebrow {
+          display: inline-flex; align-items: center; gap: 10px;
+          font-size: 12.5px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
+          color: var(--mist); margin-bottom: 22px;
+        }
+        .pv-pip { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px 1px rgba(var(--accent-rgb),0.7); }
+        .pv-h1 {
+          font-weight: 800; font-size: clamp(2.3rem,6vw,3.7rem); line-height: 1.03;
+          letter-spacing: -0.038em; color: var(--ivoire); text-wrap: balance;
+        }
+        .pv-h1 em { color: var(--terracotta); font-style: normal; }
+        .pv-hero-sub {
+          margin: 20px auto 0; max-width: 48ch;
+          font-size: clamp(15px,1.3vw,17px); line-height: 1.6; color: var(--mist); text-wrap: pretty;
+        }
+        .pv-hero-sub strong { color: var(--ivoire); font-weight: 500; }
+
+        .pv-stage { position: relative; padding: clamp(8px,2vw,20px) 20px clamp(56px,8vw,88px); }
+        .pv-stage::before {
+          content: ''; position: absolute; top: -4%; left: 50%; transform: translateX(-50%);
+          width: min(560px,100vw); height: 580px;
+          background: radial-gradient(ellipse 46% 50% at 50% 38%, rgba(var(--accent-rgb),0.13) 0%, rgba(var(--accent-rgb),0.04) 42%, transparent 70%);
+          pointer-events: none; z-index: 0;
+        }
+        .pv-grid {
+          position: relative; z-index: 1; display: grid;
+          grid-template-columns: repeat(2, minmax(0,380px)); gap: 22px;
+          justify-content: center; align-items: stretch; max-width: 820px; margin: 0 auto;
+        }
+
+        .pv-card {
+          position: relative; display: flex; flex-direction: column;
+          border-radius: var(--radius); background: var(--surface); border: 1px solid var(--card-bd);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 50px -30px rgba(0,0,0,0.8);
+          padding: clamp(26px,2.6vw,34px) clamp(22px,2.4vw,30px) clamp(26px,2.6vw,32px);
+          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .pv-card--standard:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.14); }
+        .pv-card--founder {
+          background: linear-gradient(180deg, rgba(48,40,38,0.6), rgba(28,26,28,0.62)), var(--surface);
+          border-color: rgba(var(--accent-rgb),0.42);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 0 60px -6px rgba(var(--accent-rgb),0.16), 0 28px 64px -32px rgba(0,0,0,0.85);
+          transform: translateY(-8px);
+        }
+        .pv-card--founder::before {
+          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+          border-radius: var(--radius) var(--radius) 0 0;
+          background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.65), transparent);
+        }
+        .pv-card--founder:hover {
+          transform: translateY(-12px);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 0 84px -6px rgba(var(--accent-rgb),0.24), 0 36px 76px -34px rgba(0,0,0,0.9);
+        }
+
+        .pv-badge {
+          display: inline-flex; align-items: center; gap: 9px; align-self: flex-start;
+          font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--terracotta); background: rgba(var(--accent-rgb),0.13);
+          border: 1px solid rgba(var(--accent-rgb),0.34); border-radius: 999px; padding: 7px 13px; white-space: nowrap;
+        }
+        .pv-badge svg { color: var(--terracotta); }
+        .pv-badge .sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(var(--accent-rgb),0.55); }
+        .pv-badge .count { font-variant-numeric: tabular-nums; color: var(--ivoire); letter-spacing: 0.06em; }
+        .pv-badge .count b { color: var(--terracotta); font-weight: 700; }
+        .pv-badge .count-skel { display: inline-block; width: 64px; height: 11px; border-radius: 6px; background: rgba(255,255,255,0.12); vertical-align: middle; }
+
+        .pv-label {
+          align-self: flex-start; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+          color: var(--mist); border: 1px solid var(--hair); border-radius: 999px; padding: 7px 13px;
+        }
+
+        .pv-head { min-height: 168px; display: flex; flex-direction: column; }
+        .pv-price { display: flex; align-items: baseline; gap: 9px; margin-top: 22px; flex-wrap: wrap; }
+        .pv-strike { font-size: 18px; font-weight: 500; color: var(--mist-dim); text-decoration: line-through; text-decoration-color: rgba(var(--accent-rgb),0.6); white-space: nowrap; }
+        .pv-amt { font-size: clamp(2.7rem,5vw,3.4rem); font-weight: 800; letter-spacing: -0.04em; color: var(--ivoire); line-height: 0.95; font-variant-numeric: tabular-nums; }
+        .pv-per { font-size: 16px; font-weight: 500; color: var(--mist); }
+        .pv-life { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--terracotta); letter-spacing: 0.01em; }
+        .pv-life svg { flex-shrink: 0; }
+        .pv-life-note { margin-top: 5px; font-size: 12px; line-height: 1.45; color: var(--mist-dim); }
+        .pv-standard-note { margin-top: 12px; font-size: 13px; color: var(--mist); }
+
+        .pv-cta {
+          position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
+          margin-top: auto; width: 100%; padding: 16px; border-radius: 15px;
+          font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em;
+          border: 1px solid transparent; cursor: pointer; appearance: none; font-family: inherit;
+          transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, border-color 200ms ease, filter 200ms ease;
+        }
+        .pv-cta--primary {
+          background: var(--terracotta); color: var(--terra-deep);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, 0 16px 40px -16px rgba(var(--accent-rgb),0.8);
+        }
+        .pv-cta--primary:hover { transform: translateY(-2px); filter: brightness(1.04); box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 22px 50px -18px rgba(var(--accent-rgb),0.9); }
+        .pv-cta--primary:disabled { opacity: 0.7; cursor: default; transform: none; filter: none; }
+        .pv-cta--ghost { background: rgba(255,255,255,0.02); color: var(--ivoire); border-color: var(--card-bd); }
+        .pv-cta--ghost:hover { transform: translateY(-2px); border-color: rgba(var(--accent-rgb),0.55); color: var(--ivoire); }
+
+        .pv-incl {
+          display: flex; align-items: center; gap: 12px; margin: 24px 0 18px;
+          font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mist-dim);
+        }
+        .pv-incl::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+
+        .pv-feats { display: flex; flex-direction: column; gap: 13px; }
+        .pv-feat { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.4; color: #D8D4CC; }
+        .pv-feat .ic {
+          width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; margin-top: -1px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.05); color: var(--mist);
+          transition: background 200ms ease, color 200ms ease;
+        }
+        .pv-card--founder .pv-feat .ic { background: rgba(var(--accent-rgb),0.13); color: var(--terracotta); }
+        .pv-feat strong { color: var(--ivoire); font-weight: 600; }
+
+        .pv-trust {
+          position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+          gap: 10px 26px; max-width: 820px; margin: clamp(28px,4vw,40px) auto 0; padding: 0 24px clamp(40px,6vw,72px);
+        }
+        .pv-trust span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mist); }
+        .pv-trust svg { color: var(--mist); }
+
+        @media (prefers-reduced-motion: no-preference) {
+          .pv-eyebrow, .pv-h1, .pv-hero-sub, .pv-card, .pv-trust { animation: pvrise 760ms cubic-bezier(0.22,0.61,0.36,1) backwards; }
+          .pv-eyebrow { animation-delay: 40ms; }
+          .pv-h1 { animation-delay: 110ms; }
+          .pv-hero-sub { animation-delay: 200ms; }
+          .pv-card--founder { animation-delay: 300ms; animation-name: pvrise-founder; }
+          .pv-card--standard { animation-delay: 380ms; }
+          .pv-trust { animation-delay: 460ms; }
+          @keyframes pvrise-founder { from { transform: translateY(24px); } to { transform: translateY(-8px); } }
+        }
+        @keyframes pvrise { from { transform: translateY(24px); } to { transform: none; } }
+
+        @media (max-width: 1080px) {
+          .pv-grid { grid-template-columns: minmax(0,420px); }
+          .pv-card--founder { transform: translateY(0); order: -1; }
+          .pv-card--founder:hover { transform: translateY(-4px); }
+          .pv-head { min-height: 0; }
+          @media (prefers-reduced-motion: no-preference) {
+            @keyframes pvrise-founder { from { transform: translateY(24px); } to { transform: translateY(0); } }
+          }
         }
       `}</style>
 
       <Header />
 
-      <main style={{ background: "#0E0E10", position: "relative", isolation: "isolate", overflow: "hidden" }}>
-        {/* Radial terracotta glow */}
-        <div aria-hidden="true" style={{
-          position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
-          width: "min(900px,130vw)", height: "680px",
-          background: "radial-gradient(ellipse 50% 50% at 50% 40%, rgba(217,119,87,0.10) 0%, rgba(217,119,87,0.03) 42%, transparent 68%)",
-          pointerEvents: "none", zIndex: 0,
-        }} />
-
+      <main className="pv">
         {/* Hero */}
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "760px", margin: "0 auto", padding: "clamp(48px,7vw,88px) 24px clamp(40px,5vw,60px)" }}>
-          <p style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontSize: "12.5px", fontWeight: 500, letterSpacing: "0.22em", textTransform: "uppercase", color: "#8A8A8E", marginBottom: "22px" }}>
-            <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#D97757", boxShadow: "0 0 12px 1px rgba(217,119,87,0.7)", flexShrink: 0 }} />
-            Tarifs LIVRA
+        <header className="pv-hero">
+          <p className="pv-eyebrow"><span className="pv-pip" />Tarifs LIVRA</p>
+          <h1 className="pv-h1">Un seul outil. <em>{"Deux façons d'y entrer."}</em></h1>
+          <p className="pv-hero-sub">
+            Tout LIVRA, sans piège ni engagement.<br />
+            <strong>7 jours gratuits, sans carte requise.</strong>
           </p>
-          <h1 style={{ fontWeight: 800, fontSize: "clamp(40px,6vw,64px)", lineHeight: "1.02", letterSpacing: "-0.035em", color: "#F5F0E8" }}>
-            Choisissez votre plan
-          </h1>
-          <p style={{ margin: "20px auto 0", maxWidth: "48ch", fontSize: "clamp(15px,1.3vw,17px)", lineHeight: "1.6", color: "#8A8A8E" }}>
-            7 jours gratuits. Sans engagement. Annulable en 1 clic.
-          </p>
-        </div>
+        </header>
 
-        {/* Pricing grid */}
-        <div className="pr-grid" style={{ position: "relative", zIndex: 1 }}>
+        {/* Cards */}
+        <section className="pv-stage">
+          <div className="pv-grid">
 
-          {/* MENSUEL */}
-          <article className="pcard-side" style={{
-            display: "flex", flexDirection: "column",
-            background: "rgba(38,40,50,0.55)", backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
-            padding: "32px 28px 30px",
-            boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4)",
-            transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease",
-          }}>
-            <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8A8E", marginTop: "22px" }}>Mensuel</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "10px", flexWrap: "wrap" as const }}>
-              <span style={{ fontSize: "clamp(32px,3.4vw,42px)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1, color: "#F5F0E8", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                2 799 DA
-              </span>
-              <span style={{ fontSize: "14px", fontWeight: 500, color: "#8A8A8E" }}>/ mois</span>
-            </div>
-            <p style={{ marginTop: "11px", fontSize: "13px", color: "#8A8A8E", lineHeight: "1.5" }}>Sans engagement</p>
-            <div style={{ height: "1px", background: "rgba(255,255,255,0.07)", margin: "24px 0" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: "13px", flex: 1 }}>
-              <FeatItem variant="mist">7 jours gratuits</FeatItem>
-              <FeatItem variant="mist">Toutes les fonctionnalités LIVRA</FeatItem>
-              <FeatItem variant="mist">Annulable à tout moment</FeatItem>
-            </div>
-            <div style={{ marginTop: "26px" }}>
-              <button
-                type="button"
-                onClick={() => openModal("monthly")}
-                style={{
-                  appearance: "none", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px",
-                  fontSize: "15px", fontWeight: 600, letterSpacing: "-0.005em",
-                  background: "rgba(255,255,255,0.02)", color: "#F5F0E8",
-                  transition: "transform .2s ease, border-color .2s ease",
-                }}
-              >
-                Commencer mensuel
-              </button>
-            </div>
-          </article>
-
-          {/* FONDATEUR */}
-          <article className="pcard-hl" style={{
-            position: "relative",
-            display: "flex", flexDirection: "column",
-            background: "linear-gradient(180deg, rgba(48,40,38,0.62), rgba(30,28,30,0.58))",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(217,119,87,0.4)", borderRadius: "24px",
-            padding: "36px 30px 34px",
-            boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4), 0 0 50px rgba(217,119,87,0.08)",
-            transition: "transform .25s ease, box-shadow .25s ease",
-          }}>
-            {/* top hairline */}
-            <div aria-hidden="true" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg,transparent,rgba(217,119,87,0.6),transparent)" }} />
-
-            {/* pill */}
-            <span style={{
-              alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: "7px",
-              fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              padding: "6px 12px", borderRadius: "9999px", whiteSpace: "nowrap",
-              color: "#D97757", background: "rgba(217,119,87,0.14)", border: "1px solid rgba(217,119,87,0.32)",
-            }}>
-              <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />
-              Exclusif · 100 premiers
-            </span>
-
-            {/* scarcity counter */}
-            <div style={{ marginTop: "14px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: counterColor, display: "flex", alignItems: "center", gap: "9px" }}>
-              {founders.status === "loading" ? (
-                <span style={{ whiteSpace: "nowrap", color: "#8A8A8E", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>
-                  <span style={{ display: "inline-block", width: "110px", height: "12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", verticalAlign: "middle" }} />
+            {/* ═══ FONDATEUR ═══ */}
+            <article className="pv-card pv-card--founder">
+              <div className="pv-head">
+                <span className="pv-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="8" r="6" /><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12" />
+                  </svg>
+                  Fondateur
+                  {founders.status === "loading" && (
+                    <>
+                      <span className="sep" />
+                      <span className="count-skel" aria-hidden="true" />
+                    </>
+                  )}
+                  {founders.status === "ok" && !isFull && (
+                    <>
+                      <span className="sep" />
+                      <span className="count"><b>{remaining}</b> / {foundersMax} places</span>
+                    </>
+                  )}
+                  {founders.status === "ok" && isFull && (
+                    <>
+                      <span className="sep" />
+                      <span className="count">Complet</span>
+                    </>
+                  )}
                 </span>
-              ) : founders.status === "error" ? (
-                <span style={{ whiteSpace: "nowrap", color: "#8A8A8E", fontWeight: 500, textTransform: "none", letterSpacing: 0, fontSize: "11px" }}>Places limitées</span>
-              ) : isFull ? (
-                <span style={{ whiteSpace: "nowrap", color: "#D97757" }}>COMPLET</span>
-              ) : (
-                <span style={{ whiteSpace: "nowrap" }}>PLUS QUE {remaining} PLACE{remaining === 1 ? "" : "S"}</span>
-              )}
-              {founders.status === "ok" && !isFull && (
-                <span style={{ flex: 1, height: "4px", borderRadius: "9999px", background: "rgba(255,255,255,0.07)", overflow: "hidden", maxWidth: "120px", display: "block" }}>
-                  <i className="counter-bar-fill" style={{ display: "block", height: "100%", width: barWidth, borderRadius: "9999px", background: barColor, boxShadow: barGlow, animation: "counterPulse 2.2s ease-in-out infinite" }} />
-                </span>
-              )}
-            </div>
 
-            <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8A8E", marginTop: "18px" }}>Fondateur</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "10px", flexWrap: "wrap" as const }}>
-              <span style={{ fontSize: "clamp(38px,4vw,50px)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1, color: "#F5F0E8", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                1 999 DA
-              </span>
-              <span style={{ fontSize: "14px", fontWeight: 500, color: "#8A8A8E" }}>
-                / mois <b style={{ color: "#D97757", fontWeight: 700 }}>À VIE</b>
-              </span>
-            </div>
-            <p style={{ marginTop: "11px", fontSize: "13px", color: "#8A8A8E", lineHeight: "1.5" }}>Prix verrouillé pour toujours.</p>
-            <div style={{ height: "1px", background: "rgba(255,255,255,0.07)", margin: "24px 0" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: "13px", flex: 1 }}>
-              <FeatItem variant="terra">7 jours gratuits</FeatItem>
-              <FeatItem variant="terra">Toutes les fonctionnalités LIVRA</FeatItem>
-              <FeatItem variant="terra"><strong style={{ color: "#F5F0E8", fontWeight: 600 }}>Prix verrouillé À VIE</strong></FeatItem>
-              <FeatItem variant="terra">Support prioritaire</FeatItem>
-              <FeatItem variant="terra">Badge <strong style={{ color: "#F5F0E8", fontWeight: 600 }}>« Fondateur »</strong> dans ton compte</FeatItem>
-            </div>
-            <div style={{ marginTop: "26px" }}>
+                <div className="pv-price">
+                  <span className="pv-strike">1 999</span>
+                  <span className="pv-amt">499</span>
+                  <span className="pv-per">DA / mois</span>
+                </div>
+                <p className="pv-life">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" />
+                  </svg>
+                  À vie
+                </p>
+                <p className="pv-life-note">{"tant que l'abonnement reste actif"}</p>
+              </div>
+
               {isFull ? (
-                <button
-                  type="button"
-                  onClick={() => openModal("monthly")}
-                  style={{
-                    appearance: "none", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    width: "100%", padding: "16px", borderRadius: "14px",
-                    fontSize: "15px", fontWeight: 600, letterSpacing: "-0.005em",
-                    background: "rgba(255,255,255,0.02)", color: "#F5F0E8",
-                    transition: "transform .2s ease, border-color .2s ease",
-                  }}
-                >
-                  Passer au mensuel
+                <button type="button" className="pv-cta pv-cta--ghost" onClick={() => openModal("monthly")}>
+                  Passer au Standard
+                  <ArrowSvg />
                 </button>
               ) : (
                 <button
                   type="button"
+                  className="pv-cta pv-cta--primary"
                   onClick={() => openModal("founders")}
                   disabled={founders.status === "loading"}
-                  style={{
-                    appearance: "none", border: "none",
-                    cursor: founders.status === "loading" ? "default" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    width: "100%", padding: "16px", borderRadius: "14px",
-                    fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
-                    background: founders.status === "loading" ? "rgba(217,119,87,0.5)" : "#D97757",
-                    color: "#1a0f0a",
-                    boxShadow: founders.status === "loading" ? "none" : BTN_SHADOW,
-                    transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease",
-                    opacity: founders.status === "loading" ? 0.7 : 1,
-                  }}
                 >
-                  Devenir fondateur
+                  Devenir Fondateur
+                  <ArrowSvg />
                 </button>
               )}
-            </div>
-          </article>
 
-          {/* ANNUEL */}
-          <article className="pcard-side" style={{
-            display: "flex", flexDirection: "column",
-            background: "rgba(38,40,50,0.55)", backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
-            padding: "32px 28px 30px",
-            boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4)",
-            transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease",
-          }}>
-            {/* pill */}
-            <span style={{
-              alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: "7px",
-              fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              padding: "6px 12px", borderRadius: "9999px", whiteSpace: "nowrap",
-              color: "#c79077", background: "rgba(217,119,87,0.08)", border: "1px solid rgba(217,119,87,0.18)",
-            }}>
-              <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />
-              Économise 16%
-            </span>
+              <FeatureList />
+            </article>
 
-            <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#8A8A8E", marginTop: "22px" }}>Annuel</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "10px", flexWrap: "wrap" as const }}>
-              <span style={{ fontSize: "clamp(32px,3.4vw,42px)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1, color: "#F5F0E8", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                27 990 DA
-              </span>
-              <span style={{ fontSize: "14px", fontWeight: 500, color: "#8A8A8E" }}>/ an</span>
-            </div>
-            <p style={{ marginTop: "11px", fontSize: "13px", color: "#8A8A8E", lineHeight: "1.5" }}>
-              Équivaut à 2 333 DA/mois<br />(= 2 mois offerts)
-            </p>
-            <div style={{ height: "1px", background: "rgba(255,255,255,0.07)", margin: "24px 0" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: "13px", flex: 1 }}>
-              <FeatItem variant="mist">7 jours gratuits</FeatItem>
-              <FeatItem variant="mist">Toutes les fonctionnalités LIVRA</FeatItem>
-              <FeatItem variant="mist">2 mois offerts vs mensuel</FeatItem>
-            </div>
-            <div style={{ marginTop: "26px" }}>
-              <button
-                type="button"
-                onClick={() => openModal("annual")}
-                style={{
-                  appearance: "none", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px",
-                  fontSize: "15px", fontWeight: 600, letterSpacing: "-0.005em",
-                  background: "rgba(255,255,255,0.02)", color: "#F5F0E8",
-                  transition: "transform .2s ease, border-color .2s ease",
-                }}
-              >
-                Commencer annuel
+            {/* ═══ STANDARD ═══ */}
+            <article className="pv-card pv-card--standard">
+              <div className="pv-head">
+                <span className="pv-label">Standard</span>
+
+                <div className="pv-price">
+                  <span className="pv-amt">999</span>
+                  <span className="pv-per">DA / mois</span>
+                </div>
+                <p className="pv-standard-note">Sans engagement. Annulation en 1 clic.</p>
+              </div>
+
+              <button type="button" className="pv-cta pv-cta--ghost" onClick={() => openModal("monthly")}>
+                Commencer gratuitement
+                <ArrowSvg />
               </button>
-            </div>
-          </article>
 
-        </div>
+              <FeatureList />
+            </article>
 
-        {/* Trust line */}
-        <div style={{
-          position: "relative", zIndex: 1,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          gap: "clamp(20px,3vw,40px)", flexWrap: "wrap",
-          margin: "clamp(44px,5vw,64px) auto 0", maxWidth: "1000px",
-          padding: "0 24px clamp(60px,8vw,100px)",
-        }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-            Paiement sécurisé
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-            Données chiffrées
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v4h4" /></svg>
-            Annulable en 1 clic
-          </span>
-        </div>
+          </div>
+
+          {/* Trust line */}
+          <div className="pv-trust">
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+              Paiement sécurisé
+            </span>
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></svg>
+              Données chiffrées
+            </span>
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /></svg>
+              Annulation en 1 clic
+            </span>
+          </div>
+        </section>
       </main>
 
       <Footer />

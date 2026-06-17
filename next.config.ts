@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/blog", destination: "/magazine", permanent: true },
       { source: "/blog/:slug", destination: "/magazine/:slug", permanent: true },
+      { source: "/tarifs", destination: "/pricing", permanent: true },
     ];
   },
   async rewrites() {
