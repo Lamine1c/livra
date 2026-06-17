@@ -7,7 +7,7 @@ import HeaderGlobal from "@/components/site/HeaderGlobal";
 // exact same header (replaces the per-page <Header/> + the LP inline nav).
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-onyx text-ivoire min-h-screen" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
+    <div className="bg-onyx text-ivoire min-h-screen flex flex-col" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
       <HeaderGlobal />
       {children}
     </div>

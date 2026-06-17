@@ -4,7 +4,7 @@ import LivraLogoHorizontal from "@/components/brand/LivraLogoHorizontal";
 export default function Footer() {
   return (
     <footer
-      className="bg-deep"
+      className="bg-deep mt-auto"
       style={{ borderTop: "var(--border-faint)" }}
     >
       <div className="max-w-5xl mx-auto px-6 py-12">
