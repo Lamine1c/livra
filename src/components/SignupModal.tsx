@@ -9,7 +9,7 @@ import { WILAYAS } from "@/lib/utils";
 interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedPlan: "founders" | "monthly" | "annual";
+  selectedPlan: "founders" | "monthly";
 }
 
 interface FormState {
@@ -24,9 +24,8 @@ interface FormState {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PLAN_LABELS: Record<string, string> = {
-  founders: "Fondateur · 1 999 DA/mois À VIE",
-  monthly: "Mensuel · 2 799 DA/mois",
-  annual: "Annuel · 27 990 DA/an",
+  founders: "Fondateur · 499 DA/mois À VIE",
+  monthly: "Standard · 999 DA/mois",
 };
 
 const EMPTY_FORM: FormState = {
@@ -104,6 +103,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Step 4 founder info
   const [founderIndex, setFounderIndex] = useState<number | null>(null);
@@ -118,6 +118,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
       setPassword("");
       setConfirmPassword("");
       setPasswordError("");
+      setTermsAccepted(false);
       setOtpError("");
       setTempToken("");
       setFounderIndex(null);
@@ -285,13 +286,14 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
   const handleStep3Submit = async () => {
     if (password.length < 8) { setPasswordError("8 caractères minimum"); return; }
     if (password !== confirmPassword) { setPasswordError("Les mots de passe ne correspondent pas"); return; }
+    if (!termsAccepted) { setPasswordError("Tu dois accepter les CGU et la Politique de confidentialité"); return; }
     setPasswordError("");
     setLoading(true);
     try {
       const res = await fetch("/api/auth/set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tempToken, password }),
+        body: JSON.stringify({ tempToken, password, termsAccepted: true }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -649,19 +651,40 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
 
               {passwordError && <p className="text-xs text-red-400" role="alert">{passwordError}</p>}
 
+              {/* Acceptation expresse CGU + Privacy (preuve juridique) */}
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", marginTop: "4px" }}>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => { setTermsAccepted(e.target.checked); if (passwordError) setPasswordError(""); }}
+                  style={{ width: "18px", height: "18px", marginTop: "1px", flexShrink: 0, accentColor: "#D97757", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "13px", lineHeight: "1.5", color: "#8A8A8E" }}>
+                  J&apos;accepte les{" "}
+                  <a href="/cgu" target="_blank" rel="noopener noreferrer" style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "2px" }}>
+                    Conditions Générales d&apos;Utilisation
+                  </a>{" "}
+                  et la{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "2px" }}>
+                    Politique de confidentialité
+                  </a>{" "}
+                  de LIVRA.
+                </span>
+              </label>
+
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || !termsAccepted}
                 onClick={handleStep3Submit}
                 className="su-btn-primary"
                 style={{
-                  appearance: "none", border: "none", cursor: loading ? "not-allowed" : "pointer",
+                  appearance: "none", border: "none", cursor: loading || !termsAccepted ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: "100%", padding: "16px", borderRadius: "14px", marginTop: "2px",
                   fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
                   background: "#D97757", color: "#1a0f0a",
                   boxShadow: BTN_SHADOW,
-                  opacity: loading ? 0.6 : 1,
+                  opacity: loading || !termsAccepted ? 0.6 : 1,
                   transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease, opacity .2s",
                 }}
               >
@@ -695,7 +718,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                     🎉 Tu es fondateur LIVRA #{founderIndex} !
                   </h2>
                   <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                    Ton tarif fondateur 1999 DA/mois est verrouillé à vie.
+                    Ton tarif fondateur 499 DA/mois est verrouillé à vie.
                   </p>
                 </>
               ) : (

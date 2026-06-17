@@ -17,7 +17,11 @@ export async function OPTIONS() {
 const bodySchema = z.object({
   tempToken: z.string(),
   password: z.string().min(8),
+  termsAccepted: z.boolean(),
 });
+
+const TERMS_VERSION = "v2-2026-06-17";
+const PRIVACY_VERSION = "v2-2026-06-17";
 
 export async function POST(req: NextRequest) {
   console.log("[set-password] Received request");
@@ -31,6 +35,15 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.log("[set-password] Body validation failed:", err);
     return NextResponse.json({ error: "Données invalides" }, { status: 400, headers: CORS_HEADERS });
+  }
+
+  // Step 1b: Require express acceptance of CGU + Privacy (legal proof)
+  if (body.termsAccepted !== true) {
+    console.log("[set-password] Terms not accepted — rejecting");
+    return NextResponse.json(
+      { error: "L'acceptation des CGU est requise." },
+      { status: 400, headers: CORS_HEADERS }
+    );
   }
 
   try {
@@ -51,7 +64,14 @@ export async function POST(req: NextRequest) {
     console.log("[set-password] Hashing password for:", email);
     const hash = await bcrypt.hash(body.password, 12);
 
-    // Step 4: Update vendor with password hash and set status to active
+    // Step 3b: Build legal acceptance proof (CGU art. 2.3)
+    const termsIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    const termsUserAgent = req.headers.get("user-agent") || null;
+
+    // Step 4: Update vendor with password hash, acceptance proof, set status active
     console.log("[set-password] Updating vendor record for:", email);
     const { error: updateError } = await supabaseAdmin
       .from("vendors_waitlist")
@@ -59,6 +79,11 @@ export async function POST(req: NextRequest) {
         password_hash: hash,
         status: "active",
         activated_at: new Date().toISOString(),
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: TERMS_VERSION,
+        privacy_version: PRIVACY_VERSION,
+        terms_ip: termsIp,
+        terms_user_agent: termsUserAgent,
       })
       .eq("email", email);
 
