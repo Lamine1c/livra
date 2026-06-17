@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { getAllPosts, type BlogPost } from "@/lib/blog";
 
@@ -82,7 +81,6 @@ export default function MagazineIndexPage() {
 
   return (
     <>
-      <Header />
       <main className="max-w-5xl mx-auto px-6 pt-24 pb-32">
         <h1
           className="text-4xl font-semibold mb-2"

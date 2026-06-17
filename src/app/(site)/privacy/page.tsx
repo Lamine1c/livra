@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 
 export const metadata: Metadata = {
@@ -63,7 +62,6 @@ const subList: React.CSSProperties = {
 export default function PrivacyPage() {
   return (
     <>
-      <Header />
       <main>
         <article style={{ maxWidth: "48rem", margin: "0 auto", padding: "6rem 1.5rem" }}>
 
