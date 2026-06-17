@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { getPost, getAllPosts } from "@/lib/blog";
 
@@ -44,7 +43,6 @@ export default async function MagazineArticlePage({ params }: Props) {
 
   return (
     <>
-      <Header />
       <main className="max-w-2xl mx-auto px-6 pt-24 pb-32">
         {/* Back link */}
         <Link href="/magazine" className="blog-back-link block text-sm mb-12">

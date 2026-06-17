@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SignupModal from "@/components/SignupModal";
 
@@ -249,8 +248,6 @@ export default function PricingPage() {
           }
         }
       `}</style>
-
-      <Header />
 
       <main className="pv">
         {/* Hero */}

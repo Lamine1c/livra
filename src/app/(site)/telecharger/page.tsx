@@ -1,4 +1,3 @@
-import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 
 const CARD_SHADOW = "0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4)";
@@ -94,8 +93,6 @@ export default function TelechargerPage() {
         @media(max-width:980px){.dl-stores{grid-template-columns:1fr;max-width:440px;}}
         .dl-store-card:hover{background:rgba(217,119,87,0.08)!important;border-color:rgba(217,119,87,0.40)!important;transform:translateY(-4px);}
       `}</style>
-
-      <Header />
 
       <main style={{ background: "#0E0E10", position: "relative", isolation: "isolate", overflow: "hidden", paddingBottom: "clamp(60px,8vw,100px)" }}>
         {/* Ivoire ambient glow */}

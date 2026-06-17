@@ -9,7 +9,7 @@ const SbLight = () => (
 export default function ProductDemo() {
   return (
     <>
-      <section id="produit" className="section1" data-screen-label="Section 1 — Démo produit" style={{ scrollMarginTop: '20px' }}>
+      <section id="produit" className="section1" data-screen-label="Section 1 — Démo produit" style={{ scrollMarginTop: '84px' }}>
         <div className="section1__inner">
           <div className="section1__anchor">
             <p className="section1__eyebrow"><span className="section1__pip"></span>Une seule app</p>

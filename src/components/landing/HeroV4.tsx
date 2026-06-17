@@ -1,18 +1,7 @@
-import LivraLogoHorizontal from '@/components/brand/LivraLogoHorizontal';
-
 export default function HeroV4() {
   return (
     <>
       <section className="hero" data-screen-label="Hero">
-        <nav className="nav">
-          <LivraLogoHorizontal height={22} />
-          <div className="nav-links">
-            <a href="#produit">Produit</a><a href="/pricing">Tarifs</a><a href="/telecharger">Télécharger</a>
-            <a href="/telecharger" className="nav-login">Se connecter</a>
-          </div>
-          <div className="nav-burger" aria-label="Menu"><span></span><span></span><span></span></div>
-        </nav>
-
         <div className="bg" aria-hidden="true">
           <div className="ghosts">
             <div className="card g1"><div className="c-head"><span className="c-av" style={{ '--av': '#D97757' } as React.CSSProperties}>A</span><span className="c-name">Anis F.</span></div><p className="c-text">9olbi yrouh quand ychouf &laquo;&nbsp;commande annulée &raquo; f 1ère ligne de la matinée.</p><span className="c-time">il y a 7h</span></div>
