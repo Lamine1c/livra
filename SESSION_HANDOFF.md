@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 17 juin 2026, 8:30 am Montréal
+**Dernière mise à jour** : 17 juin 2026, 19:00 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -11,7 +11,8 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 ## 📍 ÉTAT ACTUEL
 
 **Phase active** : Audit site web page-par-page (desktop d'abord).
-**Page en cours** : `/pricing` (page #2 sur 8).
+**Page en cours** : `/telecharger` (page #3 sur 8).
+**Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
 **Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin.
 
 **Pas de date de launch fixée.** Lamine veut le site fini desk-tablet-mobile + app polish AVANT de décider quoi que ce soit. Méthode = step-by-step, page par page, lien par lien, bouton par bouton.
@@ -22,12 +23,12 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 
 Site marketing (audit en cours) :
 - ✅ `/` (LP) — fermée 16 juin
-- 🟡 `/pricing` — **prochaine**
-- ⚠️ `/tarifs` — orpheline, à tuer ou rediriger 301 vers `/pricing`
-- ⏳ `/telecharger`
-- ⏳ `/magazine` + `/magazine/[slug]` (ex-`/blog`, renommé)
-- ⏳ `/privacy`
-- ⏳ `/cgu` — **🔴 problèmes critiques connus** (voir Backlog)
+- ✅ `/pricing` — fermée 17 juin
+- 🗑️ `/tarifs` — supprimée, redirige 301 vers `/pricing`
+- 🟡 `/telecharger` — **prochaine**
+- ✅ `/magazine` + `/magazine/[slug]` — route live, mais lien manquant dans Header global + LP Footer
+- ✅ `/privacy` — v2 live 17 juin
+- ✅ `/cgu` — v2 live 17 juin
 
 Opérationnel acheteur (séparé, audit après le marketing) :
 - ⏳ `/track` (suivi public)
@@ -44,12 +45,13 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - LP V2 polish complet (zigzag horizontal : Bouclier mirror / Wedge / Confiance mirror)
 - `/pricing` (3 cards + Founders counter live `{count, max:100}`, branché sur l'API)
 - SignupModal branché backend réel (OTP par email Resend, testé E2E)
-- `/telecharger`, `/privacy`, `/cgu` (existent, mais CGU a des bugs critiques)
 - Brand system : Wordmark V3 + Bouclier favicon + OG image
 - Backend OTP Sprint 1 + Sprint 2 frontend wiring en prod
 - Footer cleané (pas de ligne géo, pas de WA orphelin, Tarifs → `/pricing`)
 - Route `/blog` → `/magazine` (avec redirects 301)
 - 2 fondateurs test en DB (#1 lamine@golivra.app, #2 godzillamarketing514@gmail.com) → **à wiper avant trafic public**
+- Acceptance contractuelle : checkbox CGU obligatoire dans SignupModal, preuve stockée (timestamp + IP + UA + version) dans `vendors_waitlist` (migration 016 appliquée)
+- Tarifs alignés 499/999 partout (Fondateur / Standard), annuel retiré
 
 ---
 
@@ -73,19 +75,22 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 
 ---
 
-## 🔴 BUGS / PROBLÈMES CRITIQUES OUVERTS
+## 🔴 BUGS / TODOS OUVERTS
 
 ### Web — à fixer pendant l'audit page-par-page
 
-**`/cgu` — pricing désynchronisé** : CGU dit "15 jours gratuits" + "1 500 DA/mois" + "virement/Baridi Mob/La Poste". Site dit **7 jours** + **2 799 DA/mois** + Fondateur 1 999 DA à vie + Annuel 27 990 DA. Landmine légale.
-
-**`/cgu` — feature fantôme** : Sections 1 + 4 décrivent "Facebook Lead Ads" = V2, pas V1. Retirer/adoucir.
-
-**`/cgu` — tarif Fondateur "à vie"** : Doit être nommé explicitement, ET la clause "tarifs peuvent évoluer (préavis 30j)" doit l'**exclure**. Sinon contradiction.
-
-**`/privacy`** — à relire (probablement même type de désync, pas encore audité).
-
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
+
+### Inter-pages (cohérence) :
+
+- Logo LIVRA position incohérente entre pages (parfois centré au lieu d'aligné à gauche)
+- Nav globale paraît différente selon les pages (alignement, espacement)
+- Magazine absent du Header global (`src/components/site/Header.tsx`) ET du Footer LP (`src/components/landing/Footer.tsx`). Présent uniquement dans `site/Footer.tsx`.
+
+### `/telecharger` — chantier dédié (page #3) :
+
+- Bouton "Connexion" éteint sur cette page — intentionnel mais devrait rediriger vers app si user a un compte (Universal Links iOS / App Links Android)
+- CTA App Store / Google Play cliquent vers stores vides — reframer en waitlist tant que stores empty
 
 ### Pré-launch web (à régler avant trafic public)
 
@@ -166,13 +171,12 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Auditer `/pricing`** (page #2) — desktop d'abord, liens + boutons + rendu
-2. Tuer ou rediriger 301 `/tarifs` (page orpheline)
-3. Continuer audit pages restantes une par une
-4. CGU refonte (les 3 problèmes critiques)
-5. Quand toutes pages desktop fermées → phase Tablet/Mobile responsive
-6. PUIS app polish (les 5 store blockers triviaux)
-7. PUIS décision date launch
+1. **Cohérence Header inter-pages** (logo + nav + Magazine manquant) — session dédiée courte
+2. **Auditer `/telecharger`** (page #3) — desktop + Universal Links + reframe waitlist + dropdown indicatifs WhatsApp
+3. **Auditer `/magazine`** (page #4) — vérifier que la route 404 ou page placeholder propre
+4. **Quand toutes pages desktop fermées** → phase Tablet/Mobile responsive
+5. **PUIS app polish** (5 store blockers triviaux)
+6. **PUIS décision date launch**
 
 ---
 
