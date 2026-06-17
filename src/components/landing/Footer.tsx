@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="lp-footer">
@@ -12,9 +14,11 @@ export default function Footer() {
         <div className="lp-footer-bottom">
           <nav className="lp-footer-nav">
             <a href="#produit">Produit</a>
-            <a href="/pricing">Tarifs</a>
-            <a href="/privacy">Confidentialité</a>
-            <a href="/cgu">CGU</a>
+            <Link href="/pricing">Tarifs</Link>
+            <Link href="/magazine">Magazine</Link>
+            <Link href="/privacy">Confidentialité</Link>
+            <Link href="/cgu">CGU</Link>
+            <a href="mailto:hello@golivra.app">Contact</a>
           </nav>
           <p className="lp-footer-copy">
             © 2026 LIVRA · Godzii Media (9516-1998 Quebec Inc.)
