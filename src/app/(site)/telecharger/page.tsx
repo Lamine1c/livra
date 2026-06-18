@@ -49,11 +49,30 @@ const MapPinIcon = () => (
   </svg>
 );
 
-// Globe (ancrage DZ) — pas d'emoji drapeau (rendu inconsistant cross-browser)
-const GlobeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10" /><path d="M2 12h20" />
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+// Drapeau Algérie (ancrage DZ) — SVG inline couleur, pas d'emoji (rendu inconsistant cross-browser).
+// Seule icône non-monochrome de la trust line : vert/blanc + croissant & étoile rouges.
+const DzFlagIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="Drapeau de l'Algérie">
+    <defs>
+      <clipPath id="dz-flag">
+        <rect x="0" y="0" width="24" height="24" rx="3" />
+      </clipPath>
+    </defs>
+    <g clipPath="url(#dz-flag)">
+      <rect x="0" y="0" width="12" height="24" fill="#006233" />
+      <rect x="12" y="0" width="12" height="24" fill="#FFFFFF" />
+      {/* Croissant : disque rouge moins disque décalé (fill-rule even-odd) → ouvre vers la droite */}
+      <path
+        fillRule="evenodd"
+        d="M11.5 6.8a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 1 0 0-10.4ZM13.2 7.8a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 1 1 0-8.4Z"
+        fill="#D21034"
+      />
+      {/* Étoile 5 branches, nichée dans l'ouverture du croissant */}
+      <path
+        d="M15.3 9.4 15.92 11.15 17.77 11.2 15.92 12.32 16.83 14.1 15.3 13.05 13.77 14.1 14.3 12.32 12.83 11.2 14.68 11.15Z"
+        fill="#D21034"
+      />
+    </g>
   </svg>
 );
 
@@ -63,7 +82,7 @@ const TRUST: { icon: React.ReactNode; label: string }[] = [
   { icon: <ShieldIcon />, label: "Bouclier anti-scam" },
   { icon: <MapPinIcon />, label: "Position 100% privée" },
   { icon: <CheckCircleIcon />, label: "Sans engagement" },
-  { icon: <GlobeIcon />, label: "Made in Bledi" },
+  { icon: <DzFlagIcon />, label: "Made in Bledi" },
 ];
 
 // ── Store card ────────────────────────────────────────────────────────────────
