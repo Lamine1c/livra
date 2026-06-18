@@ -28,6 +28,10 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 - **[Vraie reco loup]** Quand Lamine demande "A ou B ?", donner UNE direction nette. Pas un essai. Pas 4 options polies. C'est exactement ce que demande le manifesto.
 
+- **[Tech]** Pour cleanup CSS morte : grep className="<classe>" + className=`...<classe>...` + className={... "<classe>" ...}. Distinguer .class (style mort) vs <tag> (HTML vivant) vs .class-prefix-* (variantes). cc l'a fait proprement en Phase 3.
+
+- **[Workflow]** 3 phases de cleanup post-audit = 3 branches séparées avec checkpoints. Plus de friction = moins de mess de branches. Confirmé sur 18 juin (Phase 1+2+3 toutes mergées sans accroc grâce à la séparation).
+
 ---
 
 ## Légende catégories

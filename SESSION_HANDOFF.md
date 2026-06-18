@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 18 juin 2026, 18:35 Montréal
+**Dernière mise à jour** : 18 juin 2026, 19:10 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -71,6 +71,7 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - Cleanup Phase 1 : -7195 lignes code mort (-19 composants `site/*` orphelins, -12 `.module.css`, -2 libs `supabase/client` + `whatsapp-link`, -2 deps `posthog-js` + `lucide-react`), lint 22→7, commit `e389a7f`
 - Drawer mobile fonctionnel ≤1080px : burger animé → croix, overlay plein écran via `createPortal(document.body)` pour sortir du containing block créé par backdrop-filter du `<header>`, scroll-lock + Escape + close-on-route + backdrop click, padding-top:max(72px, env(safe-area-inset-top)) pour notch iOS, background var(--onyx, #0E0E10) opaque, z-index 45 < header 50. Commits `0c6acdf` (vrai fix v2 via portal — root cause identifiée par CD : backdrop-filter blur crée containing block), merge `62263fc`
 - Sitemap réparé : /blog (404) → /magazine + /pricing + /telecharger + /magazine listés, articles dynamiques via getAllPosts() → /magazine/[slug]. Commit `f5bce88`, merge `62263fc`
+- Cleanup Phase 3 : CSS morte retirée de `livra-landing.css` (-17 lignes : `.nav-*` du header extrait + `.lp-footer-contact-block` + `.lp-footer-wa` du footer refait), `.brand` préservée (vivante dans Pinpoint), commentaire renommé Brand wordmark. Build inchangé. Commit `f9c9a7f`, merge `114f0c8`
 
 ---
 
@@ -210,11 +211,10 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Cleanup Phase 3** : CSS morte `livra-landing.css` (`.nav*`, `.lp-footer-contact-block`, `.lp-footer-wa`)
-2. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`)
-3. **App polish** (5 store blockers triviaux)
-4. **Enrollment Apple Dev + Google Play** (124 USD)
-5. **Décision date launch**
+1. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`, ~6 pages à intégrer)
+2. **App polish** (5 store blockers triviaux)
+3. **Enrollment Apple Dev + Google Play** (124 USD)
+4. **Décision date launch**
 
 ---
 
