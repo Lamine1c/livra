@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 17 juin 2026, 22:30 Montréal
+**Dernière mise à jour** : 18 juin 2026, 13:00 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -98,6 +98,34 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 ### Pages à confirmer existence
 
 `/contact`, `/faq`, `/a-propos` — roadmap les listait comme pas faites au 18 mai. À checker pendant l'audit.
+
+---
+
+## 🔒 SÉCURITÉ — audit forensique 18 juin (5 sub-agents read-only)
+
+Audit complet web + mobile + DB + sécurité + cohérence. Rapport intégral dans l'historique chat. 3 bombes 🔴 désamorcées ; 🟠 / 🟡 restantes ci-dessous.
+
+### 🔴 Désamorcées — branche `feature/security-3-bombs`, commit `9376498` (à merger)
+- **`driver-notify` sans auth** → gaté (`getAuthenticatedUser` + ownership `.eq("user_id")` + garde `driverName`). Était IDOR + spoofing WhatsApp + mutation d'état non-authentifiée.
+- **`cancel-delivery` status invalide** → `created`→`confirmed` (`created` violait le CHECK constraint `orders.status` → échec silencieux, commande bloquée en `shipped`).
+- **`.env.localnano .env.local`** (copie périmée des secrets LIVE en clair, hors-git) → `rm` à exécuter par Lamine. Rotation des clés = décision humaine séparée (jamais push, donc pas urgent).
+
+### 🟠 ÉLEVÉ — sessions sécurité dédiées à planifier
+- **RLS publique GPS** : `deliveries` + `delivery_positions` en `FOR SELECT USING(true)` (migration 006:57-62) → tout l'historique GPS lisible avec la clé anon. À restreindre (les pages publiques utilisent déjà un token signé).
+- **Auth livreur faible** : `driver/refresh-token` mint un token depuis `device_id` seul (devinable = mot de passe permanent) ; `driver/check-buyer-location` + `start-delivery` (1er claim) sans vérif d'assignation = IDOR.
+- **Schéma prod non versionné** : table `drivers` (jamais de `CREATE TABLE`, hand-créée en Studio) + colonne `orders.otp_sent_at` (lue par `send-otp`, dans aucune migration) → DB non reproductible depuis le repo. Créer les migrations de réconciliation.
+- **OTP brute-force** : `orders/[id]/verify-otp` + `drivers/verify-otp` sans cap de tentatives (seul `auth/verify-otp` cap à 3).
+- **Mobile — bug perte de données** : déconnexion livreur teste `status="in_progress"` (`(driver)/index.tsx:99`) alors que la recovery teste `"active"` (:34) → un livreur en livraison peut se déconnecter et orpheliner la livraison.
+
+### 🟡 MOYEN — dette (non bloquant)
+- OTP vendeur stocké en clair (`otp_codes.code`) vs OTP livreur haché → incohérent.
+- Aucun header de sécurité (CSP/HSTS/X-Frame-Options) dans `next.config.ts`.
+- Zod sur 3/28 routes API seulement (le reste = validation manuelle ou body brut).
+- **Code mort massif** : `src/components/site/*` (~19 composants orphelins + `Pricing.module.css` sans composant) ; libs mortes (`supabase/client.ts`, `whatsapp-link.ts`) ; deps mortes (`posthog-js`, `lucide-react` web ; `react-native-maps`, `expo-haptics/image/symbols/font` mobile).
+- **Sitemap cassé** (`sitemap.ts:9-10`) : pointe `/blog` (404) au lieu de `/magazine` ; omet pricing/telecharger/magazine.
+- **Burger menu** HeaderGlobal non-fonctionnel (`aria-label="Menu"` sans onClick) → mobile ≤720px = nav morte + violation a11y.
+- **CLAUDE.md web périmé** : documente `src/middleware.ts` + flow auth `/dashboard` qui **n'existent pas** dans ce repo (marketing + API only).
+- Société « Québec » (CGU/Privacy) vs « Quebec » (footers) — accent incohérent.
 
 ---
 
