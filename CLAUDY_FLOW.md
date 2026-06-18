@@ -32,6 +32,12 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 - **[Workflow]** 3 phases de cleanup post-audit = 3 branches séparées avec checkpoints. Plus de friction = moins de mess de branches. Confirmé sur 18 juin (Phase 1+2+3 toutes mergées sans accroc grâce à la séparation).
 
+- **[Workflow]** Port responsive = NE PAS porter aveuglément les exports CD. D'abord ouvrir l'HTML CD ET screenshot la prod actuelle sur le même viewport (iPad portrait/landscape). Si les 2 sont cassés au même endroit = CD a la même cause root que la prod (positionnement absolu desktop). Demander à CD de FIX avant de porter, sinon cc va répliquer les bugs.
+
+- **[Tech]** Bugs responsive iPad portrait (768-1024px) = positionnement absolute desktop qui déborde. Pattern récurrent sur la LP : bubbles et cards en absolute avec coords desktop. Fix doit être un layout flexbox/grid empilé propre au breakpoint portrait.
+
+- **[Workflow CD]** Quand CD prétend qu'un fix est déjà appliqué mais que le rendu prouve le contraire, demander captures avant/après EXPLICITES aux breakpoints précis du bug. Pas de discussion abstraite.
+
 ---
 
 ## Légende catégories

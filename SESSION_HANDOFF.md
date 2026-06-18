@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 18 juin 2026, 19:10 Montréal
+**Dernière mise à jour** : 18 juin 2026, 21:30 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -20,11 +20,17 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 
 ## 📍 ÉTAT ACTUEL
 
-**Phase active** : Cleanup post-audit + responsive.
 **Page fermée** : `/telecharger` — commit `3abf606`, 18 juin.
 **Page fermée** : `/magazine` + `/magazine/[slug]` — commit `9f2725d`, 18 juin.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
 **Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin.
+
+**Phase active** : Attente CD export 11 (fix responsive hero iPad portrait + mobile).
+- iPad LANDSCAPE (1366×1024) : ✅ rendu correct sur la prod actuelle
+- iPad PORTRAIT (1024×1366) : 🔴 hero cassé — bubbles + cards en absolute desktop débordent
+- Mobile (≤720px) : 🔴 même cause root probable
+
+CD doit livrer fix + captures avant/après aux 4 breakpoints (1024, 768, 480, 360).
 
 **Pas de date de launch fixée.** Lamine veut le site fini desk-tablet-mobile + app polish AVANT de décider quoi que ce soit. Méthode = step-by-step, page par page, lien par lien, bouton par bouton.
 
@@ -98,6 +104,8 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 ## 🔴 BUGS / TODOS OUVERTS
 
 ### Web — à fixer pendant l'audit page-par-page
+
+**Hero LP cassé en iPad portrait** : bubbles "Karim B." / "Sofiane M." coupées bord gauche, bubble "Yacine T." coupée bord droit, card "Commandes" tombe centre/bas, tracking "EN DIRECT" chevauche. Cause : positionnement absolute desktop pas adapté <1024px. CD en train de fixer.
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
 
@@ -211,10 +219,11 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`, ~6 pages à intégrer)
-2. **App polish** (5 store blockers triviaux)
-3. **Enrollment Apple Dev + Google Play** (124 USD)
-4. **Décision date launch**
+1. **CD livre export 11 responsive** (en cours)
+2. **Port responsive en prod via cc** (page par page, LP en 1er)
+3. **App polish** (5 store blockers triviaux)
+4. **Enrollment Apple Dev + Google Play** (124 USD)
+5. **Décision date launch**
 
 ---
 
