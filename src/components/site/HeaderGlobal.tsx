@@ -114,9 +114,9 @@ export default function HeaderGlobal() {
 
         /* Drawer mobile : overlay plein écran */
         .hg-drawer {
-          position: fixed; inset: 0; z-index: 40;
-          background: rgba(8,8,10,0.96);
-          -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+          /* commence sous le header (64px) → header + croix restent visibles, pas couverts */
+          position: fixed; inset: 64px 0 0 0; z-index: 40;
+          background: var(--onyx); /* opaque : masque totalement la LP derrière */
           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
           opacity: 0; visibility: hidden;
           transition: opacity .28s ease, visibility .28s ease;
