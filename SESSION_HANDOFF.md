@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 18 juin 2026, 14:30 Montréal
+**Dernière mise à jour** : 18 juin 2026, 18:35 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -59,6 +59,8 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - `/telecharger` : trust line 5 items (Données chiffrées · Bouclier anti-scam · Position 100% privée · Sans engagement · Made in Bledi avec drapeau DZ SVG couleur), commit `3abf606`
 - `/magazine` + `/magazine/[slug]` : décorrélation Tailwind global (main inline + grille `.mag-grid` scopée) + formateur date déterministe (MOIS_FR maison), fin du hydration mismatch, commit `9f2725d`
 - Cleanup Phase 1 : -7195 lignes code mort (-19 composants `site/*` orphelins, -12 `.module.css`, -2 libs `supabase/client` + `whatsapp-link`, -2 deps `posthog-js` + `lucide-react`), lint 22→7, commit `e389a7f`
+- Drawer mobile fonctionnel ≤1080px : burger animé → croix, overlay plein écran via `createPortal(document.body)` pour sortir du containing block créé par backdrop-filter du `<header>`, scroll-lock + Escape + close-on-route + backdrop click, padding-top:max(72px, env(safe-area-inset-top)) pour notch iOS, background var(--onyx, #0E0E10) opaque, z-index 45 < header 50. Commits `0c6acdf` (vrai fix v2 via portal — root cause identifiée par CD : backdrop-filter blur crée containing block), merge `62263fc`
+- Sitemap réparé : /blog (404) → /magazine + /pricing + /telecharger + /magazine listés, articles dynamiques via getAllPosts() → /magazine/[slug]. Commit `f5bce88`, merge `62263fc`
 
 ---
 
@@ -121,8 +123,6 @@ Audit complet web + mobile + DB + sécurité + cohérence. Rapport intégral dan
 - Aucun header de sécurité (CSP/HSTS/X-Frame-Options) dans `next.config.ts`.
 - Zod sur 3/28 routes API seulement (le reste = validation manuelle ou body brut).
 - **Code mort mobile** (web fait en Cleanup Phase 1, commit `e389a7f`) : deps mortes côté `~/livra-mobile` à désinstaller — `react-native-maps`, `expo-haptics/image/symbols/font`.
-- **Sitemap cassé** (`sitemap.ts:9-10`) : pointe `/blog` (404) au lieu de `/magazine` ; omet pricing/telecharger/magazine.
-- **Burger menu** HeaderGlobal non-fonctionnel (`aria-label="Menu"` sans onClick) → mobile ≤720px = nav morte + violation a11y.
 - **CLAUDE.md web périmé** : documente `src/middleware.ts` + flow auth `/dashboard` qui **n'existent pas** dans ce repo (marketing + API only).
 - Société « Québec » (CGU/Privacy) vs « Quebec » (footers) — accent incohérent.
 
@@ -193,14 +193,19 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ---
 
+## 📌 LEÇONS APPRISES
+
+- **Bug visuel/CSS mobile = consulter CD AVANT cc.** CD a tranché en 30 sec le containing block du `backdrop-filter` qu'on cherchait depuis 1h avec cc. Pour bugs visuels, CD est expert ; cc exécute.
+
+---
+
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Cleanup Phase 2** : sitemap (`/blog`→`/magazine` + pages manquantes) + burger menu (fix ou retire) + CLAUDE.md web (retire middleware/dashboard fantômes)
-2. **Cleanup Phase 3** : CSS morte `livra-landing.css` (`.nav*`, `.lp-footer-contact-block`, `.lp-footer-wa`)
-3. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`)
-4. **App polish** (5 store blockers triviaux)
-5. **Enrollment Apple Dev + Google Play** (124 USD)
-6. **Décision date launch**
+1. **Cleanup Phase 3** : CSS morte `livra-landing.css` (`.nav*`, `.lp-footer-contact-block`, `.lp-footer-wa`)
+2. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`)
+3. **App polish** (5 store blockers triviaux)
+4. **Enrollment Apple Dev + Google Play** (124 USD)
+5. **Décision date launch**
 
 ---
 
