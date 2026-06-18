@@ -8,6 +8,16 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 
 ---
 
+## 📖 FICHIERS À LIRE EN PREMIER
+
+**Réflexe nouveau Claudy** : lire dans cet ordre au démarrage :
+1. ~/livra/SESSION_HANDOFF.md (état des faits)
+2. ~/livra/CLAUDY_FLOW.md (culture de collaboration)
+3. ~/livra/CLAUDE.md (règles du repo web)
+4. ~/livra-mobile/LIVRA_ROADMAP.md (vision produit)
+
+---
+
 ## 📍 ÉTAT ACTUEL
 
 **Phase active** : Cleanup post-audit + responsive.
