@@ -10,16 +10,8 @@
     background:radial-gradient(ellipse 48% 44% at 50% 38%, rgba(var(--ivoire-rgb),0.075) 0%, rgba(var(--ivoire-rgb),0.03) 34%, rgba(14,14,16,0) 66%); pointer-events:none; z-index:0;}
   .hero::after{content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,8,10,0) 52%, var(--noir-deep) 100%); pointer-events:none; z-index:0;}
 
-  /* ─── Nav ─── */
-  .nav{position:relative; z-index:8; display:flex; align-items:center; justify-content:space-between; padding:clamp(28px,4.4vh,46px) clamp(22px,5vw,64px) 0;}
+  /* ─── Brand wordmark (utilisé dans Pinpoint.tsx) ─── */
   .brand{font-size:15px; font-weight:600; letter-spacing:0.3em; text-transform:uppercase; color:var(--ivoire);}
-  .nav-links{display:flex; gap:36px; align-items:center;}
-  .nav-links a{color:var(--mist); text-decoration:none; font-size:14px; transition:color .3s;}
-  .nav-links a:hover{color:var(--ivoire);}
-  .nav-login{color:var(--ivoire)!important; font-weight:500;}
-  .nav-burger{display:none; flex-direction:column; gap:5px; width:24px; cursor:pointer;}
-  .nav-burger span{height:1.6px; border-radius:2px; background:var(--mist);}
-  .nav-burger span:last-child{width:15px;}
 
   /* ─── Background jungle (arabizi) ─── */
   .bg{position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden;}
@@ -144,7 +136,6 @@
 
   /* ════ TABLET ≤1080px : stack, dashboard below ════ */
   @media (max-width:1080px){
-    .nav-links a:not(.nav-login){display:none;}
     .fg{grid-template-columns:1fr; gap:48px; max-width:640px; text-align:center; padding-top:clamp(30px,5vh,56px);}
     .copy{max-width:100%;}
     .kicker{justify-content:center;}
@@ -171,9 +162,6 @@
      Dashboard sits BELOW the fold on a calmer band. */
   @media (max-width:720px){
     :root{--ghost-op:0.4;}
-    .nav{padding:22px 22px 0;}
-    .nav-links{display:none;}
-    .nav-burger{display:flex;}
     .hero{overflow:hidden;}
     /* arabizi band limited to the first screen so it frames the copy */
     .bg{height:100svh; bottom:auto;}
@@ -3010,10 +2998,6 @@ body {
 .lp-footer-brand-block { flex: 1; min-width: 240px; }
 .lp-footer-brand { font-size: 24px; font-weight: 800; color: var(--ivoire, #F5F0E8); letter-spacing: -0.02em; display: block; margin-bottom: 8px; }
 .lp-footer-tagline { font-size: 14px; color: rgba(245,240,232,0.55); margin: 0; }
-.lp-footer-contact-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-.lp-footer-wa { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(217,119,87,0.08); border: 1px solid rgba(217,119,87,0.2); border-radius: 9999px; color: var(--ivoire, #F5F0E8); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
-.lp-footer-wa:hover { background: rgba(217,119,87,0.15); border-color: rgba(217,119,87,0.4); }
-.lp-footer-wa svg { color: #25D366; flex-shrink: 0; }
 .lp-footer-divider { height: 1px; background: var(--hair, rgba(255,255,255,0.07)); margin: 24px 0; }
 .lp-footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
 .lp-footer-nav { display: flex; gap: 24px; flex-wrap: wrap; }
@@ -3022,7 +3006,6 @@ body {
 .lp-footer-copy { font-size: 12px; color: rgba(245,240,232,0.4); margin: 0; }
 @media (max-width: 700px) {
   .lp-footer-top { flex-direction: column; gap: 24px; }
-  .lp-footer-contact-block { align-items: flex-start; }
   .lp-footer-bottom { flex-direction: column; align-items: flex-start; gap: 20px; }
 }
 
