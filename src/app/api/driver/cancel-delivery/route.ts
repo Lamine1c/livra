@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   const { error: ordErr } = await supabase
     .from("orders")
-    .update({ status: "created" })
+    .update({ status: "confirmed" })
     .eq("id", orderId);
 
   if (ordErr) {
