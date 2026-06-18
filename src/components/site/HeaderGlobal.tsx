@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LivraLogoHorizontal from "@/components/brand/LivraLogoHorizontal";
@@ -51,7 +52,11 @@ function DrawerLink({
 export default function HeaderGlobal() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false); // garde SSR pour le portal
   const close = useCallback(() => setOpen(false), []);
+
+  // Le portal n'existe qu'après le mount client (document indisponible en SSR).
+  useEffect(() => setMounted(true), []);
 
   // Scroll-lock body + fermeture Escape, montés tant que le drawer est ouvert.
   useEffect(() => {
@@ -72,6 +77,26 @@ export default function HeaderGlobal() {
   useEffect(() => {
     close();
   }, [pathname, close]);
+
+  // Drawer rendu hors du <header> via portal vers <body> (cf. CSS .hg-drawer).
+  const drawer = (
+    <div
+      id="hg-drawer"
+      className={`hg-drawer${open ? " is-open" : ""}`}
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={!open}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) close();
+      }}
+    >
+      <Link href="/#produit" className="hg-drawer__link" onClick={close} tabIndex={open ? 0 : -1}>Produit</Link>
+      <DrawerLink href="/pricing" label="Tarifs" pathname={pathname} open={open} onClose={close} />
+      <DrawerLink href="/magazine" label="Magazine" pathname={pathname} open={open} onClose={close} />
+      <DrawerLink href="/telecharger" label="Télécharger" pathname={pathname} open={open} onClose={close} />
+      <Link href="/telecharger" className="hg-drawer__link hg-drawer__link--login" onClick={close} tabIndex={open ? 0 : -1}>Se connecter</Link>
+    </div>
+  );
 
   return (
     <header className="hg">
@@ -112,12 +137,17 @@ export default function HeaderGlobal() {
         .hg-burger.is-open span:nth-child(2) { opacity: 0; }
         .hg-burger.is-open span:nth-child(3) { width: 100%; transform: translateY(-6.8px) rotate(-45deg); }
 
-        /* Drawer mobile : overlay plein écran */
+        /* Drawer mobile : overlay plein écran.
+           ⚠ Rendu en PORTAL vers <body> (cf. JSX) : le <header> a backdrop-filter, qui crée un
+           containing block pour position:fixed. Hors du header → inset:0 retombe sur le viewport. */
         .hg-drawer {
-          /* commence sous le header (64px) → header + croix restent visibles, pas couverts */
-          position: fixed; inset: 64px 0 0 0; z-index: 40;
-          background: var(--onyx); /* opaque : masque totalement la LP derrière */
+          position: fixed; inset: 0; z-index: 45; /* < header(50) : logo + croix restent au-dessus */
+          background: #0E0E10; /* opaque, fallback hexa en dur */
+          background: var(--onyx, #0E0E10);
           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+          /* pousse les items sous le header (+ safe-area notch iOS) */
+          padding-top: max(72px, env(safe-area-inset-top));
+          padding-bottom: max(24px, env(safe-area-inset-bottom));
           opacity: 0; visibility: hidden;
           transition: opacity .28s ease, visibility .28s ease;
         }
@@ -134,6 +164,10 @@ export default function HeaderGlobal() {
         @media (max-width: 1080px) {
           .hg-links { display: none; }
           .hg-burger { display: flex; }
+        }
+        /* Desktop-safety : le drawer ne doit jamais capturer les clics au-dessus du breakpoint */
+        @media (min-width: 1081px) {
+          .hg-drawer { display: none; }
         }
 
         /* Accessibilité : pas d'animation si l'utilisateur le demande */
@@ -171,23 +205,8 @@ export default function HeaderGlobal() {
         </button>
       </div>
 
-      {/* Drawer mobile : clic sur le fond ferme */}
-      <div
-        id="hg-drawer"
-        className={`hg-drawer${open ? " is-open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-hidden={!open}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) close();
-        }}
-      >
-        <Link href="/#produit" className="hg-drawer__link" onClick={close} tabIndex={open ? 0 : -1}>Produit</Link>
-        <DrawerLink href="/pricing" label="Tarifs" pathname={pathname} open={open} onClose={close} />
-        <DrawerLink href="/magazine" label="Magazine" pathname={pathname} open={open} onClose={close} />
-        <DrawerLink href="/telecharger" label="Télécharger" pathname={pathname} open={open} onClose={close} />
-        <Link href="/telecharger" className="hg-drawer__link hg-drawer__link--login" onClick={close} tabIndex={open ? 0 : -1}>Se connecter</Link>
-      </div>
+      {/* Portal : sort le drawer du containing-block créé par backdrop-filter sur le <header> */}
+      {mounted && createPortal(drawer, document.body)}
     </header>
   );
 }
