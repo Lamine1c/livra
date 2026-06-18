@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 18 juin 2026, 13:00 Montréal
+**Dernière mise à jour** : 18 juin 2026, 14:30 Montréal
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -10,8 +10,9 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 
 ## 📍 ÉTAT ACTUEL
 
-**Phase active** : Audit site web page-par-page (desktop d'abord).
-**Page en cours** : `/telecharger` (page #3 sur 8).
+**Phase active** : Cleanup post-audit + responsive.
+**Page fermée** : `/telecharger` — commit `3abf606`, 18 juin.
+**Page fermée** : `/magazine` + `/magazine/[slug]` — commit `9f2725d`, 18 juin.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
 **Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin.
 
@@ -25,8 +26,8 @@ Site marketing (audit en cours) :
 - ✅ `/` (LP) — fermée 16 juin
 - ✅ `/pricing` — fermée 17 juin
 - 🗑️ `/tarifs` — supprimée, redirige 301 vers `/pricing`
-- 🟡 `/telecharger` — **prochaine**
-- ✅ `/magazine` + `/magazine/[slug]` — route live + lien dans Header et Footer ✅
+- ✅ `/telecharger` — fermée 18 juin (trust line 5 items + drapeau DZ)
+- ✅ `/magazine` + `/magazine/[slug]` — hydration fix 18 juin (Tailwind global décorrélé + date déterministe)
 - ✅ `/privacy` — v2 live 17 juin
 - ✅ `/cgu` — v2 live 17 juin
 
@@ -55,6 +56,9 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - Header global unifié : HeaderGlobal.tsx sticky onyx+blur appliqué via `(site)/layout.tsx`, palette Onyx v1, active-state propre, Magazine ajouté à la nav (commit `426d99b`, merge `aa80cf3`)
 - Footer global unifié : visuel pleine largeur identique LP↔site (inner 1180px), wordmark LIVRA + tagline + copyright Godzii Media, 6 liens cohérents partout (Produit·Tarifs·Magazine·Confidentialité·CGU·Contact)
 - Sticky-footer flexbox : `(site)/layout.tsx` en flex flex-col + Footer `mt-auto` → footer épinglé en bas sur pages courtes (/pricing, /magazine)
+- `/telecharger` : trust line 5 items (Données chiffrées · Bouclier anti-scam · Position 100% privée · Sans engagement · Made in Bledi avec drapeau DZ SVG couleur), commit `3abf606`
+- `/magazine` + `/magazine/[slug]` : décorrélation Tailwind global (main inline + grille `.mag-grid` scopée) + formateur date déterministe (MOIS_FR maison), fin du hydration mismatch, commit `9f2725d`
+- Cleanup Phase 1 : -7195 lignes code mort (-19 composants `site/*` orphelins, -12 `.module.css`, -2 libs `supabase/client` + `whatsapp-link`, -2 deps `posthog-js` + `lucide-react`), lint 22→7, commit `e389a7f`
 
 ---
 
@@ -83,11 +87,6 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 ### Web — à fixer pendant l'audit page-par-page
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
-
-### `/telecharger` — chantier dédié (page #3) :
-
-- Bouton "Connexion" éteint sur cette page — intentionnel mais devrait rediriger vers app si user a un compte (Universal Links iOS / App Links Android)
-- CTA App Store / Google Play cliquent vers stores vides — reframer en waitlist tant que stores empty
 
 ### Pré-launch web (à régler avant trafic public)
 
@@ -121,7 +120,7 @@ Audit complet web + mobile + DB + sécurité + cohérence. Rapport intégral dan
 - OTP vendeur stocké en clair (`otp_codes.code`) vs OTP livreur haché → incohérent.
 - Aucun header de sécurité (CSP/HSTS/X-Frame-Options) dans `next.config.ts`.
 - Zod sur 3/28 routes API seulement (le reste = validation manuelle ou body brut).
-- **Code mort massif** : `src/components/site/*` (~19 composants orphelins + `Pricing.module.css` sans composant) ; libs mortes (`supabase/client.ts`, `whatsapp-link.ts`) ; deps mortes (`posthog-js`, `lucide-react` web ; `react-native-maps`, `expo-haptics/image/symbols/font` mobile).
+- **Code mort mobile** (web fait en Cleanup Phase 1, commit `e389a7f`) : deps mortes côté `~/livra-mobile` à désinstaller — `react-native-maps`, `expo-haptics/image/symbols/font`.
 - **Sitemap cassé** (`sitemap.ts:9-10`) : pointe `/blog` (404) au lieu de `/magazine` ; omet pricing/telecharger/magazine.
 - **Burger menu** HeaderGlobal non-fonctionnel (`aria-label="Menu"` sans onClick) → mobile ≤720px = nav morte + violation a11y.
 - **CLAUDE.md web périmé** : documente `src/middleware.ts` + flow auth `/dashboard` qui **n'existent pas** dans ce repo (marketing + API only).
@@ -196,12 +195,12 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **Auditer `/telecharger`** (page #3) — desktop + Universal Links iOS/Android + reframe CTA stores en waitlist + dropdown indicatifs WhatsApp (+213 lock)
-2. **Auditer `/magazine` + `/magazine/[slug]`** (page #4)
-3. **Wipe data fondateurs test** avant trafic public (2 entrées : lamine@golivra.app, godzillamarketing514@gmail.com)
-4. **Quand toutes pages desktop fermées** → phase Tablet/Mobile responsive
-5. **PUIS app polish** (5 store blockers triviaux)
-6. **PUIS décision date launch**
+1. **Cleanup Phase 2** : sitemap (`/blog`→`/magazine` + pages manquantes) + burger menu (fix ou retire) + CLAUDE.md web (retire middleware/dashboard fantômes)
+2. **Cleanup Phase 3** : CSS morte `livra-landing.css` (`.nav*`, `.lp-footer-contact-block`, `.lp-footer-wa`)
+3. **Port responsive tablette + mobile** (exports CD prêts dans `~/Downloads`)
+4. **App polish** (5 store blockers triviaux)
+5. **Enrollment Apple Dev + Google Play** (124 USD)
+6. **Décision date launch**
 
 ---
 
