@@ -23,14 +23,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+// Formateur de date déterministe : server === client → pas de hydration mismatch.
+const MOIS_FR = [
+  "janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+];
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return `${d.getDate()} ${MOIS_FR[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default async function MagazineArticlePage({ params }: Props) {
@@ -43,7 +45,7 @@ export default async function MagazineArticlePage({ params }: Props) {
 
   return (
     <>
-      <main className="max-w-2xl mx-auto px-6 pt-24 pb-32">
+      <main style={{ maxWidth: "42rem", margin: "0 auto", padding: "6rem 1.5rem 8rem" }}>
         {/* Back link */}
         <Link href="/magazine" className="blog-back-link block text-sm mb-12">
           &larr; Magazine
