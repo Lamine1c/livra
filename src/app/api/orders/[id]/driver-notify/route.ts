@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
 import { buyerTrackingMotoPerso } from "@/lib/whatsapp-templates";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { driverName } = await req.json();
 
-  const supabase = createServiceClient();
+  const { user, supabase, error: authError } = await getAuthenticatedUser(req);
+  if (!user || !supabase) {
+    return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
+  }
+
+  const { driverName } = await req.json();
+  if (typeof driverName !== "string" || !driverName.trim()) {
+    return NextResponse.json({ error: "driverName requis" }, { status: 400 });
+  }
 
   const { data: order } = await supabase
     .from("orders")
     .select("id, reference, status, user_id, picked_up_at, client:clients(full_name, phone)")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!order || !order.client) {
