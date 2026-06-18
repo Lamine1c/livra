@@ -9,14 +9,17 @@ export const metadata: Metadata = {
     "Analyses, stratégies et chiffres réels du marché e-commerce algérien, par l'équipe LIVRA.",
 };
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+// Formateur de date déterministe : server === client → pas de hydration mismatch.
+// toLocaleDateString("fr-FR") dépend de l'ICU et peut différer Node vs navigateur.
+const MOIS_FR = [
+  "janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+];
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return `${d.getDate()} ${MOIS_FR[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function ArticleCard({ post }: { post: BlogPost }) {
@@ -81,7 +84,20 @@ export default function MagazineIndexPage() {
 
   return (
     <>
-      <main className="max-w-5xl mx-auto px-6 pt-24 pb-32">
+      <style>{`
+        .mag-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        @media (max-width: 980px) {
+          .mag-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+          .mag-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+      <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "6rem 1.5rem 8rem" }}>
         <h1
           className="text-4xl font-semibold mb-2"
           style={{ color: "var(--ivoire)" }}
@@ -97,7 +113,7 @@ export default function MagazineIndexPage() {
             Aucun article pour le moment. Revenez bient&ocirc;t.
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mag-grid">
             {posts.map((post) => (
               <ArticleCard key={post.slug} post={post} />
             ))}
