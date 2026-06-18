@@ -133,7 +133,6 @@ Audit complet web + mobile + DB + sécurité + cohérence. Rapport intégral dan
 - Aucun header de sécurité (CSP/HSTS/X-Frame-Options) dans `next.config.ts`.
 - Zod sur 3/28 routes API seulement (le reste = validation manuelle ou body brut).
 - **Code mort mobile** (web fait en Cleanup Phase 1, commit `e389a7f`) : deps mortes côté `~/livra-mobile` à désinstaller — `react-native-maps`, `expo-haptics/image/symbols/font`.
-- **CLAUDE.md web périmé** : documente `src/middleware.ts` + flow auth `/dashboard` qui **n'existent pas** dans ce repo (marketing + API only).
 - Société « Québec » (CGU/Privacy) vs « Quebec » (footers) — accent incohérent.
 
 ---
