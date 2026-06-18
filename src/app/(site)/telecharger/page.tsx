@@ -43,6 +43,29 @@ const CheckCircleIcon = () => (
   </svg>
 );
 
+const MapPinIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+// Globe (ancrage DZ) — pas d'emoji drapeau (rendu inconsistant cross-browser)
+const GlobeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" /><path d="M2 12h20" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
+// Trust line — sécurité (1) + différenciation LIVRA (2,3) + commercial (4) + ancrage marché (5)
+const TRUST: { icon: React.ReactNode; label: string }[] = [
+  { icon: <LockIcon />, label: "Données chiffrées" },
+  { icon: <ShieldIcon />, label: "Bouclier anti-scam" },
+  { icon: <MapPinIcon />, label: "Position 100% privée" },
+  { icon: <CheckCircleIcon />, label: "Sans engagement" },
+  { icon: <GlobeIcon />, label: "Made in Bledi" },
+];
+
 // ── Store card ────────────────────────────────────────────────────────────────
 
 interface StoreCardProps {
@@ -154,18 +177,12 @@ export default function TelechargerPage() {
           margin: "clamp(44px,5vw,64px) auto 0", maxWidth: "800px",
           padding: "0 24px",
         }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <LockIcon />
-            Sécurité bancaire
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <ShieldIcon />
-            Cryptage SSL
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "#8A8A8E" }}>
-            <CheckCircleIcon />
-            Conforme RGPD
-          </span>
+          {TRUST.map((t, i) => (
+            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "9px", fontSize: "13px", color: "var(--mist)", whiteSpace: "nowrap" }}>
+              {t.icon}
+              {t.label}
+            </span>
+          ))}
         </div>
       </main>
 
