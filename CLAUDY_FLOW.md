@@ -50,6 +50,12 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 - **[Anti-pattern Claudy]** "Cul de sac" prononcé trop vite = manque de creusement. Avant de fermer une porte technique, EXPLORER toutes les options Settings/Extensions de l'app. Hier j'ai accepté une "limite architecturale" qui n'existait pas — c'était juste un toggle Extension dans Settings que je n'avais pas cherché. À garder en tête : la grinta de Lamine vaut souvent mieux que ma résignation technique prématurée.
 
+- **[Tech]** `display:contents` + `order` pour réordonner les enfants d'un conteneur sans toucher l'HTML. `parent { display:contents; }` lève ses enfants dans le flex grand-parent ; chaque enfant peut être repositionné via `order`. Scopable par media query, support Chrome/Safari/Firefox 100%. Cas LIVRA export 12 : hero CTA reorder 721-1080 (produit AVANT cta) sans wrapper HTML — le mobile ≤720 reste CTA-first et le desktop ≥1081 garde la grille 2 cols native intacte. Fix élégant quand l'HTML repo ne matche pas la structure attendue par le mockup CD.
+
+- **[Workflow]** Port CD multi-fichier (CSS additif + markup JSX) validé sur export 12 : Claudy applique les 2 edits via Filesystem direct (dryRun → apply), cc enchaîne tout le pipeline en UN brief (`checkout -b → tsc → build → lint → diff → commit → push → audit Chrome Claudy → merge --no-ff → cleanup branche locale+remote → vérif prod Ready`). Zéro friction, zéro mess de branches. Cas 19 juin : port `9bac3be` → merge `ccd43f6`, prod build 31s.
+
+- **[Workflow CD]** CD verrouillé à 924px (tablette) pour ses proofs HTML — c'est sa zone la plus dense où vivent tous les fixes responsive. Suffisant pour valider les sélecteurs et la cohérence DOM. Claudy fait l'audit final aux 5 breakpoints via Claude in Chrome (1440/1024/768/500). Les 2 vues sont complémentaires : CD prouve le contenu à 924px, Claudy prouve le rendu cross-BP.
+
 ---
 
 ## Légende catégories

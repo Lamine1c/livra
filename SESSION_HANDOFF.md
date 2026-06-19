@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 19 juin 2026, 11:00 Alger
+**Dernière mise à jour** : 19 juin 2026, 19:00 Alger
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -23,9 +23,9 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 **Page fermée** : `/telecharger` — commit `3abf606`, 18 juin.
 **Page fermée** : `/magazine` + `/magazine/[slug]` — commit `9f2725d`, 18 juin.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
-**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`).
+**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`). Port export 12 mergé 19 juin (port `9bac3be` → merge `ccd43f6`).
 
-**Phase active** : Backlog CD — demander **export 12** pour porter les TABLET REVIEW FIXES restants (unification titres H2 sections1/2/s4/s5/s6, s2-ghosts ≤1080, s75-credo grid 721-900, respiration sections 721-1080). Harmoniser avec HTML actuel du repo (**sans** dépendance `.hero-cta` wrapper qu'on n'a pas).
+**Phase active** : LP responsive complète (export 11 + export 12 live en prod). Prochaine zone : app polish mobile (5 store blockers triviaux) ou audit responsive des autres pages marketing si pertinent.
 
 **Pas de date de launch fixée.** Lamine veut le site fini desk-tablet-mobile + app polish AVANT de décider quoi que ce soit. Méthode = step-by-step, page par page, lien par lien, bouton par bouton.
 
@@ -74,6 +74,7 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - Sitemap réparé : /blog (404) → /magazine + /pricing + /telecharger + /magazine listés, articles dynamiques via getAllPosts() → /magazine/[slug]. Commit `f5bce88`, merge `62263fc`
 - Cleanup Phase 3 : CSS morte retirée de `livra-landing.css` (-17 lignes : `.nav-*` du header extrait + `.lp-footer-contact-block` + `.lp-footer-wa` du footer refait), `.brand` préservée (vivante dans Pinpoint), commentaire renommé Brand wordmark. Build inchangé. Commit `f9c9a7f`, merge `114f0c8`
 - **LP responsive (port CD export 11)** : bloc additif EXPORT 11 en fin de `livra-landing.css` (+39 lignes, zéro existant touché). Fix iPad portrait 768-1024 (`.hero .bg` swarm bulles masqué ≤1080px, `.livemap` remise en flow sous dashboard centrée, `.product` flex column, `.panel` pleine largeur) + mobile ≤720px (overflow-x bloqué, livemap recentrée). Desktop ≥1081px intact. Commit `ae3ecea` (mergé sur main 19 juin). Audit visuel via Claude in Chrome (resize_window + javascript_tool) confirmé pixel-perfect aux 3 breakpoints testables (1024 / 768 / 500 — Chrome bloque <500px, règle CSS identique à 360).
+- **LP responsive (port CD export 12)** : bloc additif EXPORT 12 en fin de `livra-landing.css` (+122 lignes après EXPORT 11) + markup `.hero-voices` dans HeroV4.tsx (+31 lignes après `.product`). Fixes 1.1 H2 unifiés (5 sections produit même échelle) / 1.2 hero CTA reorder via `display:contents` + `order` (sans wrapper, scopé 721-1080) / 1.3 s2-ghosts masquées ≤1080 / 1.4 s75-credo 1 col 721-900 / 1.5 respiration sections 721-1080. Cohérence Bouclier/Wedge/Confiance : stages 820px ≥1081 / 760px 721-1080, headers 760/600px, padding symétrique, captions alignées. Voix arabizi en stack léger ≤1080 (3 cartes Karim/Yacine/Sofiane, sans ghosts/blur/swarm — zéro débordement). Desktop ≥1081 intact (grille 2 cols + swarm), mobile ≤720 intact (CTA reste 1er écran). Port `9bac3be` → merge `ccd43f6` (mergé sur main 19 juin, prod ● Ready 31s). Audit visuel pixel-perfect 5 breakpoints (1440 / 1024 / 768 / 500) confirmé via Claude in Chrome.
 
 ---
 
@@ -103,7 +104,7 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 
 ~~**Hero LP cassé en iPad portrait**~~ → ✅ FIXÉ 19 juin (port CD export 11, commit `ae3ecea`).
 
-**Cohérence visuelle 721-1080px à demander à CD (export 12)** : unification titres H2 sections1/2/s4/s5/s6 (manche d'escalier actuelle), `.hero-cta` wrapper (visuel avant CTA en stack), `.s2-ghosts` masquées ≤1080 (superposition cartes "pendant ce temps"), `.s75-credo` grid 721-900 (écrasé actuellement), respiration sections 721-1080. Bloc TABLET REVIEW FIXES déjà préparé par CD pour export 7 mais dépend d'un changement HTML qu'on n'a pas. Demander harmonisation avec HTML actuel du repo.
+~~**Cohérence visuelle 721-1080px à demander à CD (export 12)**~~ → ✅ FIXÉ 19 juin (port CD export 12, merge `ccd43f6`). Tous les TABLET REVIEW FIXES portés (H2 unifiés / hero CTA reorder sans wrapper / s2-ghosts masquées ≤1080 / s75-credo dé-tassé / respiration homogène) + cohérence Bouclier/Wedge/Confiance + voix arabizi en stack léger.
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
 
@@ -221,16 +222,19 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 - **Nouveau workflow loup** (validé 19 juin) : Claudy lit/écrit FS Mac direct (SESSION_HANDOFF, CLAUDY_FLOW, code repo, exports CD) + audit visuel pixel-perfect via Claude in Chrome. cc = git + npm + tsc + builds + commits + merges. Vélocité 10× vs avant.
 
+- **`display:contents` + `order` pour réordonner sans wrapper HTML**. Quand un mockup CD veut un ordre visuel différent (ex: produit AVANT cta en tablette) mais que l'HTML repo n'a pas le wrapper nécessaire, `display:contents` sur le conteneur parent lève ses enfants dans le flex grand-parent, et `order` les repositionne. Élégant, scopable par media query, support Chrome/Safari/Firefox 100%. Cas LIVRA export 12 : hero reorder 721-1080 (kicker→h1→subtitle→product→voices→cta→micro) tout en préservant le mobile CTA-first et le desktop grid 2-col natif. Fix sans toucher le markup.
+
+- **Workflow port multi-fichier validé** (export 12) : pour un port CD impliquant CSS additif + ajout markup JSX, Claudy applique les 2 edits via Filesystem (dryRun → apply), cc enchaîne tout le pipeline en UN brief (`checkout -b → tsc → build → lint → diff → commit → push → audit Claudy via Chrome → merge --no-ff → cleanup branche locale+remote → vérif prod Ready`). Zéro friction, zéro mess de branches. Cas 19 juin : port `9bac3be` → merge `ccd43f6`, prod build 31s.
+
 ---
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
 1. ~~CD livre export 11 responsive~~ → ✅ DONE 19 juin (port mergé, commit `ae3ecea`)
-2. **Demander CD un export 12** — TABLET REVIEW FIXES harmonisé pour HTML actuel du repo (titres H2 uniformes + s2-ghosts ≤1080 + s75-credo grid 721-900 + respiration sections 721-1080 ; **sans** dépendance `.hero-cta` wrapper qu'on n'a pas)
-3. **Port export 12** quand livré (même méthode : audit Claudy via Filesystem + Claude in Chrome → édit direct → cc commit)
-4. **App polish** (5 store blockers triviaux mobile)
-5. **Enrollment Apple Dev + Google Play** (124 USD)
-6. **Décision date launch**
+2. ~~CD livre export 12 + port~~ → ✅ DONE 19 juin (port `9bac3be` → merge `ccd43f6`, prod live)
+3. **App polish mobile** (5 store blockers triviaux : `ios.buildNumber`, RECORD_AUDIO retrait, EXPO_PUBLIC_DEBUG_TRACKING=0 prod, splash + adaptive icon dark)
+4. **Enrollment Apple Dev + Google Play** (124 USD, DUNS `243367811` prêt)
+5. **Décision date launch**
 
 ---
 
