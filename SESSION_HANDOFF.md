@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 19 juin 2026, 19:00 Alger
+**Dernière mise à jour** : 19 juin 2026, 20:00 Alger
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -25,7 +25,7 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
 **Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`). Port export 12 mergé 19 juin (port `9bac3be` → merge `ccd43f6`).
 
-**Phase active** : LP responsive complète (export 11 + export 12 live en prod). Prochaine zone : app polish mobile (5 store blockers triviaux) ou audit responsive des autres pages marketing si pertinent.
+**Phase active** : LP responsive desktop OK (export 11 + export 12 mergés, prod live). **MAIS** chantier ouvert découvert 19 juin soir : la densité visuelle hero + section 2 est PERDUE ≤1080 (nos fix EXPORT 11+12 ont masqué `.hero .bg` swarm + `.s2-ghosts` au lieu de les reprogrammer responsive). Mobile/tablet = cœur de LIVRA (acheteur DZ découvre via Reels Meta / Reels TikTok / lien WA Safari), donc retrouver la densité à 320-1080 est PRIORITAIRE. Direction C validée (cf. CLAUDY_FLOW) : hybride mini-swarm responsive + `.hero-voices` enrichi.
 
 **Pas de date de launch fixée.** Lamine veut le site fini desk-tablet-mobile + app polish AVANT de décider quoi que ce soit. Méthode = step-by-step, page par page, lien par lien, bouton par bouton.
 
@@ -105,6 +105,12 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 ~~**Hero LP cassé en iPad portrait**~~ → ✅ FIXÉ 19 juin (port CD export 11, commit `ae3ecea`).
 
 ~~**Cohérence visuelle 721-1080px à demander à CD (export 12)**~~ → ✅ FIXÉ 19 juin (port CD export 12, merge `ccd43f6`). Tous les TABLET REVIEW FIXES portés (H2 unifiés / hero CTA reorder sans wrapper / s2-ghosts masquées ≤1080 / s75-credo dé-tassé / respiration homogène) + cohérence Bouclier/Wedge/Confiance + voix arabizi en stack léger.
+
+🔴 **Densité visuelle hero + section 2 perdue ≤1080 — chantier mobile-first ouvert (découvert 19 juin soir)** : nos fix EXPORT 11+12 ont masqué `.hero .bg` (10 ghosts + 4 sharp arabizi) et `.s2-ghosts` (12 cards section "Pendant ce temps") via `display:none` ≤1080 pour résoudre l'overflow absolute. Trade-off accepté trop vite : layout propre mais hero + section 2 VIDES sur mobile/tablet. Or mobile-first = cœur du marché DZ. Direction C validée à implementer : (a) HERO ≤1080 — mini-swarm responsive 2-3 ghosts safe-zone + `.hero-voices` enrichi 5 cards avec profondeur scale/opacity + pseudo-élément blur silhouette ; (b) SECTION 2 ≤1080 — 2-3 mini-ghosts safe + mur 6 cards central (déjà OK) + mask radial doux. Brief CD #1 à envoyer.
+
+🟡 **Desktop polish — manquements mesurés 19 juin soir** (audit Claude in Chrome à 1440 sur golivra.app live) : (a) **CTAs pas homogènes** : hero `.btn` = rect 14px / h60 / font 16px ; sections produit `.lp-cta` (s4/s5/s6) = pilule 999px / h79 / font 22px ; CTA final `.s9-cta` = pilule 999px / h76 / font 20px — 3 styles différents pour des CTAs principaux. (b) **Mockups phone central pas homogènes** : S1 Démo = 711px / S4 Bouclier = 711px / **S5 Wedge = 781px** / **S6 Confiance = 781px** — écart 70px entre S4 et S5/S6, rupture visuelle. Brief CD #2 à envoyer après le #1.
+
+🎯 **NOUVELLE SECTION LP à ajouter (19 juin soir)** : section "Blacklist scammers — exclusivité club fermé LIVRA". Angle USP DZ très puissant : LIVRA agrège collectivement les numéros/clients qui ont scammé (faux noms, fausses adresses, refus de payer COD, annulations systématiques) chez n'importe quel vendeur LIVRA. Cette blacklist devient une donnée collective et est UNIQUEMENT consultable par les vendeurs membres du club LIVRA. Network effect : plus de vendeurs = blacklist plus puissante = + de raisons de rejoindre. Aspirational pull = "exclusivité club fermé". Position probable de la section : entre Confiance (s6) et Philosophie (s75), ou en bonus au-dessus du CTA final (s9). À briefer CD après les chantiers densité mobile (#1) et polish desktop (#2). Risque légal/RGPD-like à anticiper : vérifier conformité DZ avant publication.
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
 
@@ -226,15 +232,19 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 - **Workflow port multi-fichier validé** (export 12) : pour un port CD impliquant CSS additif + ajout markup JSX, Claudy applique les 2 edits via Filesystem (dryRun → apply), cc enchaîne tout le pipeline en UN brief (`checkout -b → tsc → build → lint → diff → commit → push → audit Claudy via Chrome → merge --no-ff → cleanup branche locale+remote → vérif prod Ready`). Zéro friction, zéro mess de branches. Cas 19 juin : port `9bac3be` → merge `ccd43f6`, prod build 31s.
 
+- **🔴 MOBILE-FIRST = cœur de LIVRA, jamais un fallback**. Acheteur DZ découvre via Reels Meta / TikTok / lien WhatsApp Safari, jamais MacBook 1440 plein écran. Règle d'or de tout fix responsive : se demander d'abord "comment je PRÉSERVE la densité sur petit écran ?" avant "comment je cache pour pas déborder ?". `display:none` responsive = outil dernier recours, pas premier réflexe. Détails complets dans CLAUDY_FLOW (entrée [Stratégie] 19 juin soir + anti-pattern Claudy EXPORT 11+12 desktop-first).
+
 ---
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
 1. ~~CD livre export 11 responsive~~ → ✅ DONE 19 juin (port mergé, commit `ae3ecea`)
 2. ~~CD livre export 12 + port~~ → ✅ DONE 19 juin (port `9bac3be` → merge `ccd43f6`, prod live)
-3. **App polish mobile** (5 store blockers triviaux : `ios.buildNumber`, RECORD_AUDIO retrait, EXPO_PUBLIC_DEBUG_TRACKING=0 prod, splash + adaptive icon dark)
-4. **Enrollment Apple Dev + Google Play** (124 USD, DUNS `243367811` prêt)
-5. **Décision date launch**
+3. 🔴 **Brief CD #1 — Densité mobile/tablet ≤1080** (Direction C hybride : mini-swarm responsive hero + `.hero-voices` enrichi 5 cards + mini-ghosts section 2 safe-zone). PRIORITÉ car mobile = cœur marché DZ.
+4. 🟡 **Brief CD #2 — Polish desktop** (CTAs homogénéiser pilule 999px partout / mockups phones centraux uniformisés S4=S5=S6=711 ou 781).
+5. **App polish mobile** (5 store blockers triviaux : `ios.buildNumber`, RECORD_AUDIO retrait, EXPO_PUBLIC_DEBUG_TRACKING=0 prod, splash + adaptive icon dark)
+6. **Enrollment Apple Dev + Google Play** (124 USD, DUNS `243367811` prêt)
+7. **Décision date launch**
 
 ---
 

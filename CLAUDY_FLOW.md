@@ -56,6 +56,12 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 - **[Workflow CD]** CD verrouillé à 924px (tablette) pour ses proofs HTML — c'est sa zone la plus dense où vivent tous les fixes responsive. Suffisant pour valider les sélecteurs et la cohérence DOM. Claudy fait l'audit final aux 5 breakpoints via Claude in Chrome (1440/1024/768/500). Les 2 vues sont complémentaires : CD prouve le contenu à 924px, Claudy prouve le rendu cross-BP.
 
+- **[Stratégie]** 🔴 **MOBILE-FIRST = LE CŒUR DE LIVRA, JAMAIS UN FALLBACK.** L'acheteur DZ découvre LIVRA via mobile : pub Meta sur Android (Reels/Stories), lien WhatsApp Safari iPhone, Reel TikTok qui clique vers golivra.app. Quasi-jamais un MacBook 1440 plein écran. Donc à 320-768 le hero doit garder TOUTE sa densité immersive (cards arabizi, swarm, livemap flottante, tension visuelle) — c'est le scroll-jugement 1.5 sec qui décide si on perd 90% des prospects. Règle d'or pour tout fix responsive : d'abord se demander "comment je PRÉSERVE la densité sur petit écran ?" avant de penser "comment je cache pour pas déborder ?".
+
+- **[Anti-pattern Claudy]** Approche desktop-first sur EXPORT 11+12 = erreur de framing. J'ai caché `.hero .bg` (10 ghosts + 4 sharp cards) ≤1080 + `.s2-ghosts` (12 cards section 2) ≤1080 pour résoudre les débordements absolute. Trade-off : layout propre mais hero + section 2 VIDES sur mobile/tablet. Résultat : Lamine voit un site moins attractif sur 320-768 que sur 1440 — exactement l'INVERSE de ce qu'il fallait pour le marché DZ mobile-first. La bonne démarche aurait été : reprogrammer le swarm en positionnement responsive (% / max-width strict / safe-zone interne / scale adaptatif) au lieu de simplement le masquer. Le `display:none` responsive est un OUTIL DE DERNIER RECOURS, pas un fix de premier réflexe.
+
+- **[Stratégie]** **Le `.hero-voices` (3 cards stack émergence EXPORT 12) était dans la bonne direction mais trop léger pour compenser la perte de densité.** Vérité prouvée par le rendu live : 3 cards plates ne remplacent pas l'immersion du swarm + ghosts + livemap flottante à 1440. Direction C validée 19 juin : hybride mini-swarm responsive (2-3 ghosts safe en absolute) + `.hero-voices` enrichi (5 cards avec profondeur scale/opacity + pseudo-élément blur silhouette). Pareil section 2 : mini-ghosts safe + mur 6 cards central.
+
 ---
 
 ## Légende catégories
@@ -65,5 +71,6 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 - **[Anti-pattern cc]** : pièges récurrents de Claude Code à briefer contre
 - **[Anti-pattern Claudy]** : mes propres erreurs récurrentes à éviter
 - **[Marché DZ]** : intuitions ou verbatims terrain à intégrer
+- **[Stratégie]** : principes de positionnement marché / produit (mobile-first DZ, donnée collective scammers, etc.) qui doivent guider TOUTES les décisions techniques
 - **[Tech]** : leçons techniques apprises sur la stack
 - **[Vraie reco loup]** : exemples de bonnes réponses tranchantes
