@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 18 juin 2026, 21:30 Montréal
+**Dernière mise à jour** : 19 juin 2026, 11:00 Alger
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -23,14 +23,9 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 **Page fermée** : `/telecharger` — commit `3abf606`, 18 juin.
 **Page fermée** : `/magazine` + `/magazine/[slug]` — commit `9f2725d`, 18 juin.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
-**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin.
+**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`).
 
-**Phase active** : Attente CD export 11 (fix responsive hero iPad portrait + mobile).
-- iPad LANDSCAPE (1366×1024) : ✅ rendu correct sur la prod actuelle
-- iPad PORTRAIT (1024×1366) : 🔴 hero cassé — bubbles + cards en absolute desktop débordent
-- Mobile (≤720px) : 🔴 même cause root probable
-
-CD doit livrer fix + captures avant/après aux 4 breakpoints (1024, 768, 480, 360).
+**Phase active** : Backlog CD — demander **export 12** pour porter les TABLET REVIEW FIXES restants (unification titres H2 sections1/2/s4/s5/s6, s2-ghosts ≤1080, s75-credo grid 721-900, respiration sections 721-1080). Harmoniser avec HTML actuel du repo (**sans** dépendance `.hero-cta` wrapper qu'on n'a pas).
 
 **Pas de date de launch fixée.** Lamine veut le site fini desk-tablet-mobile + app polish AVANT de décider quoi que ce soit. Méthode = step-by-step, page par page, lien par lien, bouton par bouton.
 
@@ -78,6 +73,7 @@ Technique (pas d'UI) : `/oauth/meta-callback`.
 - Drawer mobile fonctionnel ≤1080px : burger animé → croix, overlay plein écran via `createPortal(document.body)` pour sortir du containing block créé par backdrop-filter du `<header>`, scroll-lock + Escape + close-on-route + backdrop click, padding-top:max(72px, env(safe-area-inset-top)) pour notch iOS, background var(--onyx, #0E0E10) opaque, z-index 45 < header 50. Commits `0c6acdf` (vrai fix v2 via portal — root cause identifiée par CD : backdrop-filter blur crée containing block), merge `62263fc`
 - Sitemap réparé : /blog (404) → /magazine + /pricing + /telecharger + /magazine listés, articles dynamiques via getAllPosts() → /magazine/[slug]. Commit `f5bce88`, merge `62263fc`
 - Cleanup Phase 3 : CSS morte retirée de `livra-landing.css` (-17 lignes : `.nav-*` du header extrait + `.lp-footer-contact-block` + `.lp-footer-wa` du footer refait), `.brand` préservée (vivante dans Pinpoint), commentaire renommé Brand wordmark. Build inchangé. Commit `f9c9a7f`, merge `114f0c8`
+- **LP responsive (port CD export 11)** : bloc additif EXPORT 11 en fin de `livra-landing.css` (+39 lignes, zéro existant touché). Fix iPad portrait 768-1024 (`.hero .bg` swarm bulles masqué ≤1080px, `.livemap` remise en flow sous dashboard centrée, `.product` flex column, `.panel` pleine largeur) + mobile ≤720px (overflow-x bloqué, livemap recentrée). Desktop ≥1081px intact. Commit `ae3ecea` (mergé sur main 19 juin). Audit visuel via Claude in Chrome (resize_window + javascript_tool) confirmé pixel-perfect aux 3 breakpoints testables (1024 / 768 / 500 — Chrome bloque <500px, règle CSS identique à 360).
 
 ---
 
@@ -105,7 +101,9 @@ App fonctionnellement built — vendeur + livreur 100% branchés prod, zéro moc
 
 ### Web — à fixer pendant l'audit page-par-page
 
-**Hero LP cassé en iPad portrait** : bubbles "Karim B." / "Sofiane M." coupées bord gauche, bubble "Yacine T." coupée bord droit, card "Commandes" tombe centre/bas, tracking "EN DIRECT" chevauche. Cause : positionnement absolute desktop pas adapté <1024px. CD en train de fixer.
+~~**Hero LP cassé en iPad portrait**~~ → ✅ FIXÉ 19 juin (port CD export 11, commit `ae3ecea`).
+
+**Cohérence visuelle 721-1080px à demander à CD (export 12)** : unification titres H2 sections1/2/s4/s5/s6 (manche d'escalier actuelle), `.hero-cta` wrapper (visuel avant CTA en stack), `.s2-ghosts` masquées ≤1080 (superposition cartes "pendant ce temps"), `.s75-credo` grid 721-900 (écrasé actuellement), respiration sections 721-1080. Bloc TABLET REVIEW FIXES déjà préparé par CD pour export 7 mais dépend d'un changement HTML qu'on n'a pas. Demander harmonisation avec HTML actuel du repo.
 
 **OG Facebook** — cache stale depuis 6 juin (code correct, juste le CDN). Re-test plus tard.
 
@@ -215,15 +213,24 @@ Meta veut : nom légal + téléphone sur le **même** document, daté 3-6 mois.
 
 - **Bug visuel/CSS mobile = consulter CD AVANT cc.** CD a tranché en 30 sec le containing block du `backdrop-filter` qu'on cherchait depuis 1h avec cc. Pour bugs visuels, CD est expert ; cc exécute.
 
+- **Extension Anthropic Filesystem** (Claude Desktop > Settings > Développeur > Extensions) = accès direct au FS Mac. À ne pas confondre avec un MCP custom configuré via npx (qui tourne dans sandbox container Linux). L'officielle est marquée "Ce serveur est géré par une extension" + commande "node" (pas "npx"). Setup : install l'extension + active les permissions outils lecture/écriture dans Connecteurs.
+
+- **Claude in Chrome** (resize_window + javascript_tool) = audit visuel pixel-perfect aux breakpoints. Mesures `getBoundingClientRect()` + `getComputedStyle()` plus rigoureuses qu'un screenshot. Permet de prouver le bon rendu en pixels (livemap.top vs panel.bottom, scrollWidth vs clientWidth, etc.). Chrome bloque sa fenêtre à largeur min 500px → pour tester strict <500px, faut DevTools mode device.
+
+- **Grinta Lamine** = ne pas accepter "cul-de-sac" technique sans avoir exploré toutes les options. Cas 18→19 juin : Claudy avait dit MCP filesystem ne marcherait pas (sandbox container), Lamine a creusé le matin suivant et trouvé l'extension Anthropic Filesystem officielle dans Settings. Game changer.
+
+- **Nouveau workflow loup** (validé 19 juin) : Claudy lit/écrit FS Mac direct (SESSION_HANDOFF, CLAUDY_FLOW, code repo, exports CD) + audit visuel pixel-perfect via Claude in Chrome. cc = git + npm + tsc + builds + commits + merges. Vélocité 10× vs avant.
+
 ---
 
 ## 🎯 PROCHAINS MOVES (ordre strict)
 
-1. **CD livre export 11 responsive** (en cours)
-2. **Port responsive en prod via cc** (page par page, LP en 1er)
-3. **App polish** (5 store blockers triviaux)
-4. **Enrollment Apple Dev + Google Play** (124 USD)
-5. **Décision date launch**
+1. ~~CD livre export 11 responsive~~ → ✅ DONE 19 juin (port mergé, commit `ae3ecea`)
+2. **Demander CD un export 12** — TABLET REVIEW FIXES harmonisé pour HTML actuel du repo (titres H2 uniformes + s2-ghosts ≤1080 + s75-credo grid 721-900 + respiration sections 721-1080 ; **sans** dépendance `.hero-cta` wrapper qu'on n'a pas)
+3. **Port export 12** quand livré (même méthode : audit Claudy via Filesystem + Claude in Chrome → édit direct → cc commit)
+4. **App polish** (5 store blockers triviaux mobile)
+5. **Enrollment Apple Dev + Google Play** (124 USD)
+6. **Décision date launch**
 
 ---
 
