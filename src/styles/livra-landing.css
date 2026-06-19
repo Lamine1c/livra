@@ -3242,3 +3242,42 @@ body {
   .s6 .s6-caption  { grid-column: 1 / -1; grid-row: 2; }
   .s6 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 11 — HERO portrait iPad (768–1024) + mobile : stack propre
+   ─────────────────────────────────────────────────────────────────────
+   Bug prod : sous 1080px le foreground passait en 1 colonne, MAIS
+   (a) le swarm décoratif .bg restait en position:absolute avec offsets
+       négatifs → bulles « Karim B. / Sofiane M. / Yacine T. » coupées aux bords.
+   (b) .livemap (carte « EN DIRECT ») restait position:absolute → elle
+       chevauchait le dashboard « Commandes · aujourd'hui ».
+   Fix : on retire le swarm sous 1080, et on remet la carte live DANS LE FLUX,
+   empilée sous le dashboard. Le 2-colonnes ≥1081px (landscape) est intact.
+   Source : CD export 11 (19 juin 2026), captures preuves validées 1024/768/480/360.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* (a) swarm décoratif → retiré sous 1080px : c'est lui qui débordait/coupait */
+@media (max-width: 1080px) {
+  .hero .bg { display: none !important; }
+}
+
+/* (b) Portrait iPad 721–1080 : produit empilé, carte live dans le flux */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .hero .fg { max-width: 560px; }
+  .hero .product {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 18px; max-width: 460px; perspective: none;
+  }
+  .hero .panel { width: 100%; transform: none; }
+  .hero .livemap {
+    position: relative; inset: auto; right: auto; bottom: auto; left: auto;
+    transform: none; width: 100%; max-width: 340px; margin: 6px auto 0;
+  }
+}
+
+/* (c) Mobile ≤720 : overflow-x bloqué + carte live recentrée */
+@media (max-width: 720px) {
+  .hero { overflow-x: hidden; }
+  .hero .product { max-width: 100%; }
+  .hero .livemap { right: auto; margin-left: auto; margin-right: auto; }
+}
