@@ -40,6 +40,18 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 ---
 
+## 19 juin 2026
+
+- **[Tech]** Extension officielle Anthropic Filesystem (Claude Desktop > Settings > Développeur > Extensions) donne accès filesystem direct au Mac. À NE PAS confondre avec un MCP server custom configuré via npx qui tourne dans le sandbox container. L'extension officielle est marquée "Ce serveur est géré par une extension" + commande "node" (pas "npx"). Setup : install l'extension, puis active les permissions outils lecture/écriture dans Connecteurs.
+
+- **[Tone Lamine]** GRINTA — quand Lamine se met un truc en tête ET sent que c'est faisable, il lâche pas tant que c'est pas done. Si Claudy dit "cul de sac, abandonne", mais Lamine sent que c'est faisable, RESPECTER et chercher la vraie solution. Cas 18→19 juin : Claudy avait dit "MCP filesystem ne marchera pas sur Claude Desktop, c'est une limite architecturale". Lamine a dormi, creusé le matin suivant, trouvé l'extension officielle Filesystem dans Settings > Développeur. Game changer.
+
+- **[Workflow]** Nouveau workflow après extension Filesystem activée : Claudy lit le FS Mac direct (SESSION_HANDOFF, CLAUDY_FLOW, CLAUDE.md, code du repo) sans copier-coller. cc continue d'exécuter les édits/commits/builds (git, npm, tsc). Vélocité 10× vs avant.
+
+- **[Anti-pattern Claudy]** "Cul de sac" prononcé trop vite = manque de creusement. Avant de fermer une porte technique, EXPLORER toutes les options Settings/Extensions de l'app. Hier j'ai accepté une "limite architecturale" qui n'existait pas — c'était juste un toggle Extension dans Settings que je n'avais pas cherché. À garder en tête : la grinta de Lamine vaut souvent mieux que ma résignation technique prématurée.
+
+---
+
 ## Légende catégories
 
 - **[Workflow]** : process opérationnel entre maillons Quadrille
