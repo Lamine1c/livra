@@ -70,6 +70,37 @@ export default function HeroV4() {
               </div>
             </div>
           </div>
+
+          {/* EXPORT 12 — Voix arabizi en stack léger (≤1080 only via CSS). 3 cartes nettes. */}
+          <div className="hero-voices" aria-hidden="true">
+            <p className="hv-label">Pendant ce temps, dans la jungle…</p>
+            <div className="hv-stack">
+              <div className="hv-card">
+                <div className="hv-head">
+                  <span className="hv-av" style={{ '--av': '#D97757' } as React.CSSProperties}>K</span>
+                  <span className="hv-name">Karim B.</span>
+                  <span className="hv-time">il y a 2h</span>
+                </div>
+                <p className="hv-text">Sahbi wech rahi commande ta3i ? 3 ayyam w mazal walou.</p>
+              </div>
+              <div className="hv-card">
+                <div className="hv-head">
+                  <span className="hv-av" style={{ '--av': '#D17861' } as React.CSSProperties}>Y</span>
+                  <span className="hv-name">Yacine T.</span>
+                  <span className="hv-time">il y a 3h</span>
+                </div>
+                <p className="hv-text">30% retour hada machi business, hada masse men ness yetlebou w ymchiw.</p>
+              </div>
+              <div className="hv-card">
+                <div className="hv-head">
+                  <span className="hv-av" style={{ '--av': '#C9954D' } as React.CSSProperties}>S</span>
+                  <span className="hv-name">Sofiane M.</span>
+                  <span className="hv-time">il y a 5h</span>
+                </div>
+                <p className="hv-text">Wech ndir b had l&rsquo;colis ? Client ma yjaweb-ch.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="scroll-hint"><span className="line"></span>Découvrir</div>
