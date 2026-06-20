@@ -3403,3 +3403,318 @@ body {
 @media (max-width: 720px) {
   .hero-voices { max-width: 100%; margin-top: 22px; }
 }
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13 — MOBILE-FIRST : ré-densifier HERO + SECTION 2 sous 1080px.
+   Source : CD bundles 19-20 juin (LIVRA-Tablet-Final + LIVRA-Mobile-Final).
+   ATTENTION : ce bloc DOIT rester APRÈS EXPORT 11+12 dans le fichier final.
+   Si le build réordonne (PostCSS sort, CSS modules), la cascade saute.
+   Architecture en 3 couches : socle ≤1080 (ce bloc) + 13.1–13.11 tablet + 13.M1–13.M7 mobile.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ── A. HERO-VOICES : 3 → 5 cartes, pile en profondeur ── */
+@media (max-width: 1080px) {
+  .hero-voices { position: relative; gap: 12px; }
+  .hv-stack {
+    gap: 10px;
+    -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+            mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+  }
+  .hv-card {
+    background: linear-gradient(180deg, rgba(38,40,50,0.62), rgba(28,30,38,0.58)) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset,
+                0 22px 44px -28px rgba(0,0,0,0.85) !important;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    transform-origin: top center;
+  }
+  .hv-card:nth-child(1) { transform: scale(1.00); opacity: 1;    }
+  .hv-card:nth-child(2) { transform: scale(0.97); opacity: 0.90; }
+  .hv-card:nth-child(3) { transform: scale(0.94); opacity: 0.78; }
+  .hv-card:nth-child(4) { transform: scale(0.90); opacity: 0.65; }
+  .hv-card:nth-child(5) { transform: scale(0.85); opacity: 0.50; }
+  .hero-voices::after {
+    content: ''; position: absolute; z-index: -1; pointer-events: none;
+    left: 50%; top: 40px; transform: translateX(-50%);
+    width: 86%; height: 72%;
+    background: radial-gradient(ellipse 70% 60% at 50% 28%,
+      rgba(217,119,87,0.10) 0%, transparent 70%);
+    filter: blur(26px);
+  }
+}
+
+/* ── B. HERO MINI-SWARM ── */
+@media (max-width: 1080px) {
+  .hero { overflow: hidden; }
+  .hero .bg {
+    display: block !important; z-index: 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+  .hero .bg .ghosts .card,
+  .hero .bg .sharp  .card { display: none !important; }
+  .hero .bg .ghosts .g1,
+  .hero .bg .ghosts .g8 {
+    display: flex !important; position: absolute;
+    width: 200px !important; max-width: 220px;
+    opacity: 0.35 !important;
+    animation: none !important;
+    filter: blur(3px);
+  }
+  .hero .bg .ghosts .g1 { top: 16%; bottom: auto; left: -8px; right: auto; transform: scale(0.85) rotate(-6deg); }
+  .hero .bg .ghosts .g8 { top: auto; bottom: 18%; left: auto; right: -8px; transform: scale(0.85) rotate(5deg); }
+}
+@media (min-width: 721px) and (max-width: 1080px) {
+  .hero .bg .ghosts .g6 {
+    display: flex !important; position: absolute;
+    width: 200px !important; max-width: 220px;
+    opacity: 0.30 !important; animation: none !important; filter: blur(3px);
+    top: 52%; bottom: auto; left: -6px; right: auto;
+    transform: scale(0.82) rotate(7deg);
+  }
+}
+@media (max-width: 480px) {
+  .hero .bg .ghosts .g8 { display: none !important; }
+  .hero .bg .ghosts .g1 {
+    top: 12%; left: -10px; max-width: 184px; width: 176px !important;
+    opacity: 0.28 !important;
+  }
+}
+
+/* ── C. SECTION 2 — mini-ghosts safe ── */
+@media (max-width: 1080px) {
+  .section2 .s2-ghosts {
+    display: block !important; z-index: 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  }
+  .section2 .s2-ghosts .s2-ghost { display: none !important; }
+  .section2 .s2-ghosts .q1,
+  .section2 .s2-ghosts .q6 {
+    display: flex !important;
+    width: 200px !important; max-width: 200px;
+    margin: 0 !important;
+    opacity: 0.32; animation: none !important;
+  }
+  .section2 .s2-ghosts .q1 { top: 12%; bottom: auto; left: -6px; right: auto; transform: scale(0.86) rotate(-4deg); }
+  .section2 .s2-ghosts .q6 { top: auto; bottom: 14%; left: auto; right: -6px; transform: scale(0.86) rotate(4deg); }
+}
+@media (min-width: 721px) and (max-width: 1080px) {
+  .section2 .s2-ghosts .q3 {
+    display: flex !important;
+    width: 200px !important; max-width: 200px; margin: 0 !important;
+    opacity: 0.28; animation: none !important;
+    top: 48%; bottom: auto; left: -8px; right: auto;
+    transform: scale(0.84) rotate(4deg);
+  }
+}
+/* ── fin EXPORT 13 (socle) ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.1 — TABLET hero re-priorisé (livemap remonte sur Commandes)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .hero .product       { order: 4 !important; }
+  .hero .copy > .cta { order: 5 !important; align-self: center; margin-top: -16px !important; }
+  .hero .copy > .micro { order: 6 !important; margin-top: -26px !important; }
+  .hero .hero-voices   { order: 7 !important; }
+  .hero h1 {
+    font-size: clamp(4.2rem, 10.2vw, 6.2rem) !important;
+    line-height: 0.9; letter-spacing: -0.045em;
+  }
+  .hero h1 .hl-1 { font-size: 0.42em; }
+  .hero .product { position: relative; align-items: center; }
+  .hero .panel   { position: relative; z-index: 1; }
+  .hero .livemap {
+    position: relative; z-index: 5;
+    width: 300px !important; max-width: 300px !important;
+    margin: -180px 0 0 auto !important;
+    transform: translateX(76px);
+    box-shadow: 0 40px 80px -26px rgba(0,0,0,0.92),
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 0 64px -18px rgba(var(--accent-rgb), 0.34);
+  }
+}
+/* ── fin EXPORT 13.1 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.2 — TABLET : label voix supprimé + mini-swarm enrichi/dispersé
+   ═════════════════════════════════════════════════════════════════════ */
+.hero-voices .hv-label { display: none !important; }
+
+@media (min-width: 721px) and (max-width: 1080px) {
+  .hero .hero-voices { display: none !important; }
+  .hero { height: auto !important; min-height: 100vh; }
+  .hero .fg { flex: 0 0 auto !important; }
+  .hero .bg {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  }
+  .hero .bg .ghosts .g1,
+  .hero .bg .ghosts .g3,
+  .hero .bg .ghosts .g5,
+  .hero .bg .ghosts .g6,
+  .hero .bg .ghosts .g8,
+  .hero .bg .ghosts .g10 {
+    display: flex !important; position: absolute;
+    width: 188px !important; max-width: 200px;
+    animation: none !important; filter: blur(1.5px);
+    bottom: auto; right: auto;
+  }
+  .hero .bg .ghosts .g1  { top: 4%;  left: 6%;   opacity: 0.40 !important; transform: scale(0.80) rotate(-10deg); }
+  .hero .bg .ghosts .g3  { top: 13%; left: auto; right: -1%; opacity: 0.36 !important; transform: scale(0.76) rotate(6deg); }
+  .hero .bg .ghosts .g6  { top: 30%; left: -3%;  opacity: 0.40 !important; transform: scale(0.82) rotate(-5deg); }
+  .hero .bg .ghosts .g8  { top: 44%; left: auto; right: 5%;  opacity: 0.34 !important; transform: scale(0.78) rotate(11deg); }
+  .hero .bg .ghosts .g10 { top: 62%; left: 4%;   opacity: 0.38 !important; transform: scale(0.80) rotate(-8deg); }
+  .hero .bg .ghosts .g5  { top: 80%; left: auto; right: -2%; opacity: 0.36 !important; transform: scale(0.77) rotate(7deg); }
+}
+/* ── fin EXPORT 13.2 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.3 — TABLET : triptyque « Une seule app » recadré (anti-crop droite)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .section1__inner { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (min-width: 721px) and (max-width: 940px) {
+  .section1__stage { min-height: 560px !important; }
+  .section1__mockups {
+    transform: scale(0.76); transform-origin: center;
+    margin: -84px 0 !important;
+  }
+}
+/* ── fin EXPORT 13.3 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.4 — TABLET : « Pourquoi LIVRA ? » corps de texte allégé
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .pql-body p, .pql-lead, .pql-turn {
+    font-size: 16px !important;
+    line-height: 1.62 !important;
+  }
+}
+/* ── fin EXPORT 13.4 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.5 — TABLET : section2 (cartes hauteur égale + ghosts plus visibles)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .section2__cards { grid-auto-rows: 1fr !important; align-items: stretch !important; }
+  .section2__card  { height: 100% !important; }
+  .section2__text { font-size: 13px !important; line-height: 1.55 !important; }
+  .section2 .s2-ghosts {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  }
+  .section2 .s2-ghosts .q1,
+  .section2 .s2-ghosts .q3,
+  .section2 .s2-ghosts .q6 { opacity: 0.5 !important; }
+  .section2 .s2-ghosts .q1 { left: 2%; }
+  .section2 .s2-ghosts .q3 { left: 1%; }
+  .section2 .s2-ghosts .q6 { right: 2%; }
+}
+/* ── fin EXPORT 13.5 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.6 — TABLET : section2 swarm de ghosts enrichi (6, éparpillés)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .section2 .s2-ghosts .q1,
+  .section2 .s2-ghosts .q2,
+  .section2 .s2-ghosts .q3,
+  .section2 .s2-ghosts .q6,
+  .section2 .s2-ghosts .q9,
+  .section2 .s2-ghosts .q10 {
+    display: flex !important;
+    width: 190px !important; max-width: 190px;
+    margin: 0 !important; opacity: 0.48 !important; animation: none !important;
+    bottom: auto; right: auto;
+  }
+  .section2 .s2-ghosts .q1  { top: 7%;  left: 1%;   transform: scale(0.84) rotate(-5deg); }
+  .section2 .s2-ghosts .q2  { top: 11%; left: auto; right: 1%;  transform: scale(0.82) rotate(4deg); }
+  .section2 .s2-ghosts .q3  { top: 34%; left: 0%;   transform: scale(0.84) rotate(6deg); }
+  .section2 .s2-ghosts .q6  { top: 52%; left: auto; right: -1%; transform: scale(0.83) rotate(-4deg); }
+  .section2 .s2-ghosts .q9  { top: 72%; left: 2%;   transform: scale(0.82) rotate(5deg); }
+  .section2 .s2-ghosts .q10 { top: 86%; left: auto; right: 1%;  transform: scale(0.84) rotate(-6deg); }
+}
+/* ── fin EXPORT 13.6 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.7 — TABLET : section2 blur 1.5px + gx1/gx2 centraux révélés
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .section2 .s2-ghost { filter: blur(1.5px) !important; }
+  .section2 .s2-ghosts2 { display: block !important; z-index: 0; }
+  .section2 .s2-ghosts2 .gx1,
+  .section2 .s2-ghosts2 .gx2 {
+    display: flex !important;
+    width: 200px !important; max-width: 200px;
+    margin: 0 !important; opacity: 0.42 !important; animation: none !important;
+  }
+}
+/* ── fin EXPORT 13.7 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.8 — TABLET : Bouclier (s4) stage resserré
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .s4-tri   { margin: -69px 0 !important; }
+  .s4-stage { min-height: 592px !important; }
+}
+/* ── fin EXPORT 13.8 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.9 — TABLET : Pinpoint (s5) recadré + recentré
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .s5-inner { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (min-width: 721px) and (max-width: 940px) {
+  .s5-stage   { min-height: 566px !important; }
+  .s5-mockups {
+    transform: scale(0.70); transform-origin: center;
+    margin: -117px 0 !important;
+  }
+}
+/* ── fin EXPORT 13.9 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.10 — TABLET : Confiance (s6) recadré + recentré
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .s6-inner { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (min-width: 721px) and (max-width: 940px) {
+  .s6-stage   { min-height: 566px !important; }
+  .s6-mockups {
+    transform: scale(0.70); transform-origin: center;
+    margin: -117px 0 !important;
+  }
+}
+/* ── fin EXPORT 13.10 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.11 — TABLET ≤940 : Bouclier harmonisé sur Une seule app
+   ═════════════════════════════════════════════════════════════════════ */
+@media (min-width: 721px) and (max-width: 940px) {
+  .s4-tri {
+    transform: scale(0.76) !important; transform-origin: center;
+    margin: -83px 0 !important;
+  }
+  .s4-stage { min-height: 556px !important; }
+  .s4-step  { padding: 8px 11px !important; }
+}
+/* ── fin EXPORT 13.11 ── */
