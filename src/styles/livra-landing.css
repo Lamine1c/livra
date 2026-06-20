@@ -3983,3 +3983,20 @@ body {
   .s5-phone-c, .s6-phone-c { height: 692px !important; }
 }
 /* ── fin EXPORT 14 ──────────────────────────────────────────────────────── */
+
+/* ════════════════════════════════════════════════════════════════════════
+   EXPORT 13.12 — TABLET 941–1080 : comble le trou « rendu desktop natif »
+   s5/s6 jamais réduits (scale 13.9/13.10 ≤940) + s4 partiel (scale ≤1024).
+   On cale s4/s5/s6 sur la hauteur de s1 (~711px), s1 NON touché.
+   Scope strict : ≤940 et ≥1081 inchangés.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 941px) and (max-width: 1080px) {
+  .s5-stage, .s6-stage { min-height: 720px !important; }
+  .s5-mockups, .s6-mockups {
+    transform: scale(0.91); transform-origin: center;
+    margin: -35px 0 !important;
+  }
+  .s4-tri   { transform: none !important; margin: 0 !important; }
+  .s4-stage { min-height: 720px !important; }
+}
+/* ── fin EXPORT 13.12 ───────────────────────────────────────────────────── */
