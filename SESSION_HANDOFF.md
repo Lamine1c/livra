@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md — État vivant LIVRA
 
-**Dernière mise à jour** : 20 juin 2026, ~13:00 Alger
+**Dernière mise à jour** : 20 juin 2026, ~18:30 Alger
 **Mis à jour par** : Claudy + Lamine
 
 Fichier à lire en premier au démarrage de toute nouvelle session.
@@ -23,7 +23,7 @@ Complète CLAUDE.md (règles permanentes) — celui-ci décrit où on EST.
 **Page fermée** : `/telecharger` — commit `3abf606`, 18 juin.
 **Page fermée** : `/magazine` + `/magazine/[slug]` — commit `9f2725d`, 18 juin.
 **Page fermée** : `/pricing` — mergée sur main, commit `1790656`, 17 juin.
-**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`). Port export 12 mergé 19 juin (port `9bac3be` → merge `ccd43f6`). **Responsive bouclé 20 juin** : export 13 TABLET (`4c5c16f`) + export 13 MOBILE (`a6a446c`) + export 14 micro-patch CD (`21d68d2`), tous mergés. LP pixel-perfect desktop→360px (audit Claude in Chrome 3 plages, scroll-X 0).
+**Page fermée** : `/` (LP) — mergée sur main, commit `7b83ba3`, 16 juin. Port responsive CD export 11 mergé 19 juin (commit `ae3ecea`). Port export 12 mergé 19 juin (port `9bac3be` → merge `ccd43f6`). **Responsive bouclé 20 juin** : export 13 TABLET (`4c5c16f`) + export 13 MOBILE (`a6a446c`) + export 14 micro-patch CD (`21d68d2`) + **export 13.12** trou tablette 941-1080 comblé (merge `bb4062a`, 20 juin), tous mergés. LP pixel-perfect desktop→360px (audit Claude in Chrome 5 largeurs 768/924/1024/1080/1440, scroll-X 0). Mockups s1/s4/s5/s6 calés ~711px homogènes sur toute la plage 941-1080.
 
 **Phase active** : LP responsive desktop OK (export 11 + export 12 mergés, prod live). **✅ BOUCLÉ MOBILE + TABLETTE AUSSI le 20 juin (export 13 Direction C + export 14, audit Claude in Chrome 3 plages, scroll-X 0). Ce qui suit = historique du chantier, désormais clos.** chantier ouvert découvert 19 juin soir : la densité visuelle hero + section 2 est PERDUE ≤1080 (nos fix EXPORT 11+12 ont masqué `.hero .bg` swarm + `.s2-ghosts` au lieu de les reprogrammer responsive). Mobile/tablet = cœur de LIVRA (acheteur DZ découvre via Reels Meta / Reels TikTok / lien WA Safari), donc retrouver la densité à 320-1080 ÉTAIT PRIORITAIRE → RÉSOLU. Direction C validée (cf. CLAUDY_FLOW) : hybride mini-swarm responsive + `.hero-voices` enrichi.
 
