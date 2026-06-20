@@ -3957,3 +3957,29 @@ body {
   .hv-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 }
 /* ── fin EXPORT 13.M8 ── */
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   ░░░ EXPORT 14 — MICRO-PATCH POST-13 (revue CD, 3 résidus CSS) ░░░
+   Additif pur, 3 fix scopés : 14.1 ≤720 · 14.2 ≤720 · 14.3 ≥1081. 721-1080 intact.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── 14.1 — HERO-VOICES : zéro backdrop-filter ≤720 (anti-jank Android, neutralise -webkit- + standard) */
+@media (max-width: 720px) {
+  .hv-stack .hv-card {
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+  }
+}
+
+/* ── 14.2 — MOCKUP s6 central homogène ≤720 (aligné sur s5, technique --mob-m ×0.9) */
+@media (max-width: 720px) {
+  .s6-stage   { height: calc(768px * var(--mob-m, 0.82) * 0.9) !important; }
+  .s6-mockups { transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important; }
+}
+
+/* ── 14.3 — DESKTOP ≥1081 : phones s5/s6 centraux conformés au gabarit s1/s4 (760→692 → rendu 711) */
+@media (min-width: 1081px) {
+  .s5-phone-c, .s6-phone-c { height: 692px !important; }
+}
+/* ── fin EXPORT 14 ──────────────────────────────────────────────────────── */
