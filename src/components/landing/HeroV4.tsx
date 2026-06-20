@@ -99,6 +99,22 @@ export default function HeroV4() {
                 </div>
                 <p className="hv-text">Wech ndir b had l&rsquo;colis ? Client ma yjaweb-ch.</p>
               </div>
+              <div className="hv-card">
+                <div className="hv-head">
+                  <span className="hv-av" style={{ '--av': '#7C6BAF' } as React.CSSProperties}>N</span>
+                  <span className="hv-name">Nawel T.</span>
+                  <span className="hv-time">5 min</span>
+                </div>
+                <p className="hv-text">Wprecolis rahom yḍiyɛou les colis, w client ywelli yḍeyeq ɛliya ana</p>
+              </div>
+              <div className="hv-card">
+                <div className="hv-head">
+                  <span className="hv-av" style={{ '--av': '#C77D4A' } as React.CSSProperties}>R</span>
+                  <span className="hv-name">Réda M.</span>
+                  <span className="hv-time">8 min</span>
+                </div>
+                <p className="hv-text">3 livreurs, 3 prix différents… ana mȝa men nekhdem ?</p>
+              </div>
             </div>
           </div>
         </div>

@@ -3718,3 +3718,242 @@ body {
   .s4-step  { padding: 8px 11px !important; }
 }
 /* ── fin EXPORT 13.11 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M1 — HERO mobile : produit ENTRE titre et CTA via display:contents + order
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .hero { height: auto !important; min-height: 100vh; }
+  .hero .fg { flex: 0 0 auto !important; }
+  .hero .copy { display: contents; }
+  .hero .copy > .kicker   { order: 1; }
+  .hero .copy > h1        { order: 2; }
+  .hero .copy > .subtitle { order: 3; }
+  .hero .product          { order: 4; }
+  .hero .copy > .product, .hero .product { order: 4; }
+  .hero .copy > .cta      { order: 5; align-self: center; margin-top: 44px !important; }
+  .hero .copy > .micro    { order: 6; margin-top: 22px !important; }
+  .hero .hero-voices      { order: 7; }
+  .hero .fg { padding-top: 32px !important; }
+}
+/* ── fin EXPORT 13.M1 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M2 — bouton WA désentassé ≤1080
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1080px) {
+  .s1-wa {
+    margin: 8px 8px 0 !important;
+    padding: 9px 10px !important;
+    gap: 7px !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+  }
+}
+/* ── fin EXPORT 13.M2 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M4 — s1/s5/s6 mockups mobiles alignés sur s4 (technique --mob-m)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .section1__stage, .s5-stage, .s6-stage {
+    perspective: none !important; display: block !important; overflow: hidden;
+    padding: 0 !important; min-height: 0 !important;
+  }
+  .section1__stage     { height: calc(700px * var(--mob-m, 0.82)); }
+  .s5-stage, .s6-stage { height: calc(768px * var(--mob-m, 0.82)); }
+  .section1__mockups, .s5-mockups, .s6-mockups {
+    position: relative !important; left: 50%; width: 440px;
+    transform: translateX(-50%) scale(var(--mob-m, 0.82)) !important;
+    transform-origin: top center; transform-style: flat; margin: 0 !important;
+  }
+  .section1__mockups   { height: 700px; }
+  .s5-mockups, .s6-mockups { height: 768px; }
+  .section1__phone, .s5-phone, .s6-phone {
+    position: absolute; top: 0; opacity: 1 !important; animation: none !important;
+  }
+  .section1__phone--center {
+    left: 50%; width: 320px; height: 692px; z-index: 3;
+    transform: translateX(-50%) !important; aspect-ratio: auto !important; margin: 0 !important;
+  }
+  .s5-phone-c, .s6-phone-c {
+    left: 50%; width: 320px; height: 760px; z-index: 3;
+    transform: translateX(-50%) !important; margin: 0 !important;
+  }
+  .section1__phone--left, .section1__phone--right,
+  .s5-phone-l, .s5-phone-r, .s6-phone-l, .s6-phone-r {
+    display: block !important; top: 50%; width: 280px; height: 606px; z-index: 1;
+    filter: brightness(0.74) saturate(0.95);
+  }
+  .section1__phone--left, .s5-phone-l, .s6-phone-l {
+    left: 50%; transform: translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  .section1__phone--right, .s5-phone-r, .s6-phone-r {
+    left: 50%; transform: translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+}
+@media (min-width: 561px) and (max-width: 720px) { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 1;    } }
+@media (min-width: 431px) and (max-width: 560px) { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.95; } }
+@media (min-width: 391px) and (max-width: 430px) { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.86; } }
+@media (min-width: 361px) and (max-width: 390px) { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.80; } }
+@media (max-width: 360px)                        { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.78; } }
+/* ── fin EXPORT 13.M4 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M5 — REVUE MOBILE CD (20 juin) : air voix + swarm 4 ghosts + s4/s5/cta
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .hero .hero-voices { margin-top: 48px !important; }
+  .hero .bg .ghosts .g1,
+  .hero .bg .ghosts .g3,
+  .hero .bg .ghosts .g6,
+  .hero .bg .ghosts .g8 {
+    display: flex !important; position: absolute;
+    width: 176px !important; max-width: 188px;
+    opacity: 0.26 !important; animation: none !important; filter: blur(3px);
+  }
+  .hero .bg .ghosts .g1 { top: 12%;  bottom: auto; left: -12px; right: auto;  transform: scale(0.84) rotate(-6deg); }
+  .hero .bg .ghosts .g8 { top: 31%;  bottom: auto; left: auto;  right: -14px; transform: scale(0.82) rotate(5deg);  display: flex !important; }
+  .hero .bg .ghosts .g3 { top: auto; bottom: 21%;  left: -14px; right: auto;  transform: scale(0.80) rotate(6deg);  opacity: 0.22 !important; }
+  .hero .bg .ghosts .g6 { top: auto; bottom: 5%;   left: auto;  right: -10px; transform: scale(0.82) rotate(-5deg); opacity: 0.22 !important; }
+  .pql-lead::first-letter { margin-right: 3px !important; }
+  .section2 { overflow-x: hidden; }
+  .section2 .s2-ghosts .s2-ghost { display: none !important; }
+  .section2 .s2-ghosts .q1,
+  .section2 .s2-ghosts .q2,
+  .section2 .s2-ghosts .q3,
+  .section2 .s2-ghosts .q4,
+  .section2 .s2-ghosts .q5,
+  .section2 .s2-ghosts .q6 {
+    display: flex !important; position: absolute;
+    width: 182px !important; max-width: 182px; margin: 0 !important;
+    opacity: 0.24 !important; animation: none !important;
+  }
+  .section2 .s2-ghosts .q1 { top: 5%;  left: -14px; right: auto; transform: scale(0.84) rotate(-4deg); }
+  .section2 .s2-ghosts .q2 { top: 23%; left: auto;  right: -16px; transform: scale(0.82) rotate(4deg); }
+  .section2 .s2-ghosts .q3 { top: 43%; left: -16px; right: auto; transform: scale(0.80) rotate(5deg); }
+  .section2 .s2-ghosts .q4 { top: 61%; left: auto;  right: -14px; transform: scale(0.82) rotate(-5deg); }
+  .section2 .s2-ghosts .q5 { top: 79%; left: -12px; right: auto; transform: scale(0.80) rotate(4deg); }
+  .section2 .s2-ghosts .q6 { top: 93%; left: auto;  right: -16px; transform: scale(0.84) rotate(-4deg); }
+  .s4-stage { min-height: 0 !important; height: calc(700px * var(--s4m, 0.82)) !important; }
+  .s4-caption { margin-top: 16px !important; }
+  .s5 { padding-left: 26px !important; padding-right: 26px !important; }
+  .s5-stage { height: calc(768px * var(--mob-m, 0.82) * 0.9) !important; }
+  .s5-mockups { transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important; }
+  .lp-cta {
+    width: auto !important;
+    font-size: 16px !important;
+    padding: 16px 32px !important;
+    gap: 9px !important;
+  }
+  .lp-cta-sub { font-size: 13px !important; }
+}
+@media (min-width: 561px) and (max-width: 720px) { .section4 { --s4m: 1;    } }
+@media (min-width: 431px) and (max-width: 560px) { .section4 { --s4m: 0.95; } }
+@media (min-width: 391px) and (max-width: 430px) { .section4 { --s4m: 0.86; } }
+@media (min-width: 361px) and (max-width: 390px) { .section4 { --s4m: 0.80; } }
+@media (max-width: 360px)                        { .section4 { --s4m: 0.78; } }
+@media (max-width: 480px) {
+  .hero .bg .ghosts .g3 { opacity: 0.18 !important; }
+  .hero .bg .ghosts .g6 { opacity: 0.18 !important; }
+}
+/* ── fin EXPORT 13.M5 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M6 — GHOSTS VISIBLES mobile (HERO + QUOTIDIEN) — CŒUR DU FIX MOBILE-FIRST
+   .hero .bg height:100% (libère TOUTE la hauteur), 7 ghosts + 8 section 2 ghosts
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .hero .bg {
+    height: 100% !important; bottom: 0 !important;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%) !important;
+            mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%) !important;
+  }
+  .hero .bg .ghosts .g1,
+  .hero .bg .ghosts .g2,
+  .hero .bg .ghosts .g3,
+  .hero .bg .ghosts .g5,
+  .hero .bg .ghosts .g6,
+  .hero .bg .ghosts .g8,
+  .hero .bg .ghosts .g10 {
+    display: flex !important; position: absolute;
+    width: 180px !important; max-width: 192px;
+    opacity: 0.5 !important; animation: none !important;
+    filter: blur(1.5px) !important;
+  }
+  .hero .bg .ghosts .g1  { top: 9%;  bottom: auto; left: -14px; right: auto;  transform: scale(0.86) rotate(-6deg); }
+  .hero .bg .ghosts .g2  { top: 27%; bottom: auto; left: auto;  right: -16px; transform: scale(0.84) rotate(5deg);  opacity: 0.46 !important; }
+  .hero .bg .ghosts .g3  { top: 46%; bottom: auto; left: -16px; right: auto;  transform: scale(0.82) rotate(6deg);  opacity: 0.44 !important; }
+  .hero .bg .ghosts .g8  { top: 63%; bottom: auto; left: auto;  right: -14px; transform: scale(0.84) rotate(-5deg); opacity: 0.44 !important; }
+  .hero .bg .ghosts .g5  { top: 48%; bottom: auto; left: auto;  right: -12px; transform: scale(0.82) rotate(-5deg); opacity: 0.46 !important; }
+  .hero .bg .ghosts .g6  { top: auto; bottom: 17%; left: -12px; right: auto;  transform: scale(0.82) rotate(4deg);  opacity: 0.42 !important; }
+  .hero .bg .ghosts .g10 { top: auto; bottom: 3%;  left: auto;  right: -16px; transform: scale(0.84) rotate(-4deg); opacity: 0.42 !important; }
+  .section2 .s2-ghosts {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%) !important;
+            mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%) !important;
+  }
+  .section2 .s2-ghost { filter: blur(1.5px) !important; }
+  .section2 .section2__cards,
+  .section2 .section2__header { padding-left: 22px !important; padding-right: 22px !important; }
+  .section2 .s2-ghosts .q1,
+  .section2 .s2-ghosts .q2,
+  .section2 .s2-ghosts .q3,
+  .section2 .s2-ghosts .q4,
+  .section2 .s2-ghosts .q5,
+  .section2 .s2-ghosts .q6,
+  .section2 .s2-ghosts .q7,
+  .section2 .s2-ghosts .q8 {
+    display: flex !important; position: absolute;
+    width: 186px !important; max-width: 186px; margin: 0 !important;
+    opacity: 0.55 !important; animation: none !important;
+  }
+  .section2 .s2-ghosts .q1 { top: 8%;  bottom: auto; left: -10px; right: auto;  transform: scale(0.85) rotate(-4deg); }
+  .section2 .s2-ghosts .q2 { top: 32%; bottom: auto; left: auto;  right: -10px; transform: scale(0.83) rotate(4deg); }
+  .section2 .s2-ghosts .q3 { top: 44%; bottom: auto; left: -10px; right: auto;  transform: scale(0.81) rotate(5deg);  opacity: 0.50 !important; }
+  .section2 .s2-ghosts .q4 { top: 57%; bottom: auto; left: auto;  right: -10px; transform: scale(0.83) rotate(-5deg); opacity: 0.50 !important; }
+  .section2 .s2-ghosts .q5 { top: 69%; bottom: auto; left: -10px; right: auto;  transform: scale(0.81) rotate(4deg);  opacity: 0.50 !important; }
+  .section2 .s2-ghosts .q6 { top: 80%; bottom: auto; left: auto;  right: -10px; transform: scale(0.83) rotate(-4deg); opacity: 0.48 !important; }
+  .section2 .s2-ghosts .q7 { top: 88%; bottom: auto; left: -10px; right: auto;  transform: scale(0.81) rotate(5deg);  opacity: 0.48 !important; }
+  .section2 .s2-ghosts .q8 { top: 95%; bottom: auto; left: auto;  right: -10px; transform: scale(0.83) rotate(-3deg); opacity: 0.46 !important; }
+}
+/* ── fin EXPORT 13.M6 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M7 — HOMOGÉNÉISATION mobile ≤720 (gouttière 22 / vertical 72 / h2 32)
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .section1, .pql, .section2, .section4, .s5, .s6, .s75, .s9 {
+    padding-left: 22px !important; padding-right: 22px !important;
+  }
+  .section1, .pql, .section2, .section4, .s5, .s6, .s75 {
+    padding-top: 72px !important; padding-bottom: 72px !important;
+  }
+  .s9 { padding-top: 96px !important; padding-bottom: 104px !important; }
+  .section2 .section2__header { padding-left: 0 !important; padding-right: 0 !important; }
+  .section2 .section2__cards  { padding-left: 24px !important; padding-right: 24px !important; }
+  .kicker, .section1__eyebrow, .pql-eyebrow, .section2__eyebrow,
+  .s4-eyebrow, .s5-eyebrow, .s6-eyebrow, .s75-eyebrow, .s9-eyebrow {
+    font-size: 13px !important;
+  }
+  .pql-title, .s9-h2 { font-size: 32px !important; line-height: 1.1 !important; }
+  .hero .subtitle, .s9-sub { font-size: 15px !important; }
+}
+/* ── fin EXPORT 13.M7 ── */
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   EXPORT 13.M8 (Claudy) — Perf mobile : backdrop-filter retiré ≤720 (reco CD).
+   Les .hv-card ont déjà un fond linear-gradient quasi-opaque (rgba .62/.58) du socle
+   EXPORT 13 — le backdrop-filter:blur(8px) coûte au scroll sur Android mid-range
+   (Mali/Adreno) sans apport visuel. On le retire ici uniquement ≤720.
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .hv-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+}
+/* ── fin EXPORT 13.M8 ── */
