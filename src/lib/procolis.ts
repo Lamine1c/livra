@@ -68,7 +68,10 @@ function buildProductList(items: Order["items"]): string {
 }
 
 // ─── TEST CREDENTIALS (GET /token) ────────────────────────────
-// 200 + {"Statut":"Accès activé"} = OK ; 401 = invalide.
+// ⚠️ Vérifié par curl : Procolis renvoie 200 MÊME pour des creds invalides
+//   (contrairement à la doc qui annonçait 401). On discrimine sur le corps :
+//     valide   → {"Statut":"Accès activé"}
+//     invalide → {"Statut":"Clé non détectée S2"}
 export async function testProcolisCredentials(
   creds: ProcolisCredentials
 ): Promise<{ ok: boolean; message: string }> {
@@ -80,14 +83,12 @@ export async function testProcolisCredentials(
   const data = await res.json().catch(() => null);
   console.log("[Procolis /token]", { status: res.status, body: data });
 
-  if (res.status === 401) {
-    return { ok: false, message: "Identifiants ZR Express invalides." };
-  }
   if (!res.ok) {
     return { ok: false, message: `Erreur ZR Express (${res.status}).` };
   }
   const statut = (data as { Statut?: string } | null)?.Statut ?? "";
-  return { ok: statut === "Accès activé", message: statut || "Réponse inattendue." };
+  if (statut === "Accès activé") return { ok: true, message: statut };
+  return { ok: false, message: "Identifiants ZR Express invalides." };
 }
 
 // ─── CREATE PARCEL (POST /add_colis) ──────────────────────────
@@ -132,9 +133,16 @@ export async function createProcolisParcel(
     throw new Error(`Erreur ZR Express (${res.status}).`);
   }
 
-  const parcel = (data as { Colis?: Array<{ MessageRetour?: string; Tracking?: string }> } | null)?.Colis?.[0];
-  const message = parcel?.MessageRetour ?? "";
+  // Procolis renvoie 200 même en erreur : si pas de tableau Colis, le corps
+  // porte le message d'erreur dans "Retour"/"Statut" (ex: "Clé non détectée S2").
+  const body = data as { Colis?: Array<{ MessageRetour?: string; Tracking?: string }>; Retour?: string; Statut?: string } | null;
+  const parcel = body?.Colis?.[0];
+  if (!parcel) {
+    const apiMsg = body?.Retour ?? body?.Statut;
+    throw new Error(apiMsg || "Réponse ZR Express inattendue.");
+  }
 
+  const message = parcel.MessageRetour ?? "";
   if (message === "Double Tracking") {
     throw new Error("Un bon ZR Express existe déjà pour cette commande (doublon).");
   }
@@ -142,7 +150,7 @@ export async function createProcolisParcel(
     throw new Error(message || "Création du bon ZR Express échouée.");
   }
 
-  const tracking = parcel?.Tracking;
+  const tracking = parcel.Tracking;
   if (!tracking) throw new Error("Numéro de tracking absent de la réponse ZR Express.");
 
   return { tracking };
