@@ -12,7 +12,7 @@ export async function POST(
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
-    .select("id, user_id, status, otp_verified_at, otp_sent_at, client:clients(full_name, phone)")
+    .select("id, user_id, status, otp_verified_at, otp_sent_at, total_amount, client:clients(full_name, phone), items:order_items(product_name)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -61,7 +61,23 @@ export async function POST(
     return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
   }
 
-  const result = await sendOtpWhatsApp(client.phone, client.full_name, otp);
+  // Contexte du message V1 : boutique (profil vendeur) + total + produit (optionnel).
+  const { data: vendor } = await supabase
+    .from("profiles")
+    .select("store_name, full_name")
+    .eq("id", order.user_id)
+    .single();
+  const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
+
+  const itemsRaw = (order as { items?: unknown }).items;
+  const items = (Array.isArray(itemsRaw) ? itemsRaw : itemsRaw ? [itemsRaw] : []) as { product_name: string }[];
+  const produit = items[0]?.product_name ?? null;
+
+  const result = await sendOtpWhatsApp(client.phone, client.full_name, otp, {
+    boutique,
+    total: order.total_amount,
+    produit,
+  });
 
   if (!result.success) {
     return NextResponse.json(
