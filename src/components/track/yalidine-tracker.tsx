@@ -7,6 +7,7 @@ import InfoPanel from "./info-panel";
 type YalidineTrackerProps = {
   orderStatus: string;
   vendorName: string;
+  mode?: "yalidine" | "zrexpress";
 };
 
 type StepState = "done" | "active" | "future";
@@ -60,7 +61,7 @@ function getStatusLabel(status: string): string {
   return map[status] ?? status;
 }
 
-export default function YalidineTracker({ orderStatus, vendorName }: YalidineTrackerProps) {
+export default function YalidineTracker({ orderStatus, vendorName, mode = "yalidine" }: YalidineTrackerProps) {
   const router = useRouter();
   const isTerminal =
     orderStatus === "delivered" || orderStatus === "cancelled" || orderStatus === "returned";
@@ -207,7 +208,7 @@ export default function YalidineTracker({ orderStatus, vendorName }: YalidineTra
         driverName={null}
         driverPhone={null}
         vendorName={vendorName}
-        mode="yalidine"
+        mode={mode}
       />
 
       <style>{`

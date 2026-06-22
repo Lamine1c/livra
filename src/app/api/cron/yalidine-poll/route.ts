@@ -5,6 +5,7 @@ import {
   YALIDINE_STATUS_MAP,
   STATUS_RANK,
 } from "@/lib/yalidine";
+import { fetchProcolisStatus, PROCOLIS_STATUS_MAP } from "@/lib/procolis";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { vendorMessage, clientMessage } from "@/lib/whatsapp-templates";
 
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
     // pour minimiser les appels API Yalidine.
     const { data: orders, error: fetchErr } = await supabase
       .from("orders")
-      .select("id, status, reference, tracking_number, user_id, client_id")
+      .select("id, status, reference, tracking_number, user_id, client_id, delivery_mode")
       .eq("status", "shipped")
       .not("tracking_number", "is", null);
 
@@ -73,32 +74,51 @@ export async function GET(req: NextRequest) {
         // Récupérer les credentials Yalidine du vendeur
         const { data: profile } = await supabase
           .from("profiles")
-          .select("yalidine_api_id, yalidine_api_token, phone, store_name")
+          .select("yalidine_api_id, yalidine_api_token, zr_token, zr_key, phone, store_name")
           .eq("id", order.user_id)
           .single();
 
-        if (!profile?.yalidine_api_id || !profile?.yalidine_api_token) {
-          result.error = "Credentials Yalidine manquants";
-          results.push(result);
-          continue;
+        // Brancher selon le transporteur de la commande.
+        let status: { tracking: string; last_status: string } | null = null;
+        let livraStatus: string | undefined;
+
+        if (order.delivery_mode === "zrexpress") {
+          if (!profile?.zr_token || !profile?.zr_key) {
+            result.error = "Credentials ZR Express manquants";
+            results.push(result);
+            continue;
+          }
+          status = await fetchProcolisStatus(order.tracking_number!, {
+            token: profile.zr_token,
+            key: profile.zr_key,
+          });
+          if (!status) {
+            result.error = "Pas de réponse ZR Express";
+            results.push(result);
+            continue;
+          }
+          livraStatus = PROCOLIS_STATUS_MAP[status.last_status];
+        } else {
+          if (!profile?.yalidine_api_id || !profile?.yalidine_api_token) {
+            result.error = "Credentials Yalidine manquants";
+            results.push(result);
+            continue;
+          }
+          status = await fetchParcelStatus(order.tracking_number!, {
+            centerId: profile.yalidine_api_id,
+            token: profile.yalidine_api_token,
+          });
+          if (!status) {
+            result.error = "Pas de réponse Yalidine";
+            results.push(result);
+            continue;
+          }
+          livraStatus = YALIDINE_STATUS_MAP[status.last_status];
         }
 
-        // Appeler l'API Yalidine
-        const status = await fetchParcelStatus(order.tracking_number!, {
-          centerId: profile.yalidine_api_id,
-          token: profile.yalidine_api_token,
-        });
-
-        if (!status) {
-          result.error = "Pas de réponse Yalidine";
-          results.push(result);
-          continue;
-        }
-
-        // Mapper vers statut LIVRA
-        const livraStatus = YALIDINE_STATUS_MAP[status.last_status];
+        // Libellé transporteur inconnu → on garde le statut courant.
         if (!livraStatus) {
-          result.error = `Statut Yalidine inconnu: ${status.last_status}`;
+          result.error = `Statut transporteur inconnu: ${status.last_status}`;
           results.push(result);
           continue;
         }
