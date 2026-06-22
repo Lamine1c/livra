@@ -128,12 +128,13 @@ function buildOtpMessage(clientName: string, otp: string, ctx?: OtpMessageContex
   const produit = ctx?.produit?.trim();
   const ligneProduit = produit ? `${produit} — ${totalTxt} DA` : `${totalTxt} DA`;
   return (
-    `Bonjour ${clientName} 👋\n` +
-    ` Votre commande chez ${boutique} est réservée à votre nom :\n` +
-    ` ${ligneProduit} · paiement à la livraison, rien à payer maintenant.\n` +
-    ` Pour la confirmer et qu'on vous l'envoie, répondez à ce message avec ce code :\n` +
-    ` ✅ ${otp}\n` +
-    ` Sans ce code, on ne peut pas vous l'envoyer. On attend votre réponse 🙂`
+    `Bonjour ${clientName} 👋\n\n` +
+    `Votre commande chez ${boutique} est réservée à votre nom :\n` +
+    `${ligneProduit}\n` +
+    `Paiement à la livraison, rien à payer maintenant.\n\n` +
+    `Pour la confirmer et qu'on vous l'envoie, répondez à ce message avec ce code :\n\n` +
+    `✅ ${otp}\n\n` +
+    `Sans ce code, on ne peut pas vous l'envoyer. On attend votre réponse 🙂`
   );
 }
 
