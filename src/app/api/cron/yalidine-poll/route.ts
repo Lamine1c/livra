@@ -6,6 +6,7 @@ import {
   STATUS_RANK,
 } from "@/lib/yalidine";
 import { fetchProcolisStatus, PROCOLIS_STATUS_MAP } from "@/lib/procolis";
+import { fetchEcotrackStatus, ECOTRACK_STATUS_MAP, ECOTRACK_SLUG_BASE_URL } from "@/lib/ecotrack";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { vendorMessage, clientMessage } from "@/lib/whatsapp-templates";
 
@@ -98,6 +99,26 @@ export async function GET(req: NextRequest) {
             continue;
           }
           livraStatus = PROCOLIS_STATUS_MAP[status.last_status];
+        } else if (order.delivery_mode && order.delivery_mode in ECOTRACK_SLUG_BASE_URL) {
+          // Famille Ecotrack (dhd, anderson, …) — token dans carrier_tokens.
+          const { data: ct } = await supabase
+            .from("carrier_tokens")
+            .select("token")
+            .eq("user_id", order.user_id)
+            .eq("carrier_slug", order.delivery_mode)
+            .maybeSingle();
+          if (!ct?.token) {
+            result.error = `Token ${order.delivery_mode} manquant`;
+            results.push(result);
+            continue;
+          }
+          status = await fetchEcotrackStatus(order.delivery_mode, order.tracking_number!, ct.token);
+          if (!status) {
+            result.error = `Pas de réponse ${order.delivery_mode}`;
+            results.push(result);
+            continue;
+          }
+          livraStatus = ECOTRACK_STATUS_MAP[status.last_status];
         } else {
           if (!profile?.yalidine_api_id || !profile?.yalidine_api_token) {
             result.error = "Credentials Yalidine manquants";
@@ -155,12 +176,12 @@ export async function GET(req: NextRequest) {
           .eq("id", order.client_id)
           .single();
 
-        const shopName = profile.store_name ?? "LIVRA";
+        const shopName = profile?.store_name ?? "LIVRA";
 
         const vMsg = vendorMessage(livraStatus, order.reference, order.tracking_number);
         const cMsg = clientMessage(livraStatus, order.tracking_number, shopName);
 
-        if (profile.phone && vMsg) {
+        if (profile?.phone && vMsg) {
           const r = await sendWhatsAppNotification(profile.phone, vMsg);
           result.vendorNotified = r.success;
         }
