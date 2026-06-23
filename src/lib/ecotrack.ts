@@ -3,8 +3,11 @@ import { Order } from "@/types";
 // ─── ECOTRACK (famille : DHD, Anderson, …) ────────────────────
 // UNE lib paramétrée par slug → baseUrl. Auth = un seul header Bearer.
 // Doc officielle : https://documenter.getpostman.com/view/14517169/Tz5je15g
+// ⚠️ Bases vérifiées au curl : dhd.ecotrack.dz fait un 301 → platform.dhd-dz.com
+//   (DHD a migré sur son propre host, toujours propulsé par Ecotrack). On pointe
+//   l'host final directement : un POST qui suit un 301 perdrait son body.
 export const ECOTRACK_SLUG_BASE_URL: Record<string, string> = {
-  dhd: "https://dhd.ecotrack.dz",
+  dhd: "https://platform.dhd-dz.com",
   anderson: "https://anderson-ecommerce.ecotrack.dz",
 };
 
@@ -88,6 +91,11 @@ export async function testEcotrackToken(
   const data = await res.json().catch(() => null);
   console.log(`[Ecotrack validate/token ${slug}]`, { status: res.status, body: data });
 
+  // Vérifié au curl : un token invalide est rejeté par le middleware Bearer en 401
+  // (corps {"message":"Unauthenticated."}), et non par un 200 + message INVALID_TOKEN.
+  if (res.status === 401 || res.status === 403) {
+    return { ok: false, message: "Token invalide ou accès API non autorisé." };
+  }
   if (!res.ok) {
     return { ok: false, message: `Erreur ${slug} (${res.status}).` };
   }
