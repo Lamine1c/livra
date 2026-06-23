@@ -12,22 +12,25 @@ export const ECOTRACK_SLUG_BASE_URL: Record<string, string> = {
 };
 
 // ─── STATUS MAPPING ───────────────────────────────────────────
-// Best-effort. Les libellés exacts Ecotrack s'affinent au curl réel (le suivi
-// statut n'est pas documenté dans CourierDZ). Libellé inconnu → garde le statut
-// courant (pas de régression, cf. STATUS_RANK).
+// Vérifié au curl réel (Anderson) : le statut est un CODE snake_case dans
+// activity[].status (PAS un libellé FR). Libellé inconnu → garde le statut
+// courant (pas de régression, cf. STATUS_RANK). Une clé qui ne matche pas est inerte.
 export const ECOTRACK_STATUS_MAP: Record<string, string> = {
-  "En préparation": "shipped",
-  "Expédié": "shipped",
-  "Expédiée": "shipped",
-  "En cours": "shipped",
-  "Sorti en livraison": "shipped",
-  "Vers le client": "shipped",
-  "Livré": "delivered",
-  "Livrée": "delivered",
-  "Retourné": "returned",
-  "Retournée": "returned",
-  "Annulé": "cancelled",
-  "Annulée": "cancelled",
+  // ✅ Confirmé au curl (état initial à la création du bon) :
+  order_information_received_by_carrier: "shipped",
+  // Plausibles (codes standard famille Ecotrack) — à valider sur de vraies livraisons :
+  order_accepted_by_carrier: "shipped",
+  picked_up_by_carrier: "shipped",
+  in_preparation: "shipped",
+  in_transit: "shipped",
+  dispatched: "shipped",
+  out_for_delivery: "shipped",
+  delivered: "delivered",
+  returned: "returned",
+  returned_to_sender: "returned",
+  return_received_by_seller: "returned",
+  cancelled: "cancelled",
+  canceled: "cancelled",
 };
 
 export const STATUS_RANK: Record<string, number> = {
@@ -160,20 +163,17 @@ export async function createEcotrackOrder(
     throw new Error(d.message || "Création de la commande Ecotrack échouée.");
   }
 
-  // Nom exact du champ tracking à confirmer au curl réel — on couvre les variantes.
-  const tracking =
-    d?.tracking ??
-    (data as { tracking_id?: string; data?: { tracking?: string } } | null)?.tracking_id ??
-    (data as { data?: { tracking?: string } } | null)?.data?.tracking;
-
+  // ✅ Confirmé au curl réel : réponse = {"success":true,"tracking":"EC…","reference":"…"}.
+  const tracking = d?.tracking;
   if (!tracking) throw new Error("Numéro de tracking absent de la réponse Ecotrack.");
   return { tracking };
 }
 
 // ─── FETCH STATUS ─────────────────────────────────────────────
-// ⚠️ Endpoint de suivi NON documenté dans CourierDZ — À CONFIRMER au curl réel.
-// Tant qu'il n'est pas confirmé, on tente un endpoint plausible et on renvoie null
-// proprement en cas d'échec (le cron garde alors le statut courant — pas de casse).
+// ✅ Confirmé au curl réel (Anderson) :
+//   GET /api/v1/get/tracking/info?tracking=<id> → { recipientName, activity:[
+//     { date, time, status, station } ], ... }. Le statut courant = le code
+//   (snake_case) de la DERNIÈRE entrée de activity[].
 export async function fetchEcotrackStatus(
   slug: string,
   tracking: string,
@@ -186,14 +186,12 @@ export async function fetchEcotrackStatus(
       { method: "GET", headers: authHeaders(token) }
     );
     if (!res.ok) {
-      console.warn(`[Ecotrack status ${slug}] ${tracking} → ${res.status} (endpoint à confirmer au curl)`);
+      console.warn(`[Ecotrack status ${slug}] ${tracking} → ${res.status}`);
       return null;
     }
     const data = await res.json().catch(() => null);
-    const last =
-      (data as { status?: string; last_status?: string } | null)?.status ??
-      (data as { last_status?: string } | null)?.last_status ??
-      "";
+    const activity = (data as { activity?: Array<{ status?: string }> } | null)?.activity;
+    const last = activity?.length ? (activity[activity.length - 1]?.status ?? "") : "";
     if (!last) return null;
     return { tracking, last_status: last };
   } catch (err) {
