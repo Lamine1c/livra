@@ -76,7 +76,8 @@ function yalidineHeaders(creds: YalidineCredentials): HeadersInit {
 // ─── CREATE PARCEL ────────────────────────────────────────────
 export async function createYalidineParcel(
   order: Order,
-  credentials: YalidineCredentials
+  credentials: YalidineCredentials,
+  opts?: { stopDesk?: boolean }
 ): Promise<YalidineParcelResult> {
   if (!order.client) throw new Error("Données client manquantes.");
 
@@ -91,6 +92,7 @@ export async function createYalidineParcel(
     address: `${order.client.address}, ${order.client.commune}`,
     from_wilaya_name: FROM_WILAYA,
     to_wilaya_name: toWilaya,
+    to_commune_name: order.client.commune,
     price: order.total_amount,
     do_insurance: false,
     declared_value: 0,
@@ -100,7 +102,7 @@ export async function createYalidineParcel(
     weight: 1,
     product_list: buildProductList(order.items),
     freeshipping: order.delivery_fee === 0,
-    is_stopdesk: false,
+    is_stopdesk: !!opts?.stopDesk,
     has_exchange: false,
   };
 

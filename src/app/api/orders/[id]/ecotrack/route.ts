@@ -12,6 +12,7 @@ const CARRIER_LABELS: Record<string, string> = { dhd: "DHD", anderson: "Anderson
 
 const bodySchema = z.object({
   carrier: z.enum(Object.keys(ECOTRACK_SLUG_BASE_URL) as [string, ...string[]]),
+  stopDesk: z.boolean().optional(),
 });
 
 export async function POST(
@@ -61,7 +62,7 @@ export async function POST(
 
   let tracking: string;
   try {
-    const result = await createEcotrackOrder(carrier, order as Order, carrierToken.token);
+    const result = await createEcotrackOrder(carrier, order as Order, carrierToken.token, { stopDesk: parsed.data.stopDesk });
     tracking = result.tracking;
   } catch (err) {
     const msg = err instanceof Error ? err.message : `Erreur ${carrierLabel} inconnue`;
