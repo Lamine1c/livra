@@ -115,7 +115,8 @@ export async function testEcotrackToken(
 export async function createEcotrackOrder(
   slug: string,
   order: Order,
-  token: string
+  token: string,
+  opts?: { stopDesk?: boolean }
 ): Promise<EcotrackParcelResult> {
   if (!order.client) throw new Error("Données client manquantes.");
 
@@ -130,7 +131,7 @@ export async function createEcotrackOrder(
     nom_client: order.client.full_name,
     telephone: order.client.phone,
     telephone_2: "",
-    adresse: order.client.address,
+    adresse: order.client.address, // vraie adresse client (le mobile la garantit non vide en mode Domicile)
     code_postal: "",
     commune: order.client.commune,
     code_wilaya: codeWilaya,
@@ -141,7 +142,7 @@ export async function createEcotrackOrder(
     quantite: totalQuantity(order.items),
     boutique: "",
     type: 1, // 1 = Livraison
-    stop_desk: 0,
+    stop_desk: opts?.stopDesk ? 1 : 0,
   };
 
   const res = await fetch(`${base}/api/v1/create/order`, {

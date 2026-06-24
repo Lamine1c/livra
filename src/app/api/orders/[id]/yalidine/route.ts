@@ -15,6 +15,9 @@ export async function POST(
   const { user, supabase, error: authError } = await getAuthenticatedUser(req);
   if (!user || !supabase) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
 
+  const body = await req.json().catch(() => ({}));
+  const stopDesk = (body as { stopDesk?: boolean })?.stopDesk === true;
+
   const { data: order, error: fetchError } = await supabase
     .from("orders")
     .select("*, client:clients(*), items:order_items(*)")
@@ -48,7 +51,7 @@ export async function POST(
     const result = await createYalidineParcel(order as Order, {
       centerId: profile.yalidine_api_id,
       token: profile.yalidine_api_token,
-    });
+    }, { stopDesk });
     tracking = result.tracking;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur Yalidine inconnue";
