@@ -67,7 +67,7 @@ export default async function TrackPage({
         id: order.id as string,
         reference: order.reference as string,
         status: order.status as string,
-        deliveryMode: order.delivery_mode as "moto_perso" | "yalidine" | "zrexpress" | "dhd" | "anderson",
+        deliveryMode: order.delivery_mode as "moto_perso" | "yalidine" | "dhd" | "anderson",
         driverName: order.independent_driver_name as string | null,
         driverPhone: order.independent_driver_phone as string | null,
         createdAt: order.created_at as string,

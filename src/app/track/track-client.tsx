@@ -28,7 +28,7 @@ type OrderData = {
   id: string;
   reference: string;
   status: string;
-  deliveryMode: "moto_perso" | "yalidine" | "zrexpress" | "dhd" | "anderson";
+  deliveryMode: "moto_perso" | "yalidine" | "dhd" | "anderson";
   driverName: string | null;
   driverPhone: string | null;
   createdAt: string;
@@ -64,7 +64,6 @@ export default function TrackClient({ order, vendorName, delivery, token }: Trac
 
   if (
     order.deliveryMode === "yalidine" ||
-    order.deliveryMode === "zrexpress" ||
     order.deliveryMode === "dhd" ||
     order.deliveryMode === "anderson"
   ) {

@@ -7,7 +7,7 @@ import InfoPanel from "./info-panel";
 type YalidineTrackerProps = {
   orderStatus: string;
   vendorName: string;
-  mode?: "yalidine" | "zrexpress" | "dhd" | "anderson";
+  mode?: "yalidine" | "dhd" | "anderson";
 };
 
 type StepState = "done" | "active" | "future";

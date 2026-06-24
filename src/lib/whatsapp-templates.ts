@@ -17,10 +17,6 @@ export function buyerTrackingYalidine(vendorName: string, url: string): string {
   return `Bonjour, votre commande de ${vendorName} a été expédiée via Yalidine. Suivez son statut : ${url}`;
 }
 
-export function buyerTrackingZrExpress(vendorName: string, url: string): string {
-  return `Bonjour, votre commande de ${vendorName} a été expédiée via ZR Express. Suivez son statut : ${url}`;
-}
-
 export function buyerTrackingEcotrack(vendorName: string, carrierLabel: string, url: string): string {
   return `Bonjour, votre commande de ${vendorName} a été expédiée via ${carrierLabel}. Suivez son statut : ${url}`;
 }

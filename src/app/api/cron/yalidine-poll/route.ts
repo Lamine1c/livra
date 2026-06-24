@@ -5,7 +5,6 @@ import {
   YALIDINE_STATUS_MAP,
   STATUS_RANK,
 } from "@/lib/yalidine";
-import { fetchProcolisStatus, PROCOLIS_STATUS_MAP } from "@/lib/procolis";
 import { fetchEcotrackStatus, ECOTRACK_STATUS_MAP, ECOTRACK_SLUG_BASE_URL } from "@/lib/ecotrack";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { vendorMessage, clientMessage } from "@/lib/whatsapp-templates";
@@ -75,7 +74,7 @@ export async function GET(req: NextRequest) {
         // Récupérer les credentials Yalidine du vendeur
         const { data: profile } = await supabase
           .from("profiles")
-          .select("yalidine_api_id, yalidine_api_token, zr_token, zr_key, phone, store_name")
+          .select("yalidine_api_id, yalidine_api_token, phone, store_name")
           .eq("id", order.user_id)
           .single();
 
@@ -83,23 +82,7 @@ export async function GET(req: NextRequest) {
         let status: { tracking: string; last_status: string } | null = null;
         let livraStatus: string | undefined;
 
-        if (order.delivery_mode === "zrexpress") {
-          if (!profile?.zr_token || !profile?.zr_key) {
-            result.error = "Credentials ZR Express manquants";
-            results.push(result);
-            continue;
-          }
-          status = await fetchProcolisStatus(order.tracking_number!, {
-            token: profile.zr_token,
-            key: profile.zr_key,
-          });
-          if (!status) {
-            result.error = "Pas de réponse ZR Express";
-            results.push(result);
-            continue;
-          }
-          livraStatus = PROCOLIS_STATUS_MAP[status.last_status];
-        } else if (order.delivery_mode && order.delivery_mode in ECOTRACK_SLUG_BASE_URL) {
+        if (order.delivery_mode && order.delivery_mode in ECOTRACK_SLUG_BASE_URL) {
           // Famille Ecotrack (dhd, anderson, …) — token dans carrier_tokens.
           const { data: ct } = await supabase
             .from("carrier_tokens")
