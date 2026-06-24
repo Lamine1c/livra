@@ -170,6 +170,24 @@ export async function createEcotrackOrder(
   return { tracking };
 }
 
+// ─── DELETE ORDER ─────────────────────────────────────────────
+// DELETE /api/v1/delete/order {tracking:[…]} → vérifié au curl : {"delete":"success"}.
+export async function deleteEcotrackOrder(
+  slug: string,
+  tracking: string,
+  token: string
+): Promise<{ ok: boolean }> {
+  const base = ecotrackBase(slug);
+  const res = await fetch(`${base}/api/v1/delete/order`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+    body: JSON.stringify({ tracking: [tracking] }),
+  });
+  const data = await res.json().catch(() => null);
+  console.log(`[Ecotrack delete/order ${slug}]`, { status: res.status, body: data });
+  return { ok: res.ok && (data as { delete?: string } | null)?.delete === "success" };
+}
+
 // ─── FETCH STATUS ─────────────────────────────────────────────
 // ✅ Confirmé au curl réel (Anderson) :
 //   GET /api/v1/get/tracking/info?tracking=<id> → { recipientName, activity:[
