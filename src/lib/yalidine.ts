@@ -138,6 +138,30 @@ export async function createYalidineParcel(
   return { tracking, label_url: parcel.label_url };
 }
 
+// ─── DELETE PARCEL ────────────────────────────────────────────
+// DELETE /v1/parcels/{tracking} (endpoint à confirmer côté Yalidine). Best-effort :
+// si l'API refuse/échoue, on renvoie ok:false + warning et le caller rollback quand même.
+export async function deleteYalidineParcel(
+  tracking: string,
+  credentials: YalidineCredentials
+): Promise<{ ok: boolean; warning?: string }> {
+  try {
+    const res = await fetch(`${YALIDINE_API}/parcels/${encodeURIComponent(tracking)}`, {
+      method: "DELETE",
+      headers: yalidineHeaders(credentials),
+    });
+    const data = await res.json().catch(() => null);
+    console.log("[Yalidine deleteParcel]", { status: res.status, body: data });
+    if (!res.ok) {
+      return { ok: false, warning: "Annulation à faire dans l'espace Yalidine." };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.warn("[Yalidine deleteParcel] error", err);
+    return { ok: false, warning: "Annulation à faire dans l'espace Yalidine." };
+  }
+}
+
 // ─── FETCH PARCEL STATUS (POLLING) ────────────────────────────
 export async function fetchParcelStatus(
   tracking: string,
