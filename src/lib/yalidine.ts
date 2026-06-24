@@ -104,10 +104,11 @@ export async function createYalidineParcel(
     has_exchange: false,
   };
 
+  // L'API /parcels/ attend un TABLEAU d'éléments (sinon 400 "in one or more elements").
   const res = await fetch(`${YALIDINE_API}/parcels/`, {
     method: "POST",
     headers: yalidineHeaders(credentials),
-    body: JSON.stringify(payload),
+    body: JSON.stringify([payload]),
   });
 
   const data = await res.json();
@@ -118,12 +119,21 @@ export async function createYalidineParcel(
     throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 
-  const parcel = Array.isArray(data) ? data[0] : data?.data ?? data;
-  const tracking = parcel?.tracking ?? parcel?.id;
+  // Réponse batch : soit un tableau [{...}], soit un objet indexé par order_id { "REF": {...} }.
+  // ⚠️ À re-tester avec un vrai compte Yalidine (pas de creds de test ici).
+  const first =
+    Array.isArray(data) ? data[0]
+    : (data && typeof data === "object" ? Object.values(data)[0] : data);
+  const parcel = (first ?? {}) as { success?: boolean; message?: string; tracking?: string; id?: string; label_url?: string };
 
+  if (parcel.success === false) {
+    throw new Error(parcel.message ?? "Création du bon Yalidine échouée.");
+  }
+
+  const tracking = parcel.tracking ?? parcel.id;
   if (!tracking) throw new Error("Numéro de tracking absent de la réponse Yalidine.");
 
-  return { tracking, label_url: parcel?.label_url };
+  return { tracking, label_url: parcel.label_url };
 }
 
 // ─── FETCH PARCEL STATUS (POLLING) ────────────────────────────
