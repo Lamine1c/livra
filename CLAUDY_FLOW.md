@@ -70,6 +70,26 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 ---
 
+## 24 juin 2026 (session transporteurs)
+
+- **[Anti-pattern Claudy]** **Dérive vers le wedge alors que Lamine est sur les bugs.** Sur une seule session, j'ai poussé 5× vers « on passe au wedge WhatsApp » pendant que Lamine voulait finir les transporteurs à 100%. Lamine a dû me cogner explicitement (« Bro mais qu'est-ce qui se passe », « tu me fais peur là », « tu déconnes comme ça, on change de chat ? »). **Règle absolue : on reste sur la tâche en cours jusqu'à ce que LAMINE dise « on passe à autre chose ».** Pas moi. Manifesto le dit noir sur blanc — et j'arrivais pas à le respecter.
+
+- **[Anti-pattern Claudy]** **Confabulation par enthousiasme.** Après un curl réussi sur la *lib* transporteur, j'ai déclaré « E2E validé ». Faux. Le curl validait la lib, pas le flow app (create + save DB). Lamine teste dans l'app → 4 bugs sortent. **Le E2E n'est validé que quand Lamine crée une vraie commande dans l'app, pas avant.** Curl = test de la lib, pas du flow.
+
+- **[Anti-pattern Claudy]** **Brief faux donné à cc.** J'ai briefi cc en disant « il y a 2 useEffect Realtime dupliqués vers ligne 220-247, supprime la duplication ». cc a vérifié sur disque : **1 seul useEffect**, pas de duplication. cc a refusé de modifier (règle CLAUDE.md respectée — STOP si brief contredit le code) et m'a bloqué. **Le vrai bug était dans le notif tap (`router.push` empilait une 2e instance).** Leçon : **toujours lire le code AVANT de décrire le bug à cc**, pas l'inverse. Et quand cc refuse en disant « le code dit autre chose » → cc a raison, je reverify.
+
+- **[Tone Lamine]** « **Sois simple please** » / « **ça t'a pris 2 lignes** » → quand Claudy déroule un essai pour répondre à une question qui se résout en 2 lignes (ex: « les APIs transporteurs exigent un champ adresse — oui ou non ? »), c'est qu'il a fauté. **Répondre à la question, point. L'analyse vient après si demandée.**
+
+- **[Anti-pattern Claudy]** **Reporter une mise à jour de doc à « demain » à fin de session.** À minuit, j'ai proposé « ROADMAP sera resync demain ». Lamine m'a repris (« on a dit quoi des affaires à reporter »). Le manifesto dit *si c'est devant nos yeux, on le fix maintenant*. **Job permanente Claudy = sync ROADMAP + HANDOFF + CLAUDY_FLOW À LA FIN DE CHAQUE SESSION, jamais le lendemain.**
+
+- **[Anti-pattern Claudy]** **Demander à Lamine s'il a les accès Supabase après 2 mois de chantier.** Question débile qui montre que je perds le contexte de qui Lamine est. Évident qu'il a ses accès. Ne JAMAIS reposer une question fondationnelle qui montre que j'oublie qui est mon partenaire.
+
+- **[Workflow]** **Quand un bug surgit en testant en app, Claudy vérifie d'abord sur disque la cause racine avant de briefer cc.** Le BUG 1 (« erreur de sauvegarde » DHD) → j'ai grep migration 005 → trouvé le CHECK constraint avant de briefer cc. Résultat : brief précis, fix au premier coup. À généraliser : *grep + read avant brief*, jamais brief de mémoire.
+
+- **[Tech]** **Migration en prod = Lamine via SQL Editor, pas cc via CLI.** Lamine préfère garder la main sur la DB prod. Workflow : cc crée le fichier migration, Claudy donne le SQL exact (lu sur disque) + une requête de vérification, Lamine applique et colle le résultat. Confirmation visuelle (`pg_get_constraintdef`) avant de continuer.
+
+- **[Vraie reco loup]** Quand le code commité marche mais le flow app ne marche pas → **ne pas couvrir l'erreur, l'admettre cash** (« le curl validait la lib pas le flow app — je le prends »). Lamine encaisse mieux l'honnêteté brute que l'excuse brodée.
+
 ## Légende catégories
 
 - **[Workflow]** : process opérationnel entre maillons Quadrille
