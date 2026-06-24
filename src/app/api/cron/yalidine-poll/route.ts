@@ -5,6 +5,7 @@ import {
   YALIDINE_STATUS_MAP,
   STATUS_RANK,
 } from "@/lib/yalidine";
+import { fetchEcotrackStatus, ECOTRACK_STATUS_MAP, ECOTRACK_SLUG_BASE_URL } from "@/lib/ecotrack";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { vendorMessage, clientMessage } from "@/lib/whatsapp-templates";
 
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
     // pour minimiser les appels API Yalidine.
     const { data: orders, error: fetchErr } = await supabase
       .from("orders")
-      .select("id, status, reference, tracking_number, user_id, client_id")
+      .select("id, status, reference, tracking_number, user_id, client_id, delivery_mode")
       .eq("status", "shipped")
       .not("tracking_number", "is", null);
 
@@ -77,28 +78,51 @@ export async function GET(req: NextRequest) {
           .eq("id", order.user_id)
           .single();
 
-        if (!profile?.yalidine_api_id || !profile?.yalidine_api_token) {
-          result.error = "Credentials Yalidine manquants";
-          results.push(result);
-          continue;
+        // Brancher selon le transporteur de la commande.
+        let status: { tracking: string; last_status: string } | null = null;
+        let livraStatus: string | undefined;
+
+        if (order.delivery_mode && order.delivery_mode in ECOTRACK_SLUG_BASE_URL) {
+          // Famille Ecotrack (dhd, anderson, …) — token dans carrier_tokens.
+          const { data: ct } = await supabase
+            .from("carrier_tokens")
+            .select("token")
+            .eq("user_id", order.user_id)
+            .eq("carrier_slug", order.delivery_mode)
+            .maybeSingle();
+          if (!ct?.token) {
+            result.error = `Token ${order.delivery_mode} manquant`;
+            results.push(result);
+            continue;
+          }
+          status = await fetchEcotrackStatus(order.delivery_mode, order.tracking_number!, ct.token);
+          if (!status) {
+            result.error = `Pas de réponse ${order.delivery_mode}`;
+            results.push(result);
+            continue;
+          }
+          livraStatus = ECOTRACK_STATUS_MAP[status.last_status];
+        } else {
+          if (!profile?.yalidine_api_id || !profile?.yalidine_api_token) {
+            result.error = "Credentials Yalidine manquants";
+            results.push(result);
+            continue;
+          }
+          status = await fetchParcelStatus(order.tracking_number!, {
+            centerId: profile.yalidine_api_id,
+            token: profile.yalidine_api_token,
+          });
+          if (!status) {
+            result.error = "Pas de réponse Yalidine";
+            results.push(result);
+            continue;
+          }
+          livraStatus = YALIDINE_STATUS_MAP[status.last_status];
         }
 
-        // Appeler l'API Yalidine
-        const status = await fetchParcelStatus(order.tracking_number!, {
-          centerId: profile.yalidine_api_id,
-          token: profile.yalidine_api_token,
-        });
-
-        if (!status) {
-          result.error = "Pas de réponse Yalidine";
-          results.push(result);
-          continue;
-        }
-
-        // Mapper vers statut LIVRA
-        const livraStatus = YALIDINE_STATUS_MAP[status.last_status];
+        // Libellé transporteur inconnu → on garde le statut courant.
         if (!livraStatus) {
-          result.error = `Statut Yalidine inconnu: ${status.last_status}`;
+          result.error = `Statut transporteur inconnu: ${status.last_status}`;
           results.push(result);
           continue;
         }
@@ -135,12 +159,12 @@ export async function GET(req: NextRequest) {
           .eq("id", order.client_id)
           .single();
 
-        const shopName = profile.store_name ?? "LIVRA";
+        const shopName = profile?.store_name ?? "LIVRA";
 
         const vMsg = vendorMessage(livraStatus, order.reference, order.tracking_number);
         const cMsg = clientMessage(livraStatus, order.tracking_number, shopName);
 
-        if (profile.phone && vMsg) {
+        if (profile?.phone && vMsg) {
           const r = await sendWhatsAppNotification(profile.phone, vMsg);
           result.vendorNotified = r.success;
         }

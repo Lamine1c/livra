@@ -4,7 +4,7 @@ type InfoPanelProps = {
   driverName: string | null;
   driverPhone: string | null;
   vendorName: string;
-  mode: "moto_perso" | "yalidine";
+  mode: "moto_perso" | "yalidine" | "dhd" | "anderson";
 };
 
 export default function InfoPanel({
