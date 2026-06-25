@@ -4,7 +4,7 @@ import { Order } from "@/types";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
-import { buyerTrackingYalidine } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
@@ -94,7 +94,11 @@ export async function POST(
     if (clientData?.phone) {
       const buyerToken = generateBuyerToken(order.id);
       const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
-      await sendWhatsAppNotification(clientData.phone, buyerTrackingYalidine(vendorName, trackingUrl));
+      const prenom = (clientData.full_name ?? "").split(" ")[0] ?? "";
+      await sendWhatsAppNotification(
+        clientData.phone,
+        renderTemplateText(TEMPLATES.delivery_mode_carrier, [prenom, vendorName, "Yalidine", trackingUrl])
+      );
     }
   } catch (err) {
     console.error("[yalidine] buyer WA failed:", err);

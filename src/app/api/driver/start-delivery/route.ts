@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken, generateBuyerToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
-import { buyerTrackingMotoPerso } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 
 export async function POST(req: NextRequest) {
@@ -112,7 +112,8 @@ export async function POST(req: NextRequest) {
     if (client?.phone) {
       const buyerToken = generateBuyerToken(orderId);
       const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
-      const message = `🛵 Votre livreur *${driverPrenom}* est en route !\n\n${buyerTrackingMotoPerso(vendorName, trackingUrl)}`;
+      const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+      const message = renderTemplateText(TEMPLATES.delivery_perso_enroute, [prenom, vendorName, trackingUrl]);
       const waResult = await sendWhatsAppNotification(client.phone, message);
       if (!waResult.success) {
         console.error("[start-delivery] WhatsApp send failed:", waResult.error);

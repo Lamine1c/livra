@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
-import { buyerTrackingMotoPerso } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
@@ -48,7 +48,8 @@ export async function POST(
 
   const buyerToken = generateBuyerToken(order.id);
   const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
-  const message = `🛵 Votre livreur *${driverName}* est en route !\n\n${buyerTrackingMotoPerso(vendorName, trackingUrl)}`;
+  const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+  const message = renderTemplateText(TEMPLATES.delivery_perso_enroute, [prenom, vendorName, trackingUrl]);
 
   const waResult = await sendWhatsAppNotification(client.phone, message);
 
