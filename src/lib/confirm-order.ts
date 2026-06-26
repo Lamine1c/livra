@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { sendExpoPush } from "@/lib/expo-push";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -240,7 +241,7 @@ export async function handleInboundReply(
     // Contexte MSG 6 : boutique (profil vendeur) + prénom (client).
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("store_name, full_name")
+      .select("store_name, full_name, expo_push_token")
       .eq("id", order.user_id)
       .single();
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
@@ -256,6 +257,17 @@ export async function handleInboundReply(
     if (updErr) {
       console.error(`[whatsapp/inbound] from=${masked} db-error (cancel changed_mind) order=${order.id}:`, updErr.message);
     }
+
+    if (vendor?.expo_push_token) {
+      const pushResult = await sendExpoPush(
+        vendor.expo_push_token,
+        "❌ Commande annulée",
+        `Le client a changé d'avis — commande #${order.id.slice(0, 8).toUpperCase()}.`,
+        { orderId: order.id, type: "order_cancelled" }
+      );
+      if (!pushResult.success) console.error("[whatsapp/inbound] expo push (cancel) failed:", pushResult.error);
+    }
+
     console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" → MSG 6 + cancelled order=${order.id}`);
     return { action: "cancelled_mind", orderId: order.id };
   }
