@@ -97,6 +97,23 @@ Merci {{1}} ! Commande confirmée ✅
 Dès qu'elle est prête, on vous envoie un lien pour choisir où vous faire livrer et quand.`,
   },
 
+  // ─── Accusé de confirmation + badge réputation (après code OTP vérifié) ───
+  order_confirmed_verified: {
+    name: "order_confirmed_verified",
+    category: "UTILITY",
+    language: "fr",
+    variables: [],
+    body: `message en français suit
+
+✅ مبروك! الطلبية ثابتة.
+راك ولّيت زبون مؤكَّد LIVRA ✓ — الزبائن الموثوقين يُخدمو بالأولوية.
+
+${SEP}
+
+✅ C'est validé ! Commande confirmée.
+Vous êtes maintenant client vérifié LIVRA ✓ — les clients fiables sont servis en priorité.`,
+  },
+
   // ─── MSG 4 — Pourquoi ? (après NON) ───
   // ⚠️ Boutons bilingues > 20 caractères = limite Meta quick-reply (à raccourcir
   //    avant soumission Meta — copy verbatim conservée ici, décision Lamine).

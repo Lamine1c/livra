@@ -121,6 +121,13 @@ export async function confirmOrderByInboundCode(
   }
 
   console.log(`[whatsapp/inbound] from=${masked} match → order ${match.id} confirmé`);
+
+  // Accusé de confirmation + badge réputation "client vérifié" (best-effort :
+  // un échec d'envoi ne doit PAS faire échouer la confirmation déjà persistée).
+  const confirmMsg = renderTemplateText(TEMPLATES.order_confirmed_verified, []);
+  const r = await sendWhatsAppNotification(phone, confirmMsg);
+  if (!r.success) console.error(`[whatsapp/inbound] from=${masked} accusé confirmation failed:`, r.error);
+
   return { matched: true, orderId: match.id };
 }
 
