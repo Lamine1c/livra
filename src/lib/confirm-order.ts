@@ -31,6 +31,22 @@ function clientPhone(o: PendingOrder): string {
   return c?.phone ?? "";
 }
 
+// Variante enrichie pour le tunnel objection : ramène aussi user_id (→ boutique
+// via profiles) et full_name (→ prénom). Type dédié pour ne pas polluer
+// PendingOrder, dont le SELECT inline de confirmOrderByInboundCode reste intact.
+type PendingOrderEnriched = {
+  id: string;
+  otp_code: string | null;
+  otp_sent_at: string | null;
+  user_id: string;
+  client: { full_name: string; phone: string } | { full_name: string; phone: string }[] | null;
+};
+
+function enrichedClient(o: PendingOrderEnriched): { full_name: string; phone: string } | null {
+  const c = Array.isArray(o.client) ? o.client[0] : o.client;
+  return c ?? null;
+}
+
 /**
  * Tente de confirmer une commande à partir d'un message WhatsApp entrant.
  * Edge cases V1 = silencieux (on ignore, on ne répond rien au client) :
@@ -112,22 +128,24 @@ export async function confirmOrderByInboundCode(
 // se fait en JS sur le numéro normalisé (formats stockés variables).
 async function findPendingForPhone(
   phone: string
-): Promise<{ orders: PendingOrder[]; dbError: boolean }> {
+): Promise<{ orders: PendingOrderEnriched[]; dbError: boolean }> {
   const supabase = createAdminClient();
   const phoneNorm = normalizePhoneNumber(phone);
   const nowIso = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, otp_code, otp_sent_at, client:clients(phone)")
+    .select("id, otp_code, otp_sent_at, user_id, client:clients(full_name, phone)")
     .not("otp_code", "is", null)
     .is("otp_verified_at", null)
     .gt("otp_expires_at", nowIso)
     .order("otp_sent_at", { ascending: false });
 
   if (error) return { orders: [], dbError: true };
-  const pending = (data ?? []) as PendingOrder[];
-  const sameNumber = pending.filter((o) => normalizePhoneNumber(clientPhone(o)) === phoneNorm);
+  const pending = (data ?? []) as PendingOrderEnriched[];
+  const sameNumber = pending.filter(
+    (o) => normalizePhoneNumber(enrichedClient(o)?.phone ?? "") === phoneNorm
+  );
   return { orders: sameNumber, dbError: false };
 }
 
@@ -135,11 +153,18 @@ export type InboundReplyResult =
   | { action: "code_sent"; orderId: string }
   | { action: "no_pending" }
   | { action: "declined" }
+  | { action: "reschedule"; orderId: string }
+  | { action: "cancelled_mind"; orderId: string }
+  | { action: "objection"; orderId: string }
   | { action: "code"; result: InboundConfirmResult };
 
 // Détecteurs OUI / NON bilingues (darija AR + FR + EN), insensible à la casse.
 const YES_RE = /^(oui|إيه|ايه|اه|نعم|yes|ok)$/i;
 const NO_RE = /^(non|لا|لأ|no)$/i;
+// Branches d'objection (boutons MSG 4 → texte bilingue, match partiel).
+const NOT_AVAIL_RE = /dispo|ماشي اليوم/i;
+const MIND_CHANGED_RE = /avis|بدلت/i;
+const CHEAPER_RE = /cher|أرخص|رخيص/i;
 
 /**
  * Aiguillage des réponses WhatsApp entrantes du tunnel anti-scam :
@@ -168,10 +193,96 @@ export async function handleInboundReply(
     return { action: "code_sent", orderId: order.id };
   }
 
-  // ── NON → note le refus (V1 : pas de branche objection) ──
+  // ── NON → envoyer MSG 4 (raisons), aucun changement DB ──
   if (NO_RE.test(bodyTrim)) {
-    console.log(`[whatsapp/inbound] from=${masked} client a refusé (NON)`);
+    const msg = renderTemplateText(TEMPLATES.order_cancel_reasons, []);
+    await sendWhatsAppNotification(phone, msg);
+    console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (raisons) envoyé`);
     return { action: "declined" };
+  }
+
+  // ── Branche A · "Pas dispo" → MSG 5 + decline_reason=not_available (statut inchangé) ──
+  if (NOT_AVAIL_RE.test(bodyTrim)) {
+    const { orders, dbError } = await findPendingForPhone(phone);
+    const order = orders[0];
+    if (dbError || !order) {
+      console.log(`[whatsapp/inbound] from=${masked} "pas dispo" mais aucun order en attente`);
+      return { action: "no_pending" };
+    }
+    const msg = renderTemplateText(TEMPLATES.order_reschedule_request, []);
+    await sendWhatsAppNotification(phone, msg);
+
+    const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+    const { error: updErr } = await supabase
+      .from("orders")
+      .update({ decline_reason: "not_available", updated_at: nowIso })
+      .eq("id", order.id);
+    if (updErr) {
+      console.error(`[whatsapp/inbound] from=${masked} db-error (decline not_available) order=${order.id}:`, updErr.message);
+    }
+    console.log(`[whatsapp/inbound] from=${masked} "pas dispo" → MSG 5 + decline_reason=not_available order=${order.id}`);
+    return { action: "reschedule", orderId: order.id };
+  }
+
+  // ── Branche B · "Changé d'avis" → MSG 6 + status=cancelled + decline_reason=changed_mind ──
+  if (MIND_CHANGED_RE.test(bodyTrim)) {
+    const { orders, dbError } = await findPendingForPhone(phone);
+    const order = orders[0];
+    if (dbError || !order) {
+      console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" mais aucun order en attente`);
+      return { action: "no_pending" };
+    }
+
+    const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+
+    // Contexte MSG 6 : boutique (profil vendeur) + prénom (client).
+    const { data: vendor } = await supabase
+      .from("profiles")
+      .select("store_name, full_name")
+      .eq("id", order.user_id)
+      .single();
+    const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
+    const prenom = (enrichedClient(order)?.full_name ?? "").split(" ")[0] ?? "";
+
+    const msg = renderTemplateText(TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
+    await sendWhatsAppNotification(phone, msg);
+
+    const { error: updErr } = await supabase
+      .from("orders")
+      .update({ status: "cancelled", decline_reason: "changed_mind", updated_at: nowIso })
+      .eq("id", order.id);
+    if (updErr) {
+      console.error(`[whatsapp/inbound] from=${masked} db-error (cancel changed_mind) order=${order.id}:`, updErr.message);
+    }
+    console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" → MSG 6 + cancelled order=${order.id}`);
+    return { action: "cancelled_mind", orderId: order.id };
+  }
+
+  // ── Branche C · "Moins cher" → MSG 7 + decline_reason=found_cheaper (statut inchangé) ──
+  // Le OUI qui suivra retombe sur YES_RE → MSG 2 (code), déjà géré.
+  if (CHEAPER_RE.test(bodyTrim)) {
+    const { orders, dbError } = await findPendingForPhone(phone);
+    const order = orders[0];
+    if (dbError || !order) {
+      console.log(`[whatsapp/inbound] from=${masked} "moins cher" mais aucun order en attente`);
+      return { action: "no_pending" };
+    }
+    const msg = renderTemplateText(TEMPLATES.order_objection_cheaper, []);
+    await sendWhatsAppNotification(phone, msg);
+
+    const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+    const { error: updErr } = await supabase
+      .from("orders")
+      .update({ decline_reason: "found_cheaper", updated_at: nowIso })
+      .eq("id", order.id);
+    if (updErr) {
+      console.error(`[whatsapp/inbound] from=${masked} db-error (decline found_cheaper) order=${order.id}:`, updErr.message);
+    }
+    console.log(`[whatsapp/inbound] from=${masked} "moins cher" → MSG 7 + decline_reason=found_cheaper order=${order.id}`);
+    return { action: "objection", orderId: order.id };
   }
 
   // ── Sinon : peut-être le code 6 chiffres → délégation ──
