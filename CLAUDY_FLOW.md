@@ -6,6 +6,30 @@ Fichier vivant qui capture le **flow** entre Lamine et Claudy (au-delà des fait
 
 ---
 
+## 26 juin 2026
+
+- **[Anti-pattern Claudy MAJEUR]** Quand on "ferme un template" / une copy / un design, le CODE qui le fait fonctionner fait PARTIE de la tâche. Le 25 juin on a "fermé les 12 templates WhatsApp" mais le code du tunnel OUI→MSG2 n'existait pas, et le caller send-otp utilisait encore l'ancien message. Un feature sans le code qui le déclenche n'est PAS fini. Lamine : "comment tu peux mettre un feature sans le faire fonctionner ?". Leçon : quand on valide un asset (template, copy, mockup), vérifier immédiatement que le chemin de code complet qui l'active existe end-to-end.
+
+- **[Anti-pattern Claudy]** Sur-découpage en "vagues" + ajout d'options non demandées ("Voie 1 / Voie 2") en plein milieu d'une tâche déjà décidée = fait perdre du temps et énerve. Lamine : "je crois que tu travailles dur à me rendre fou". Quand la décision est prise (Option A validée), on EXÉCUTE, on ne ressort pas une alternative.
+
+- **[Anti-pattern Claudy]** Réponses trop longues répétées → Lamine a dû sortir "/focus + /efficacité" et faire relire l'ANTIDOTE en entier. Quand Lamine donne un screenshot + 3 observations, répondre court : accuser réception des bugs, les noter, agir. Pas de pavé explicatif.
+
+- **[Tech bidi arabe]** Un nombre formaté fr-FR ("3 300") contient un espace insécable étroit U+202F qui CASSE le rendu LTR dans une ligne de texte arabe (le moteur bidi ré-ordonne → "300 3"). Fix : Intl.NumberFormat("en-US") ("3,300", virgule, pas d'espace) + wrap \u202A...\u202C. Lisible AR + FR.
+
+- **[Tech test]** Le mobile en test pointe vers golivra.app (prod Vercel) via EXPO_PUBLIC_API_BASE. Donc pour tester un fix BACKEND, il faut promouvoir le bon deploy en PRODUCTION sur Vercel — un fix qui reste en preview est invisible pour l'app. Le switch de version backend ne se fait PAS dans Expo, mais sur Vercel.
+
+- **[Tech Twilio sandbox]** Twilio sandbox envoie les messages entrants en form-urlencoded (From/Body), PAS en JSON Cloud API. Et il répond "You said: ..." tant que l'Inbound URL n'est pas configurée. Les boutons quick-reply OUI/NON ne sont PAS natifs en sandbox (texte simple). Le tunnel complet ne se teste vraiment qu'avec un vrai canal (360dialog).
+
+- **[UX]** Un bouton en style "ghost" (fond surface + bord gris) ne se lit PAS comme un bouton — même Lamine, créateur de l'app, ne l'a pas reconnu. Pour une action principale : style outline avec bord terracotta visible (comme "Se déconnecter" dans Settings). Le CTA plein terracotta, lui, "fait gros et laid" selon Lamine pour ce contexte — l'outline est le bon entre-deux.
+
+- **[Design FLOW-2]** Le vendeur ne tape JAMAIS le code OTP lui-même. Le client confirme via WhatsApp → webhook → Realtime push → l'écran vendeur passe à "Confirmée" tout seul. Toute case de saisie OTP côté vendeur contredit la promesse "le vendeur pourrait dormir". Supprimée.
+
+- **[Sécurité ordre critique]** Quand un fix sécu touche à la fois le code (qui retire les accès anon) ET une migration (qui verrouille la RLS) : merger + déployer le CODE d'abord, migration APRÈS. Inverser = l'app en prod (encore sur l'ancien code qui lit en anon) casse instantanément.
+
+- **[Incident]** Un `git checkout main` après travail sur branche peut reset le working tree d'un doc (HANDOFF) à la version main, puis un commit/push écrase les updates. Conséquence : updates HANDOFF du 25 juin soir perdus. Toujours commit les docs sur la branche où on les édite, ou vérifier l'état du doc avant de switch.
+
+---
+
 ## 18 juin 2026
 
 - **[Workflow]** Bug visuel CSS mobile → consulter CD AVANT cc. CD a tranché le containing block du backdrop-filter en 30 sec ; cc et Claudy cherchaient depuis 1h. Pour bugs visuels, CD est expert ; cc exécute.
