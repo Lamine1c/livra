@@ -78,7 +78,9 @@ export async function POST(
   // L'OTP reste généré + stocké en DB ci-dessus ; le code part ensuite via MSG 2
   // (order_otp_code) quand le client répond OUI (géré côté webhook inbound).
   const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
-  const totalTxt = new Intl.NumberFormat("fr-FR").format(Math.round(order.total_amount));
+  // en-US (virgule, "3,300") et PAS fr-FR : fr-FR insère un espace insécable étroit
+  // U+202F qui casse le wrap LTR ‪‬ de la ligne arabe (le bidi ré-ordonne).
+  const totalTxt = new Intl.NumberFormat("en-US").format(Math.round(order.total_amount));
   const produitTxt = produit ?? "";
 
   const message = renderTemplateText(TEMPLATES.order_confirmation_request, [
