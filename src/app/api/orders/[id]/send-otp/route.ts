@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateOTP, sendOtpWhatsApp } from "@/lib/whatsapp";
+import { generateOTP, sendWhatsAppNotification, normalizePhoneNumber } from "@/lib/whatsapp";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
@@ -73,11 +74,21 @@ export async function POST(
   const items = (Array.isArray(itemsRaw) ? itemsRaw : itemsRaw ? [itemsRaw] : []) as { product_name: string }[];
   const produit = items[0]?.product_name ?? null;
 
-  const result = await sendOtpWhatsApp(client.phone, client.full_name, otp, {
+  // MSG 1 — Confirmation de commande (OUI/NON), bilingue AR+FR.
+  // L'OTP reste généré + stocké en DB ci-dessus ; le code part ensuite via MSG 2
+  // (order_otp_code) quand le client répond OUI (géré côté webhook inbound).
+  const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+  const totalTxt = new Intl.NumberFormat("fr-FR").format(Math.round(order.total_amount));
+  const produitTxt = produit ?? "";
+
+  const message = renderTemplateText(TEMPLATES.order_confirmation_request, [
+    prenom,
     boutique,
-    total: order.total_amount,
-    produit,
-  });
+    produitTxt,
+    totalTxt,
+  ]);
+
+  const result = await sendWhatsAppNotification(client.phone, message);
 
   if (!result.success) {
     return NextResponse.json(
@@ -86,5 +97,9 @@ export async function POST(
     );
   }
 
-  return NextResponse.json({ maskedPhone: result.maskedPhone });
+  // maskedPhone : calculé localement pour garder la même API de retour.
+  const normalized = normalizePhoneNumber(client.phone);
+  const masked = "+" + normalized.slice(0, 5) + "XXXXX" + normalized.slice(-2);
+
+  return NextResponse.json({ maskedPhone: masked });
 }
