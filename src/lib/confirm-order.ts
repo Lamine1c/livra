@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizePhoneNumber } from "@/lib/whatsapp";
+import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -104,4 +105,76 @@ export async function confirmOrderByInboundCode(
 
   console.log(`[whatsapp/inbound] from=${masked} match → order ${match.id} confirmé`);
   return { matched: true, orderId: match.id };
+}
+
+// ─── Helper : commandes en attente d'OTP pour un numéro (récent → ancien) ──
+// Même requête que confirmOrderByInboundCode (gardée intacte) ; le filtre téléphone
+// se fait en JS sur le numéro normalisé (formats stockés variables).
+async function findPendingForPhone(
+  phone: string
+): Promise<{ orders: PendingOrder[]; dbError: boolean }> {
+  const supabase = createAdminClient();
+  const phoneNorm = normalizePhoneNumber(phone);
+  const nowIso = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, otp_code, otp_sent_at, client:clients(phone)")
+    .not("otp_code", "is", null)
+    .is("otp_verified_at", null)
+    .gt("otp_expires_at", nowIso)
+    .order("otp_sent_at", { ascending: false });
+
+  if (error) return { orders: [], dbError: true };
+  const pending = (data ?? []) as PendingOrder[];
+  const sameNumber = pending.filter((o) => normalizePhoneNumber(clientPhone(o)) === phoneNorm);
+  return { orders: sameNumber, dbError: false };
+}
+
+export type InboundReplyResult =
+  | { action: "code_sent"; orderId: string }
+  | { action: "no_pending" }
+  | { action: "declined" }
+  | { action: "code"; result: InboundConfirmResult };
+
+// Détecteurs OUI / NON bilingues (darija AR + FR + EN), insensible à la casse.
+const YES_RE = /^(oui|إيه|ايه|اه|نعم|yes|ok)$/i;
+const NO_RE = /^(non|لا|لأ|no)$/i;
+
+/**
+ * Aiguillage des réponses WhatsApp entrantes du tunnel anti-scam :
+ *   - "OUI"  → renvoie MSG 2 (le code) à la commande en attente la plus récente.
+ *   - "NON"  → note le refus (V1 : pas d'envoi de branche objection).
+ *   - sinon  → délègue à confirmOrderByInboundCode (le body est peut-être le code).
+ */
+export async function handleInboundReply(
+  phone: string,
+  body: string
+): Promise<InboundReplyResult> {
+  const masked = maskFrom(phone);
+  const bodyTrim = body.trim();
+
+  // ── OUI → envoyer MSG 2 (le code) ──
+  if (YES_RE.test(bodyTrim)) {
+    const { orders, dbError } = await findPendingForPhone(phone);
+    const order = orders[0];
+    if (dbError || !order?.otp_code) {
+      console.log(`[whatsapp/inbound] from=${masked} OUI mais aucun order en attente`);
+      return { action: "no_pending" };
+    }
+    const msg = renderTemplateText(TEMPLATES.order_otp_code, [order.otp_code]);
+    await sendWhatsAppNotification(phone, msg);
+    console.log(`[whatsapp/inbound] from=${masked} OUI → MSG 2 (code) envoyé pour order ${order.id}`);
+    return { action: "code_sent", orderId: order.id };
+  }
+
+  // ── NON → note le refus (V1 : pas de branche objection) ──
+  if (NO_RE.test(bodyTrim)) {
+    console.log(`[whatsapp/inbound] from=${masked} client a refusé (NON)`);
+    return { action: "declined" };
+  }
+
+  // ── Sinon : peut-être le code 6 chiffres → délégation ──
+  const result = await confirmOrderByInboundCode(phone, bodyTrim);
+  return { action: "code", result };
 }
