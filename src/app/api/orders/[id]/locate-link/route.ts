@@ -3,7 +3,7 @@ import { generateLocateToken } from "@/lib/qr-token";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
-import { locatePinpointTemplate } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 
 export async function POST(
   req: NextRequest,
@@ -51,7 +51,8 @@ export async function POST(
     .single();
   const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
 
-  const message = locatePinpointTemplate(vendorName, url);
+  const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+  const message = renderTemplateText(TEMPLATES.delivery_mode_perso, [prenom, vendorName, url]);
   const waResult = await sendWhatsAppNotification(client.phone, message);
 
   if (!waResult.success) {

@@ -7,7 +7,7 @@ import {
 } from "@/lib/yalidine";
 import { fetchEcotrackStatus, ECOTRACK_STATUS_MAP, ECOTRACK_SLUG_BASE_URL } from "@/lib/ecotrack";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
-import { vendorMessage, clientMessage } from "@/lib/whatsapp-templates";
+import { vendorMessage, TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 
 // ─── POLLING ENDPOINT ─────────────────────────────────────────
 // Appelé par Vercel Cron toutes les 5 minutes.
@@ -162,7 +162,14 @@ export async function GET(req: NextRequest) {
         const shopName = profile?.store_name ?? "LIVRA";
 
         const vMsg = vendorMessage(livraStatus, order.reference, order.tracking_number);
-        const cMsg = clientMessage(livraStatus, order.tracking_number, shopName);
+        // clientMessage supprimé → templates acheteur. shipped déjà annoncé à la
+        // création du bon (MSG 9), donc ici on ne re-notifie que les états terminaux.
+        let cMsg: string | null = null;
+        if (livraStatus === "delivered") {
+          cMsg = renderTemplateText(TEMPLATES.delivery_completed, [shopName]);
+        } else if (livraStatus === "returned") {
+          cMsg = renderTemplateText(TEMPLATES.delivery_failed, [shopName]);
+        }
 
         if (profile?.phone && vMsg) {
           const r = await sendWhatsAppNotification(profile.phone, vMsg);

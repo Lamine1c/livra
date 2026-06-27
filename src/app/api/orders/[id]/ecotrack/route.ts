@@ -5,7 +5,7 @@ import { Order } from "@/types";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
-import { buyerTrackingEcotrack } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 const CARRIER_LABELS: Record<string, string> = { dhd: "DHD", anderson: "Anderson" };
@@ -101,7 +101,11 @@ export async function POST(
     if (clientData?.phone) {
       const buyerToken = generateBuyerToken(order.id);
       const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
-      await sendWhatsAppNotification(clientData.phone, buyerTrackingEcotrack(vendorName, carrierLabel, trackingUrl));
+      const prenom = (clientData.full_name ?? "").split(" ")[0] ?? "";
+      await sendWhatsAppNotification(
+        clientData.phone,
+        renderTemplateText(TEMPLATES.delivery_mode_carrier, [prenom, vendorName, carrierLabel, trackingUrl])
+      );
     }
   } catch (err) {
     console.error("[ecotrack] buyer WA failed:", err);

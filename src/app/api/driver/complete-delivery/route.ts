@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
-import { deliveryCompletedTemplate } from "@/lib/whatsapp-templates";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 
 export async function POST(req: NextRequest) {
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
     const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
 
     if (client?.phone) {
-      const message = deliveryCompletedTemplate(vendorName);
+      const message = renderTemplateText(TEMPLATES.delivery_completed, [vendorName]);
       const waResult = await sendWhatsAppNotification(client.phone, message);
       if (!waResult.success) {
         console.error("[complete-delivery] WhatsApp send failed:", waResult.error);

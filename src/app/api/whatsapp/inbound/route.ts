@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
-import { confirmOrderByInboundCode } from "@/lib/confirm-order";
+import { handleInboundReply } from "@/lib/confirm-order";
 
 // Webhook WhatsApp ENTRANT (réponses des clients).
 // Format = WhatsApp Cloud API (entry[].changes[].value.messages[]) — identique
@@ -27,6 +27,14 @@ export async function GET(req: NextRequest) {
 //   ci-dessous (secret partagé via header/query). Tant qu'il n'est pas configuré,
 //   le chemin 360dialog reste fermé (403) et seul le chemin Meta signé passe.
 function isAuthentic(req: NextRequest, rawBody: Buffer): boolean {
+  // TEMP TWILIO SANDBOX — retirer à l'activation 360dialog.
+  // Bypass d'auth UNIQUEMENT si TWILIO_SANDBOX_MODE=1 + content-type form-urlencoded.
+  // En prod 360dialog cette var sera absente → ce chemin est fermé.
+  if (process.env.TWILIO_SANDBOX_MODE === "1") {
+    const ct = req.headers.get("content-type") ?? "";
+    if (ct.includes("application/x-www-form-urlencoded")) return true;
+  }
+
   const metaSig = req.headers.get("x-hub-signature-256");
   if (metaSig) {
     const secret = process.env.META_APP_SECRET;
@@ -89,21 +97,32 @@ export async function POST(req: NextRequest) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  let payload: CloudInboundPayload;
-  try {
-    payload = JSON.parse(rawBody.toString("utf8"));
-  } catch {
-    console.error("[whatsapp/inbound] payload JSON invalide");
-    return new Response("OK", { status: 200 });
-  }
+  // Détection du format : Twilio sandbox (form-urlencoded) vs Cloud API (JSON).
+  let messages: Array<{ from: string; body: string }>;
+  const contentType = req.headers.get("content-type") ?? "";
 
-  const messages = extractTextMessages(payload);
+  // TEMP TWILIO SANDBOX — retirer à l'activation 360dialog.
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams(rawBody.toString("utf8"));
+    const from = params.get("From")?.replace("whatsapp:", "").trim();
+    const body = params.get("Body")?.trim();
+    messages = from && body ? [{ from, body }] : [];
+  } else {
+    let payload: CloudInboundPayload;
+    try {
+      payload = JSON.parse(rawBody.toString("utf8"));
+    } catch {
+      console.error("[whatsapp/inbound] payload JSON invalide");
+      return new Response("OK", { status: 200 });
+    }
+    messages = extractTextMessages(payload);
+  }
 
   // Le Realtime vendeur est déjà branché → l'écran passe à « Confirmée » seul
   // quand l'order est mis à jour. L'entrée manuelle vendeur reste le fallback.
   for (const m of messages) {
     try {
-      await confirmOrderByInboundCode(m.from, m.body);
+      await handleInboundReply(m.from, m.body);
     } catch (err) {
       // Pas de catch muet : on logge, et on continue les autres messages.
       console.error("[whatsapp/inbound] erreur traitement message:", err);
