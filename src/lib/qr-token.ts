@@ -231,3 +231,34 @@ export function verifyDriverToken(token: string): DriverTokenVerifyResult {
 
   return { valid: true, driverId };
 }
+
+/**
+ * Vérifie la signature HMAC d'un driver token MAIS accepte les tokens
+ * expirés. Usage : /api/driver/refresh-token, pour permettre à un livreur
+ * de demander un nouveau token tant qu'il prouve qu'il détenait déjà un
+ * token légitime émis pour lui (HMAC valide).
+ *
+ * NE PAS utiliser pour autoriser des actions ! Uniquement pour le refresh.
+ */
+export function verifyDriverTokenAllowExpired(token: string):
+  { valid: true; driverId: string } | { valid: false } {
+  if (!token || typeof token !== "string") return { valid: false };
+  const dot = token.lastIndexOf(".");
+  if (dot === -1) return { valid: false };
+  const encoded = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  let payload: string;
+  try { payload = Buffer.from(encoded, "base64url").toString("utf8"); }
+  catch { return { valid: false }; }
+  let expectedSig: string;
+  try { expectedSig = crypto.createHmac("sha256", secret()).update(payload).digest("base64url"); }
+  catch { return { valid: false }; }
+  if (sig.length !== expectedSig.length) return { valid: false };
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) return { valid: false };
+  const parts = payload.split("|");
+  if (parts.length !== 3) return { valid: false };
+  const [driverId, scope] = parts;
+  if (scope !== "__driver__") return { valid: false };
+  if (!driverId) return { valid: false };
+  return { valid: true, driverId };
+}
