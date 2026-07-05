@@ -81,7 +81,10 @@ export async function POST(req: NextRequest) {
         whatsapp_verified_at: now,
         last_scan_at: now,
       },
-      { onConflict: "whatsapp" }
+      // drivers a une contrainte UNIQUE sur device_id (pas sur whatsapp). onConflict DOIT
+      // matcher cette contrainte, sinon Postgres tente un INSERT → collision device_id (500).
+      // Un device = un livreur : même device_id à la réinstall → UPDATE de la ligne existante.
+      { onConflict: "device_id" }
     )
     .select("id")
     .single();
