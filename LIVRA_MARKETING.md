@@ -131,11 +131,13 @@ Que le vendeur livre avec son livreur perso OU avec Yalidine/DHD/Anderson, l'ach
 
 > **Règle :** AR en premier, FR après séparateur, header `message en français suit` uniquement. Boutons bilingues `[✅ إيه / OUI]`.
 
-> **ÉTAT IMPLÉMENTATION (26 juin)** : les 12 templates sont codés dans `src/lib/whatsapp-templates.ts` (branche feature/whatsapp-templates-v1, hash ac79556). Le tunnel OUI→MSG2→code→confirmation est CODÉ (`handleInboundReply` dans confirm-order.ts). MSG 1 envoyé par send-otp. Prix arabe fixé (en-US + wrap LTR). MSG 4-7 (branches objection après NON) = pas encore branchés côté code (V1 : NON = refus simplement noté ; les branches objection viendront avec le bot conversationnel). Boutons MSG 4 > 20 char à raccourcir avant soumission Meta.
+> **🔴 RECALIBRAGE 5 JUIL — TUNNEL BILATÉRAL VERROUILLÉ (copy)** : MSG 1-7 réécrits sous le pivot bilatéral (LIVRA = transaction protégée des 2 côtés, pas bouclier vendeur). MSG 1 = ajout bloc confiance encadré (✅ boutique vérifiée + ⭐ note/nb_livraisons + 4 engagements) + engagement nominatif acheteur ("كي تأكد راك تلتزم"). MSG 3 = annonce évaluation post-livraison sur {{boutique}}. MSG 5 = report (pas "pas dispo"). MSG 7 = checklist garanties + proverbe. **Nouvelles variables : {{note}}, {{nb_livraisons}}** (+ singulier/pluriel). **Décision Lamine : boutique 0 livraison = on affiche TOUT (transparence, LIVRA miroir).**
 
-> **🔴 VAGUE 3 À FAIRE (décision Lamine 26 juin)** : séparer le prix dans MSG 1 — afficher **prix produit + prix livraison + total** au lieu du seul total. Touche le template MSG 1 ci-dessous (passer de 4 à 6 variables) + le caller send-otp. À faire après validation E2E du tunnel actuel.
+> **⚠️ ÉTAT CODE (à faire, groupé avec bascule 360dialog)** : les 12 templates 26 juin sont codés (`src/lib/whatsapp-templates.ts`, hash ac79556) MAIS avec l'ANCIENNE copy "bouclier". Le tunnel OUI→MSG2→code→confirmation est branché (`handleInboundReply` confirm-order.ts). MSG 4-7 (objection) codés comme templates, logique NON branchée. → REMPLACER par la copy bilatérale ci-dessous quand on branche 360dialog (coder maintenant = dans le vide, Twilio sandbox ne gère pas les boutons). Labels boutons quick-reply : 20 char max Meta (cc tronque à la soumission). `order_thanks` template orphelin (jamais envoyé) : à câbler avec MSG 3 ou supprimer.
 
-### MSG 1 — Confirmation de commande (OUI/NON)
+> **🔴 VAGUE 3 (décision Lamine 26 juin, encore valide)** : séparer le prix dans MSG 1 — afficher **prix produit + prix livraison + total** au lieu du seul total.
+
+### MSG 1 — Confirmation + confiance bilatérale (OUI/NON) ⭐ PIVOT 5 juil
 
 ```
 message en français suit
@@ -147,18 +149,36 @@ message en français suit
 💰 {{total}} دج
 📦 الخلاص عند التوصيل · ما تخلص والو دروك
 
-تحب نبداو التوصيل ؟
+━━━━━━━━━━━━━━
+✅ {{boutique}} · بوتيك مأكدة LIVRA
+⭐ {{note}} · {{nb_livraisons}} توصيلة
+تلتزم بي : 
+المنتج كيما فالصورة · تبديل إلا فيه مشكل · الوقت محترم · تجاوبك حتى للتوصيل و بعد.
+━━━━━━━━━━━━━━
+
+كي تأكد، راك تلتزم بالاستلام وتخلص {{total}} دج عند التوصيل.
+
+تحب نبداو ؟
 
 ━━━━━━━━━━━━━━
 
 Bonjour {{prénom}} 👋
-Bonne nouvelle : votre commande chez {{boutique}} est réservée à votre nom.
+Votre commande chez {{boutique}} est réservée à votre nom.
 
 🛍️ {{produit}}
 💰 {{total}} DA
 📦 Paiement à la livraison · rien à payer maintenant
 
-Voulez-vous procéder à la livraison ?
+━━━━━━━━━━━━━━
+✅ {{boutique}} · Boutique vérifiée LIVRA
+⭐ {{note}} · {{nb_livraisons}} livraisons
+Engagement : 
+produit tel qu'annoncé · échange si défaut · délai respecté · joignable jusqu'au bout
+━━━━━━━━━━━━━━
+
+En confirmant, vous vous engagez à recevoir et payer {{total}} DA à la livraison.
+
+On commence ?
 
 [✅ إيه / OUI]   [❌ لا / NON]
 ```
@@ -168,12 +188,12 @@ Voulez-vous procéder à la livraison ?
 ```
 message en français suit
 
-باش نأكدو ونطلقو التوصيل، رد على هاد الرسالة بالكود تاعك :
+باش نأكدو ونطلقو التوصيل، رد بالكود تاعك :
 
 ✅ {{code}}
 
-بلا تأكيد، ما نقدروش نوصلولك.
-راني نستنى الكود تاعك 🙂
+بلا هاد الكود، ما نقدروش نطلقو الكوموند.
+راني نستنى 🙂
 
 ━━━━━━━━━━━━━━
 
@@ -181,24 +201,28 @@ Pour confirmer et lancer la livraison, répondez avec votre code :
 
 ✅ {{code}}
 
-Sans confirmation, on ne pourra pas vous l'envoyer.
-On attend votre code 🙂
+Sans ce code, on ne peut pas lancer la commande.
+On attend 🙂
 ```
 
-### MSG 3 — Remerciement (après code reçu)
+### MSG 3 — Confirmé + annonce évaluation (après code reçu) ⭐ PIVOT 5 juil
 
 ```
 message en français suit
 
 شكرا {{prénom}} ! الكوموند مأكدة ✅
-{{boutique}} راهي تحضرها.
-كي تكون واجدة، نبعثولك لينك باش تختار وين ووقتاش تحب نوصلوك.
+{{boutique}} راهي تحضرها
+كي تكون واجدة، نبعثولك LINK باش تختار وين ووقتاش تحب نوصلوك.
+
+نتمناو ليك تجربة مليحة — وبعد التوصيل، رأيك يهمنا على {{boutique}} 🌟
 
 ━━━━━━━━━━━━━━
 
 Merci {{prénom}} ! Commande confirmée ✅
 {{boutique}} la prépare.
-Dès qu'elle est prête, on vous envoie un lien pour choisir où vous faire livrer et quand.
+Dès qu'elle est prête, on vous envoie un lien pour choisir où et quand vous faire livrer.
+
+Bonne expérience — et après la livraison, votre avis sur {{boutique}} comptera 🌟
 ```
 
 ### MSG 4 — Pourquoi ? (après NON)
@@ -212,23 +236,23 @@ message en français suit
 
 Pas de souci 🙂 Dites-nous pourquoi :
 
-[📅 ماشي اليوم / Pas dispo]
+[📅 ماشي دروك / Pas maintenant]
 [🤔 بدلت رايي / Changé d'avis]
 [💰 لقيت أرخص / Moins cher]
 ```
 
-### MSG 5 — Branche A · Pas dispo
+### MSG 5 — Branche A · Pas maintenant (= REPORT, pivot 5 juil)
 
 ```
 message en français suit
 
-ما كانش مشكل ! خاير نهار يناسبك ؟
-رد بالنهار اللي يناسبك 📅
+مليح ! أي وقت يناسبك ؟
+قللنا النهار والوقت اللي يريحك، ونأجلولك التوصيل 📅
 
 ━━━━━━━━━━━━━━
 
-Pas de souci ! Quel jour vous arrange ?
-Répondez avec le jour qui vous convient 📅
+Parfait ! Quelle date et quelle heure vous conviennent le plus ?
+Dites-nous le jour et le moment qui vous arrangent, on reprogramme 📅
 ```
 
 ### MSG 6 — Branche B · Changé d'avis
@@ -245,26 +269,46 @@ Compris {{prénom}}, on annule.
 Si vous changez d'avis, {{boutique}} reste à votre service 👋
 ```
 
-### MSG 7 — Branche C · Trouvé moins cher
+### MSG 7 — Branche C · Trouvé moins cher (LA RÉCUP) ⭐ PIVOT 5 juil
 
 ```
 message en français suit
 
-المثل يقول : "على رخصو خلا نصو" 😜
+فهمتك 🙂 بصح خمم معايا دقيقة :
 
-في اغلب الوقت، الرخيص يخبي منتوج مزيف ولا بياع ماشي محترف.
-هنا تخلص كي يوصلك المنتوج — تشوفو، تقلبو، تتحقق منو، وبعد تخلص.
-راك ما تخسر والو.
+هنا ما تخلص والو دروك. تستنى المنتوج يوصلك، تشوفو، تقلبو —
+وكي يعجبك، تخلص. إلا ما عجبكش، ما تخلص والو.
+
+كما يقول المثل:
+على رخصو خلا نصو!!
+المنتوج الرخيص لي شفتو، هل يعطيك ضمان:
+
+• توصيل سريع؟
+• المنتج كما الإعلان؟
+• التبديل إلا فيه مشكل؟
+• خدمة دعم؟
+
+{{boutique}} تعطيك الأمان : تخلص كي تكون راضي.
 
 نكملو ؟
 
 ━━━━━━━━━━━━━━
 
-Le proverbe le dit : "على رخصو خلا نصو" 😜
+On vous comprend 🙂 Mais réfléchissez une minute :
 
-Le moins cher cache souvent un faux produit ou un vendeur pas professionnel.
-Ici, vous payez à la livraison — une fois le produit en main, vérifié.
-Vous risquez zéro.
+Ici, vous ne payez rien maintenant. Vous attendez le produit, vous le recevez, vous le vérifiez —
+s'il vous plaît, vous payez. Sinon, vous ne payez rien.
+
+Comme dit le proverbe :
+« Ce qui est trop bon marché finit par te coûter le double. »
+Le produit pas cher que vous avez vu ailleurs, est-ce qu'il vous garantit :
+
+• Une livraison rapide ?
+• Un produit conforme à l'annonce ?
+• L'échange s'il y a un problème ?
+• Un vrai service après-vente ?
+
+{{boutique}} vous offre la sécurité : vous payez quand vous êtes satisfait.
 
 On continue ?
 
