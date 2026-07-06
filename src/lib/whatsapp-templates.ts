@@ -78,25 +78,6 @@ Sans confirmation, on ne pourra pas vous l'envoyer.
 On attend votre code 🙂`,
   },
 
-  // ─── MSG 3 — Remerciement (après code reçu) ───
-  order_thanks: {
-    name: "order_thanks",
-    category: "UTILITY",
-    language: "fr",
-    variables: ["prénom", "boutique"],
-    body: `message en français suit
-
-شكرا {{1}} ! الكوموند مأكدة ✅
-{{2}} راهي تحضرها.
-كي تكون واجدة، نبعثولك لينك باش تختار وين ووقتاش تحب نوصلوك.
-
-${SEP}
-
-Merci {{1}} ! Commande confirmée ✅
-{{2}} la prépare.
-Dès qu'elle est prête, on vous envoie un lien pour choisir où vous faire livrer et quand.`,
-  },
-
   // ─── Accusé de confirmation + badge réputation (après code OTP vérifié) ───
   order_confirmed_verified: {
     name: "order_confirmed_verified",
