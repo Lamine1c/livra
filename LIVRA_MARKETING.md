@@ -133,7 +133,7 @@ Que le vendeur livre avec son livreur perso OU avec Yalidine/DHD/Anderson, l'ach
 
 > **🔴 RECALIBRAGE 5 JUIL — TUNNEL BILATÉRAL VERROUILLÉ (copy)** : MSG 1-7 réécrits sous le pivot bilatéral (LIVRA = transaction protégée des 2 côtés, pas bouclier vendeur). MSG 1 = ajout bloc confiance encadré (✅ boutique vérifiée + ⭐ note/nb_livraisons + 4 engagements) + engagement nominatif acheteur ("كي تأكد راك تلتزم"). MSG 3 = annonce évaluation post-livraison sur {{boutique}}. MSG 5 = report (pas "pas dispo"). MSG 7 = checklist garanties + proverbe. **Nouvelles variables : {{note}}, {{nb_livraisons}}** (+ singulier/pluriel). **Décision Lamine : boutique 0 livraison = on affiche TOUT (transparence, LIVRA miroir).**
 
-> **⚠️ ÉTAT CODE (à faire, groupé avec bascule 360dialog)** : les 12 templates 26 juin sont codés (`src/lib/whatsapp-templates.ts`, hash ac79556) MAIS avec l'ANCIENNE copy "bouclier". Le tunnel OUI→MSG2→code→confirmation est branché (`handleInboundReply` confirm-order.ts). MSG 4-7 (objection) codés comme templates, logique NON branchée. → REMPLACER par la copy bilatérale ci-dessous quand on branche 360dialog (coder maintenant = dans le vide, Twilio sandbox ne gère pas les boutons). Labels boutons quick-reply : 20 char max Meta (cc tronque à la soumission). `order_thanks` template orphelin (jamais envoyé) : à câbler avec MSG 3 ou supprimer.
+> **⚠️ ÉTAT CODE (à faire, groupé avec setup Meta WhatsApp Step 2)** : les 12 templates 26 juin sont codés (`src/lib/whatsapp-templates.ts`) MAIS avec l'ANCIENNE copy "bouclier". Le tunnel OUI→MSG2→code→confirmation est branché (`handleInboundReply` confirm-order.ts). MSG 4-7 (objection) codés comme templates, logique NON branchée. → REMPLACER par la copy bilatérale ci-dessous quand on branche le canal Meta (coder maintenant = dans le vide, Twilio sandbox ne gère pas les boutons). Labels boutons quick-reply : 20 char max Meta (cc tronque à la soumission). **`order_thanks` template SUPPRIMÉ le 6 juil** (orphelin, le beat "merci" reste couvert par `order_confirmed_verified`). **🔴 6 juil : 360dialog ANNULÉ → MÉTA DIRECT** (Cloud API accessible sans Business Verification depuis fin 2025 ; app Meta "LIVRA" créée sous portfolio Plateforme LIVRA ; le flux transactionnel = messages de service = illimités dans la fenêtre 24h, le plafond 250/24h ne touche que le marketing sortant qu'on ne fait PAS sur WA). **RÈGLE INVIOLABLE : WhatsApp = transactionnel ONLY, zéro broadcast marketing tous Vn.**
 
 > **🔴 VAGUE 3 (décision Lamine 26 juin, encore valide)** : séparer le prix dans MSG 1 — afficher **prix produit + prix livraison + total** au lieu du seul total.
 
@@ -411,5 +411,5 @@ Suivez-le en live jusqu'à votre porte :
 
 ---
 
-**Dernière mise à jour :** 26 juin 2026
+**Dernière mise à jour :** 6 juillet 2026 (360dialog annulé → Meta direct, order_thanks supprimé, règle WA transactionnel-only)
 **Maintenu par :** Claudy + Lamine
