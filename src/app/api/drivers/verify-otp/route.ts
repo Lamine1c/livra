@@ -66,43 +66,73 @@ export async function POST(req: NextRequest) {
   // 8a. Supprimer le record (single-use)
   await supabase.from("driver_otps").delete().eq("id", record.id);
 
-  // 8b. Upsert dans drivers
+  // 8b. Écriture dans drivers — résolution d'identité AVANT d'écrire.
+  // drivers a DEUX uniques : device_id (contrainte) ET idx_drivers_whatsapp (index unique).
+  // whatsapp = identité stable du livreur ; device_id change (réinstall/nouveau tel).
+  // Même whatsapp + nouveau device = même livreur qui a réinstallé → UPDATE de sa ligne.
+  // Un seul onConflict ne peut pas couvrir les deux contraintes → on résout à la main.
   const now = new Date().toISOString();
-  const { data: driver, error: driverError } = await supabase
-    .from("drivers")
-    .upsert(
-      {
-        prenom: record.prenom,
-        whatsapp: normalizedPhone,
-        couleur_casque: record.couleur_casque,
-        wilaya: record.wilaya,
-        device_id: record.device_id,
-        whatsapp_verified: true,
-        whatsapp_verified_at: now,
-        last_scan_at: now,
-      },
-      // drivers a une contrainte UNIQUE sur device_id (pas sur whatsapp). onConflict DOIT
-      // matcher cette contrainte, sinon Postgres tente un INSERT → collision device_id (500).
-      // Un device = un livreur : même device_id à la réinstall → UPDATE de la ligne existante.
-      { onConflict: "device_id" }
-    )
-    .select("id")
-    .single();
+  const driverFields = {
+    prenom: record.prenom,
+    whatsapp: normalizedPhone,
+    couleur_casque: record.couleur_casque,
+    wilaya: record.wilaya,
+    device_id: record.device_id,
+    whatsapp_verified: true,
+    whatsapp_verified_at: now,
+    last_scan_at: now,
+  };
 
-  if (driverError || !driver) {
-    console.error("[verify-otp] driver upsert error:", driverError?.message);
-    return NextResponse.json(
-      { error: "Erreur enregistrement livreur." },
-      { status: 500 }
-    );
+  // Chercher un livreur existant : par whatsapp (identité stable) d'abord, sinon par device_id.
+  let existingId: string | null = null;
+  const { data: byPhone } = await supabase
+    .from("drivers")
+    .select("id")
+    .eq("whatsapp", normalizedPhone)
+    .maybeSingle();
+  if (byPhone?.id) {
+    existingId = byPhone.id as string;
+  } else {
+    const { data: byDevice } = await supabase
+      .from("drivers")
+      .select("id")
+      .eq("device_id", record.device_id)
+      .maybeSingle();
+    if (byDevice?.id) existingId = byDevice.id as string;
+  }
+
+  let driverId: string;
+  if (existingId) {
+    const { data: updated, error: updateError } = await supabase
+      .from("drivers")
+      .update(driverFields)
+      .eq("id", existingId)
+      .select("id")
+      .single();
+    if (updateError || !updated) {
+      console.error("[verify-otp] driver update error:", updateError?.message);
+      return NextResponse.json({ error: "Erreur enregistrement livreur." }, { status: 500 });
+    }
+    driverId = updated.id as string;
+  } else {
+    const { data: inserted, error: insertError } = await supabase
+      .from("drivers")
+      .insert(driverFields)
+      .select("id")
+      .single();
+    if (insertError || !inserted) {
+      console.error("[verify-otp] driver insert error:", insertError?.message);
+      return NextResponse.json({ error: "Erreur enregistrement livreur." }, { status: 500 });
+    }
+    driverId = inserted.id as string;
   }
 
   // 8c / 8d. Générer le device token signé 24h
-  const deviceToken = generateDriverToken(driver.id as string);
+  const deviceToken = generateDriverToken(driverId);
 
   // 8e. Retourner le résultat
   return NextResponse.json(
-    { success: true, driverId: driver.id, deviceToken },
+    { success: true, driverId, deviceToken },
     { status: 200 }
   );
 }
