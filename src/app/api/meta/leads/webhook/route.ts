@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyWebhookSignature, getLeadData } from "@/lib/meta";
 import { sendExpoPush } from "@/lib/expo-push";
+import { normalizePhoneNumber } from "@/lib/whatsapp";
 
 // GET — Meta webhook verification handshake
 export async function GET(req: NextRequest) {
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
             user_id: subscription.user_id,
             full_name: lead.name ?? "Lead Meta Ads",
             phone: lead.phone ?? "",
+            phone_normalized: lead.phone ? normalizePhoneNumber(lead.phone) || null : null,
             wilaya: lead.city ?? "",
             commune: "",
             address: "",
