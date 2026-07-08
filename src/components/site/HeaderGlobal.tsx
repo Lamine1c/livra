@@ -56,6 +56,7 @@ export default function HeaderGlobal() {
   const close = useCallback(() => setOpen(false), []);
 
   // Le portal n'existe qu'après le mount client (document indisponible en SSR).
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- pattern standard de garde SSR pour createPortal.
   useEffect(() => setMounted(true), []);
 
   // Scroll-lock body + fermeture Escape, montés tant que le drawer est ouvert.
@@ -75,6 +76,7 @@ export default function HeaderGlobal() {
 
   // Sécurité app-router : fermer le drawer à tout changement de route.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronisation volontaire avec un système externe (navigation app-router).
     close();
   }, [pathname, close]);
 

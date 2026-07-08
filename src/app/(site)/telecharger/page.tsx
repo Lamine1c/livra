@@ -149,7 +149,7 @@ export default function TelechargerPage() {
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "760px", margin: "0 auto", padding: "clamp(48px,7vw,88px) 24px clamp(44px,5vw,64px)" }}>
           <p style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontSize: "12.5px", fontWeight: 500, letterSpacing: "0.22em", textTransform: "uppercase", color: "#8A8A8E", marginBottom: "22px" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#D97757", boxShadow: "0 0 12px 1px rgba(217,119,87,0.7)", flexShrink: 0 }} />
-            L'application
+            L&apos;application
           </p>
           <h1 style={{ fontWeight: 800, fontSize: "clamp(48px,7vw,72px)", lineHeight: "1.0", letterSpacing: "-0.04em", color: "#F5F0E8" }}>
             Télécharge LIVRA
