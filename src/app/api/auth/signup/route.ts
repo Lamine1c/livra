@@ -4,6 +4,11 @@ import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateOtp } from "@/lib/auth/otp";
 import { renderOtpEmail } from "@/lib/email/templates/otp-email";
+import { rateLimit } from "@/lib/rate-limit";
+
+// Rate-limit signup : 5 tentatives / heure, par IP et par email.
+const SIGNUP_RATE_LIMIT = 5;
+const SIGNUP_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 heure
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "https://golivra.app",
@@ -36,7 +41,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Données invalides" }, { status: 400, headers: CORS_HEADERS });
   }
 
+  // Step 1b: Rate-limit par IP + par email (5/heure, in-memory best-effort —
+  // le throttle OTP en base ci-dessous reste la protection durable).
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const ipAllowed = rateLimit(`signup:ip:${ip}`, SIGNUP_RATE_LIMIT, SIGNUP_RATE_WINDOW_MS);
+  const emailAllowed = rateLimit(
+    `signup:email:${body.email.toLowerCase()}`,
+    SIGNUP_RATE_LIMIT,
+    SIGNUP_RATE_WINDOW_MS
+  );
+  if (!ipAllowed || !emailAllowed) {
+    console.log("[signup] Rate limit (5/h) hit for:", ipAllowed ? body.email : "ip");
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessaie dans une heure." },
+      { status: 429, headers: CORS_HEADERS }
+    );
+  }
+
   try {
+    // NOTE PIVOT (juillet 2026) : aucun gating waitlist ici — cette route n'a
+    // jamais rejeté les emails absents de vendors_waitlist. Elle UPSERT le
+    // prospect dans vendors_waitlist (table qui sert de table vendeurs) puis
+    // envoie l'OTP. Tout le monde peut s'inscrire ; seul un compte déjà
+    // "active" est rejeté (409 ci-dessous). Flux OTP/vérification inchangé.
+
     // Step 2: Check if already active
     console.log("[signup] Checking vendors_waitlist for:", body.email);
     const { data: existing, error: existingError } = await supabaseAdmin
