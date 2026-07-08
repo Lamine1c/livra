@@ -63,7 +63,7 @@ export default function Footer() {
             <Link href="/cgu">CGU</Link>
             <a href="mailto:hello@golivra.app">Contact</a>
           </nav>
-          <p className="sf-copy">© 2026 LIVRA · Godzii Media (9516-1998 Quebec Inc.)</p>
+          <p className="sf-copy">© 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)</p>
         </div>
       </div>
     </footer>
