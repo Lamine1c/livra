@@ -232,6 +232,66 @@ export function verifyDriverToken(token: string): DriverTokenVerifyResult {
   return { valid: true, driverId };
 }
 
+// ── Billing activation token (scope sentinel = "__billing__", expiry = 7d) ──
+// Envoyé dans les emails/WA de rappel de fin d'essai : les emails ne portent
+// pas de session vendeur, le token signé identifie le vendeur (email) sur
+// /billing/activer?t=<token> qui crée le checkout Chargily et redirige.
+
+const BILLING_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function generateBillingActivationToken(email: string): string {
+  const payload = `${email}|__billing__|${Date.now()}`;
+  const sig = crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
+  const encoded = Buffer.from(payload, "utf8").toString("base64url");
+  return `${encoded}.${sig}`;
+}
+
+export type BillingTokenVerifyResult =
+  | { valid: true; email: string }
+  | { valid: false; expired?: boolean };
+
+export function verifyBillingActivationToken(token: string): BillingTokenVerifyResult {
+  if (!token || typeof token !== "string") return { valid: false };
+
+  const dot = token.lastIndexOf(".");
+  if (dot === -1) return { valid: false };
+
+  const encoded = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  let payload: string;
+  try {
+    payload = Buffer.from(encoded, "base64url").toString("utf8");
+  } catch {
+    return { valid: false };
+  }
+
+  let expectedSig: string;
+  try {
+    expectedSig = crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
+  } catch {
+    return { valid: false };
+  }
+
+  if (sig.length !== expectedSig.length) return { valid: false };
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+    return { valid: false };
+  }
+
+  const parts = payload.split("|");
+  if (parts.length !== 3) return { valid: false };
+  const [email, scope, tsStr] = parts;
+  if (scope !== "__billing__") return { valid: false };
+  const ts = parseInt(tsStr, 10);
+  if (!email || isNaN(ts)) return { valid: false };
+
+  if (Date.now() - ts > BILLING_TOKEN_EXPIRY_MS) {
+    return { valid: false, expired: true };
+  }
+
+  return { valid: true, email };
+}
+
 /**
  * Vérifie la signature HMAC d'un driver token MAIS accepte les tokens
  * expirés. Usage : /api/driver/refresh-token, pour permettre à un livreur

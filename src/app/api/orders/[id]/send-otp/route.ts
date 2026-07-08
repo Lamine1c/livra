@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateOTP, sendWhatsAppNotification, normalizePhoneNumber } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
 
 export async function POST(
   req: NextRequest,
@@ -10,6 +11,14 @@ export async function POST(
   const { id } = await params;
   const { user, supabase, error: authError } = await getAuthenticatedUser(req);
   if (!user || !supabase) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
+
+  // Trial gate : abonnement expiré → pas d'envoi de confirmation WhatsApp.
+  if (user.email) {
+    const gate = await requireActiveSubscription(user.email);
+    if (!gate.allowed) {
+      return NextResponse.json({ error: SUBSCRIPTION_EXPIRED_ERROR }, { status: 403 });
+    }
+  }
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")

@@ -21,7 +21,7 @@ export default function Footer() {
             <a href="mailto:hello@golivra.app">Contact</a>
           </nav>
           <p className="lp-footer-copy">
-            © 2026 LIVRA · Godzii Media (9516-1998 Quebec Inc.)
+            © 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)
           </p>
         </div>
       </div>

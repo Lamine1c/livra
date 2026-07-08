@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     const termsUserAgent = req.headers.get("user-agent") || null;
 
     // Step 4: Update vendor with password hash, acceptance proof, set status active
+    // + démarrage du trial 7 jours (026_billing_trial_gate).
     console.log("[set-password] Updating vendor record for:", email);
     const { error: updateError } = await supabaseAdmin
       .from("vendors_waitlist")
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
         password_hash: hash,
         status: "active",
         activated_at: new Date().toISOString(),
+        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         terms_accepted_at: new Date().toISOString(),
         terms_version: TERMS_VERSION,
         privacy_version: PRIVACY_VERSION,
@@ -92,52 +94,23 @@ export async function POST(req: NextRequest) {
       throw updateError;
     }
 
-    // Step 5: Count existing founders (active with a founder_index)
-    console.log("[set-password] Counting existing founders");
-    const { count, error: countError } = await supabaseAdmin
-      .from("vendors_waitlist")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "active")
-      .not("founder_index", "is", null);
+    // Step 5: Claim founder index via RPC ATOMIQUE (026_billing_trial_gate).
+    // Remplace l'ancien count+update applicatif (race condition : deux
+    // activations simultanées lisaient le même count). La RPC sérialise via
+    // pg_advisory_xact_lock et retourne l'index attribué (ou déjà détenu),
+    // NULL si les 50 places founders sont prises.
+    console.log("[set-password] Claiming founder index for:", email);
+    const { data: claimedIndex, error: claimError } = await supabaseAdmin.rpc(
+      "claim_founder_index",
+      { p_email: email }
+    );
 
-    if (countError) {
-      console.log("[set-password] Error counting founders:", countError);
-      throw countError;
+    if (claimError) {
+      console.log("[set-password] Error claiming founder_index:", claimError);
+      throw claimError;
     }
 
-    const founderCount = Number(count ?? 0);
-    console.log("[set-password] Current founder count:", founderCount);
-
-    // Step 6: Assign founder_index if still within the first 50
-    if (founderCount < 50) {
-      const founderIndex = founderCount + 1;
-      console.log("[set-password] Assigning founder_index", founderIndex, "to:", email);
-      const { error: founderUpdateError } = await supabaseAdmin
-        .from("vendors_waitlist")
-        .update({ founder_index: founderIndex })
-        .eq("email", email)
-        .is("founder_index", null);
-
-      if (founderUpdateError) {
-        console.log("[set-password] Error assigning founder_index:", founderUpdateError);
-        throw founderUpdateError;
-      }
-    }
-
-    // Step 7: Fetch final founder_index
-    console.log("[set-password] Fetching final founder_index for:", email);
-    const { data: row, error: fetchError } = await supabaseAdmin
-      .from("vendors_waitlist")
-      .select("founder_index")
-      .eq("email", email)
-      .single();
-
-    if (fetchError) {
-      console.log("[set-password] Error fetching founder_index:", fetchError);
-      throw fetchError;
-    }
-
-    const founderIndex = row?.founder_index ?? null;
+    const founderIndex = (claimedIndex as number | null) ?? null;
     console.log("[set-password] Done for:", email, "founder_index:", founderIndex);
 
     return NextResponse.json({ ok: true, founder_index: founderIndex }, { headers: CORS_HEADERS });
