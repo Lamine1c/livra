@@ -111,6 +111,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
   // ── Reset on open ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire du wizard à chaque ouverture du modal (le composant reste monté quand isOpen=false).
       setStep(1);
       setErrors({});
       setForm(EMPTY_FORM);
@@ -128,6 +129,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
   // ── Resend timer ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (step !== 2) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- réarmement volontaire du timer de resend à chaque entrée dans l'étape OTP.
     setCanResend(false);
     setResendTimer(30);
     const interval = setInterval(() => {
@@ -174,7 +176,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
       if (res.status === 409) {
         setErrors((prev) => ({ ...prev, email: "Tu es déjà inscrit·e avec cet email" }));
       } else if (res.status === 429) {
-        setErrors((prev) => ({ ...prev, email: "Patiente 1 minute avant de redemander un code" }));
+        setErrors((prev) => ({ ...prev, email: data?.error ?? "Patiente 1 minute avant de redemander un code" }));
       } else {
         setErrors((prev) => ({ ...prev, email: data?.error ?? "Une erreur est survenue, réessaie" }));
       }
@@ -269,7 +271,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (res.status === 429) {
-          setOtpError("Patiente 1 minute avant de redemander un code");
+          setOtpError(data?.error ?? "Patiente 1 minute avant de redemander un code");
         } else {
           setOtpError(data?.error ?? "Une erreur est survenue, réessaie");
         }
@@ -402,7 +404,7 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   Crée ton compte LIVRA
                 </h2>
                 <p style={{ marginTop: "8px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                  C'est rapide. 1 minute max.
+                  C&apos;est rapide. 1 minute max.
                 </p>
               </div>
 

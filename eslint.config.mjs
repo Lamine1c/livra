@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scripts Node CJS de tooling (assets brand) — pas du code applicatif.
+    "scripts/**",
   ]),
 ]);
 

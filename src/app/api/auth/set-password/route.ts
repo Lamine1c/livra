@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
     const founderCount = Number(count ?? 0);
     console.log("[set-password] Current founder count:", founderCount);
 
-    // Step 6: Assign founder_index if still within the first 100
-    if (founderCount < 100) {
+    // Step 6: Assign founder_index if still within the first 50
+    if (founderCount < 50) {
       const founderIndex = founderCount + 1;
       console.log("[set-password] Assigning founder_index", founderIndex, "to:", email);
       const { error: founderUpdateError } = await supabaseAdmin
