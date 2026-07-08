@@ -24,9 +24,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://golivra.app"),
-  title: "LIVRA — L'OS de votre e-commerce",
+  title: "LIVRA — La transaction protégée des deux côtés",
   description:
-    "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons. Pour les e-commerçants en Algérie et la diaspora.",
+    "LIVRA protège chaque livraison des deux côtés : le vendeur est protégé des faux clients (score de fiabilité, OTP de réception), l'acheteur est protégé des arnaques (validation de commande, suivi live).",
   icons: {
     icon: [
       { url: "/favicon.ico",       sizes: "any" },
@@ -38,14 +38,14 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title:       "LIVRA — L'OS de votre e-commerce",
-    description: "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons.",
+    title:       "LIVRA — La transaction protégée des deux côtés",
+    description: "Le vendeur est protégé des faux clients, l'acheteur est protégé des arnaques. Score de fiabilité, OTP de réception, validation et suivi live.",
     images: [{ url: "/og-image-livra.png", width: 1200, height: 630, alt: "LIVRA" }],
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "LIVRA — L'OS de votre e-commerce",
-    description: "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons.",
+    title:       "LIVRA — La transaction protégée des deux côtés",
+    description: "Le vendeur est protégé des faux clients, l'acheteur est protégé des arnaques. Score de fiabilité, OTP de réception, validation et suivi live.",
     images:      ["/og-image-livra.png"],
   },
 };

@@ -48,7 +48,7 @@ export default function Footer() {
         <div className="sf-top">
           <div className="sf-brand-block">
             <span className="sf-brand">LIVRA</span>
-            <p className="sf-tagline">L&rsquo;OS de votre e-commerce.</p>
+            <p className="sf-tagline">La transaction protégée des deux côtés.</p>
           </div>
         </div>
 

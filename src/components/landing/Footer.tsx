@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="lp-footer-top">
           <div className="lp-footer-brand-block">
             <span className="lp-footer-brand">LIVRA</span>
-            <p className="lp-footer-tagline">L&rsquo;OS de votre e-commerce.</p>
+            <p className="lp-footer-tagline">La transaction protégée des deux côtés.</p>
           </div>
         </div>
         <div className="lp-footer-divider"></div>

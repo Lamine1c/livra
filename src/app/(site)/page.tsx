@@ -15,22 +15,22 @@ import Footer from '@/components/landing/Footer';
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata = {
-  title: "LIVRA — L'OS de votre e-commerce",
+  title: "LIVRA — La transaction protégée des deux côtés",
   description:
-    "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons. Pour les e-commerçants en Algérie et la diaspora. Bientôt disponible.",
+    "LIVRA protège chaque livraison des deux côtés : le vendeur est protégé des faux clients (score de fiabilité, OTP de réception), l'acheteur est protégé des arnaques (validation de commande, suivi live).",
   openGraph: {
-    title: "LIVRA — L'OS de votre e-commerce",
+    title: "LIVRA — La transaction protégée des deux côtés",
     description:
-      "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons. Pour les e-commerçants en Algérie et la diaspora. Bientôt disponible.",
+      "LIVRA protège chaque livraison des deux côtés : le vendeur est protégé des faux clients (score de fiabilité, OTP de réception), l'acheteur est protégé des arnaques (validation de commande, suivi live).",
     url: "https://golivra.app",
     siteName: "LIVRA",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LIVRA — L'OS de votre e-commerce",
+    title: "LIVRA — La transaction protégée des deux côtés",
     description:
-      "LIVRA est le système qui connecte vos pubs Facebook à vos livraisons.",
+      "Le vendeur est protégé des faux clients, l'acheteur est protégé des arnaques. Score de fiabilité, OTP de réception, validation et suivi live.",
   },
 };
 
