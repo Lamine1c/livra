@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Footer from "@/components/site/Footer";
 import SignupModal from "@/components/SignupModal";
 
@@ -49,38 +49,9 @@ function FeatureList() {
   );
 }
 
-type FoundersData = { count: number; max: number };
-type FoundersState =
-  | { status: "loading" }
-  | { status: "ok"; count: number; max: number }
-  | { status: "error" };
-
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [founders, setFounders] = useState<FoundersState>({ status: "loading" });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/founders-count")
-      .then((res) => {
-        if (!res.ok) throw new Error("fetch failed");
-        return res.json() as Promise<FoundersData>;
-      })
-      .then((data) => {
-        if (!cancelled) setFounders({ status: "ok", count: data.count, max: data.max });
-      })
-      .catch(() => {
-        if (!cancelled) setFounders({ status: "error" });
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  // Founders counter — branché sur l'API existante (même source que la v précédente)
-  const foundersCount = founders.status === "ok" ? founders.count : null;
-  const foundersMax = founders.status === "ok" ? founders.max : 100;
-  const isFull = foundersCount !== null && foundersCount >= foundersMax;
-  const remaining = foundersCount !== null ? Math.max(0, foundersMax - foundersCount) : null;
 
   function openModal(plan: PlanKey) {
     setSelectedPlan(plan);
@@ -169,7 +140,6 @@ export default function PricingPage() {
         .pv-badge .sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(var(--accent-rgb),0.55); }
         .pv-badge .count { font-variant-numeric: tabular-nums; color: var(--ivoire); letter-spacing: 0.06em; }
         .pv-badge .count b { color: var(--terracotta); font-weight: 700; }
-        .pv-badge .count-skel { display: inline-block; width: 64px; height: 11px; border-radius: 6px; background: rgba(255,255,255,0.12); vertical-align: middle; }
 
         .pv-label {
           align-self: flex-start; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
@@ -272,24 +242,8 @@ export default function PricingPage() {
                     <circle cx="12" cy="8" r="6" /><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12" />
                   </svg>
                   Fondateur
-                  {founders.status === "loading" && (
-                    <>
-                      <span className="sep" />
-                      <span className="count-skel" aria-hidden="true" />
-                    </>
-                  )}
-                  {founders.status === "ok" && !isFull && (
-                    <>
-                      <span className="sep" />
-                      <span className="count"><b>{remaining}</b> / {foundersMax} places</span>
-                    </>
-                  )}
-                  {founders.status === "ok" && isFull && (
-                    <>
-                      <span className="sep" />
-                      <span className="count">Complet</span>
-                    </>
-                  )}
+                  <span className="sep" />
+                  <span className="count"><b>50</b> premiers</span>
                 </span>
 
                 <div className="pv-price">
@@ -306,22 +260,14 @@ export default function PricingPage() {
                 <p className="pv-life-note">{"tant que l'abonnement reste actif"}</p>
               </div>
 
-              {isFull ? (
-                <button type="button" className="pv-cta pv-cta--ghost" onClick={() => openModal("monthly")}>
-                  Passer au Standard
-                  <ArrowSvg />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="pv-cta pv-cta--primary"
-                  onClick={() => openModal("founders")}
-                  disabled={founders.status === "loading"}
-                >
-                  Devenir Fondateur
-                  <ArrowSvg />
-                </button>
-              )}
+              <button
+                type="button"
+                className="pv-cta pv-cta--primary"
+                onClick={() => openModal("founders")}
+              >
+                Devenir Fondateur
+                <ArrowSvg />
+              </button>
 
               <FeatureList />
             </article>
