@@ -1,6 +1,6 @@
 // Emails de rappel fin d'essai (cron /api/cron/billing-reminders).
 // Même gabarit visuel que otp-email.ts (wordmark + carte blanche sur ivoire).
-// Copy validée à défaut par Claude — à soumettre à Lamine.
+// Copy VALIDÉE par Lamine (8 juil 2026).
 
 const WORDMARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0.76 -92 374.32 100" fill="none" role="img" aria-label="LIVRA" width="120" style="display:block;">
   <title>LIVRA</title>
@@ -12,8 +12,8 @@ const WORDMARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0.76 -92 
 </svg>`;
 
 export const BILLING_REMINDER_SUBJECTS = {
-  j3: "Il te reste 3 jours d'essai LIVRA",
-  j0: "Ton essai LIVRA se termine aujourd'hui",
+  j3: "Ton essai LIVRA se termine dans 3 jours",
+  j0: "Dernier jour de ton essai LIVRA ⏳",
 } as const;
 
 export type BillingReminderKind = keyof typeof BILLING_REMINDER_SUBJECTS;
@@ -30,13 +30,17 @@ export function renderBillingReminderEmail(
   kind: BillingReminderKind,
   prenom: string,
   amount: number,
-  activationUrl: string
+  activationUrl: string,
+  dateFin: string,
+  isFounder: boolean
 ): string {
   const safePrenom = escapeHtml(prenom || "");
+  const salutation = safePrenom ? `Salam ${safePrenom} 👋` : "Salam 👋";
+  const founderSuffix = isFounder ? " — tarif Fondateur verrouillé à vie" : "";
   const body =
     kind === "j3"
-      ? `Salut ${safePrenom}, ton essai LIVRA se termine dans 3 jours. Tes commandes, tes clients et ton historique sont sauvegardés. Pour continuer à confirmer tes commandes et protéger tes transactions, active ton abonnement : ${amount} DA/mois.`
-      : `Salut ${safePrenom}, c'est le dernier jour de ton essai. Tes données restent sauvegardées, mais la confirmation de commandes sera suspendue ce soir. Active ton abonnement pour continuer sans coupure : ${amount} DA/mois.`;
+      ? `${salutation} Ton essai gratuit se termine le ${escapeHtml(dateFin)}. Tes commandes, tes clients et ton score restent sauvegardés — mais sans abonnement, tu ne pourras plus expédier. Continue avec LIVRA : ${amount} DA/mois${founderSuffix}.`
+      : `Active maintenant et tu ne perds rien : tes commandes, tes clients et ton score t'attendent. ${amount} DA/mois${founderSuffix}.`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -59,6 +63,9 @@ export function renderBillingReminderEmail(
     <a href="${activationUrl}" style="display:inline-block;margin-top:24px;padding:14px 28px;border-radius:999px;background:#D97757;color:#0E0E10;font-weight:700;font-size:14px;text-decoration:none;">
       Activer mon abonnement
     </a>
+    <p style="font-size:13px;line-height:1.6;color:#8A8A8E;margin:20px 0 0;">
+      Pas convaincu ? Réponds à ce mail et dis-nous ce qui manque — on lit tout.
+    </p>
     <p style="font-size:14px;color:#8A8A8E;margin:24px 0 0;">
       — L'équipe LIVRA
     </p>
