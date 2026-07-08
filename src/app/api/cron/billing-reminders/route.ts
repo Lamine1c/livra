@@ -33,9 +33,10 @@ interface ReminderResult {
   error?: string;
 }
 
-function waMessage(kind: BillingReminderKind, amount: number, lien: string): string {
-  const quand = kind === "j3" ? "dans 3 jours" : "aujourd'hui";
-  return `⏳ Ton essai LIVRA se termine ${quand}. Active ton abonnement (${amount} DA/mois) pour continuer à confirmer tes commandes : ${lien}`;
+// Copy WA validée par Lamine (8 juil 2026).
+function waMessage(kind: BillingReminderKind, amount: number, lien: string, dateFin: string): string {
+  const quand = kind === "j3" ? `le ${dateFin}` : "aujourd'hui";
+  return `⏳ Ton essai LIVRA se termine ${quand}. Active ton abonnement (${amount} DA/mois) : ${lien}. Tes données sont sauvegardées.`;
 }
 
 export async function GET(req: NextRequest) {
@@ -102,13 +103,21 @@ export async function GET(req: NextRequest) {
         const prenom = ((vendor.full_name as string | null) ?? "").split(" ")[0] ?? "";
         const token = generateBillingActivationToken(vendor.email);
         const lien = `${base}/billing/activer?t=${token}`;
+        const isFounder = vendor.founder_index != null;
+        const dateFin = new Date(endsAt).toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+        });
 
         // ── Email Resend (même pattern que signup) ──
+        // replyTo : la copy invite à répondre au mail — contact@golivra.app à
+        // confirmer/créer côté Resend (sinon les réponses partent dans le vide).
         const { error: emailError } = await resend.emails.send({
           from: "LIVRA <noreply@golivra.app>",
+          replyTo: "contact@golivra.app",
           to: vendor.email,
           subject: BILLING_REMINDER_SUBJECTS[kind],
-          html: renderBillingReminderEmail(kind, prenom, amount, lien),
+          html: renderBillingReminderEmail(kind, prenom, amount, lien, dateFin, isFounder),
         });
         if (emailError) {
           // Colonne non marquée → retenté au prochain run.
@@ -142,7 +151,7 @@ export async function GET(req: NextRequest) {
           try {
             const wa = await sendWhatsAppNotification(
               profile.phone,
-              waMessage(kind, amount, lien)
+              waMessage(kind, amount, lien, dateFin)
             );
             result.waSent = wa.success;
             if (!wa.success) {
