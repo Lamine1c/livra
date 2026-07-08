@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
 
 export async function POST(
   req: NextRequest,
@@ -9,6 +10,14 @@ export async function POST(
   const { id } = await params;
   const { user, supabase, error: authError } = await getAuthenticatedUser(req);
   if (!user || !supabase) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
+
+  // Trial gate : abonnement expiré → pas de confirmation de commande.
+  if (user.email) {
+    const gate = await requireActiveSubscription(user.email);
+    if (!gate.allowed) {
+      return NextResponse.json({ error: SUBSCRIPTION_EXPIRED_ERROR }, { status: 403 });
+    }
+  }
 
   const body = await req.json();
   const { code } = body as { code: string };
