@@ -8,6 +8,8 @@ type PushPayload = {
   data?: Record<string, unknown>;
   sound?: "default" | null;
   badge?: number;
+  priority?: "default" | "normal" | "high";
+  channelId?: string;
 };
 
 type PushResult = { success: boolean; error?: string };
@@ -32,6 +34,12 @@ export async function sendExpoPush(
     body,
     data,
     sound: "default",
+    // Android : priorité FCM haute + canal "commandes-v1" (importance MAX,
+    // créé par l'app mobile) → heads-up/bannière hors app. Le canal "default"
+    // hérité d'anciennes installs peut être resté en importance basse (son
+    // sans bannière) et Android interdit de le remonter — d'où le canal neuf.
+    priority: "high",
+    channelId: "commandes-v1",
   };
 
   try {
