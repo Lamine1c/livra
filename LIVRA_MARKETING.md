@@ -411,5 +411,50 @@ Suivez-le en live jusqu'à votre porte :
 
 ---
 
-**Dernière mise à jour :** 6 juillet 2026 (360dialog annulé → Meta direct, order_thanks supprimé, règle WA transactionnel-only)
+---
+
+# 📣 STRATÉGIE SOCIAL MEDIA LIVRA — « LA MACHINE » (gravée 10 juil 2026)
+
+## Architecture des comptes
+- **2 pages par plateforme, toutes sous le portfolio Meta « Plateforme LIVRA »** : page VENDEUR (acquisition) + page ACHETEUR (pull).
+- **Réserver les handles MAINTENANT sur toutes les plateformes** (FB, IG, TikTok, YouTube Shorts) — même si vides. Page vendeur = active au pré-lancement ; **page acheteur = ALLUMÉE seulement à ~50-100 boutiques actives** (réclamer un badge qui n'existe nulle part = message à plat ; quand le badge circule déjà dans les WhatsApp, la demande a un objet).
+- Page acheteur — l'idée psychologique (Lamine) : amener l'acheteur à DEMANDER aux boutiques « vous travaillez avec LIVRA ? » → la pression remonte, mécanique Intel Inside / cadenas HTTPS.
+
+## Piliers éditoriaux (le mix — pas que du pain)
+| Pilier | Part | Contenu |
+|---|---|---|
+| 🩸 PAIN & wedge | ~40% | Fausses commandes, retours, scammers — série C1-C6, angle « wallah c'est exactement ça » |
+| 📚 CONSEILS | ~30% | E-commerce DZ, confiance, branding boutique, social selling, pricing, photos produit — LIVRA = le grand frère qui aide, pas juste le vendeur d'app |
+| 🔬 PREUVE produit | ~20% | Screen recordings du VRAI produit (badge score qui apparaît, OTP, tracking GPS) — 8 sec hypnotiques que personne ne peut copier |
+| 🟷️ MARQUE | ~10% | Vision, coulisses du build, la transaction protégée des deux côtés |
+
+## Cadence (réaliste solo + quadrille)
+- **Pré-lancement** : 1 post/jour page vendeur (chauffer le marché, remplir les 50 fondateurs au jour J).
+- **Post-lancement** : 2-3/jour via le KIT (Gary-V style : occuper l'espace — mais le volume ne devient une arme que quand la machine produit toute seule).
+- **Batch production** : 1 session dédiée = 1 semaine de contenu d'avance. Sprint contenu 2-3j complets APRÈS la fin app+site (décision Lamine).
+- La moitié du jeu Gary-V = les RÉPONSES : commentaires/DM traités chaque jour (>volume).
+
+## Formats & pipeline de production
+- **KIT DE CARTES (à verrouiller avec CD)** : ~10 cartes UI réalistes réutilisables — appel raté, journal d'appels, note de frais −800 DA, OTP, **badge score rouge**, stat géante, bulle WhatsApp, carte GPS livreur, timeline commande, évaluation ⭐. Paramétrique : kicker + carte + punch + signoff sur CSS unique → « pitcher le thème, CD produit ».
+- **Shorts TikTok/Reels (le rêve, réalisable sans caméra)** : (a) créatives HTML ANIMÉES 1080×1920 (punch qui tape ligne par ligne, −800 DA qui se calcule, appels qui s'empilent) → screen-record 7-10 sec ; (b) screen recordings produit réel. Zéro tournage, pipeline infini.
+- **Miroir SEO** : chaque pain/conseil = 1 post + 1 short + 1 article magazine long-tail. Une idée, trois canaux. Réseaux + SEO = BUMP.
+
+## Langues
+- Ads & social organique : **darija/arabizi** (« YCOMMANDI. NUMÉRO TAFI. W NTA TKHALLES. ») + FR selon le post.
+- UI app : MSA propre (jamais croisé avec la darija des ads — chacun sa place).
+- Articles SEO : FR (+ AR plus tard).
+
+## Série créatives COD — verdict 10 juil
+- C1 (numéro éteint) ✅ · C2 (10 appels) ✅ punch à resserrer (« 10 APPELS. 0 RÉPONSE. TU PAIES LA COURSE. ») · **C3 (−800 DA) = LA plus forte, à pousser en premier** · C4 (30%) ✅ · C5 (délivrance OTP) ✅ · **C6 À CRÉER : la créative SCORE** (badge rouge réel « Client à risque · 2 refus sur 23 commandes » — « IL A DÉJÀ ARNAQUÉ 2 BOUTIQUES. LIVRA TE PRÉVIENT AVANT D'EXPÉDIER. » / darija « DAREHA F 2 7WANET. LIVRA TGOLHALEK QBEL MA TSIFTI. »).
+- Signoff « Le bouclier de ta boutique / Dra3 el 7anout » : **GARDÉ pour la série vendeur** (le pain est vendeur, la langue du marché dit bouclier) — le bilatéral vit sur la LP d'atterrissage ; la série ACHETEUR aura son propre angle.
+
+## Workflow quadrille contenu
+Lamine pitch thème/sujet → Claudy angle + copy (FR + darija) → CD assemble depuis le kit → export → publication + réponses par Lamine.
+
+## KPIs (les seuls qui comptent)
+Pas les followers : **commentaires de vendeurs réels, DM entrants, signups fondateurs attribués.**
+
+---
+
+**Dernière mise à jour :** 10 juillet 2026 (stratégie social media « La Machine » + verdict série COD + C6 score à créer)
 **Maintenu par :** Claudy + Lamine
