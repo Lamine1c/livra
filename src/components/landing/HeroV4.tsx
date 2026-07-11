@@ -1,4 +1,8 @@
-export default function HeroV4() {
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+
+export default async function HeroV4() {
+  const t = await getTranslations("Hero");
   return (
     <>
       <section className="hero" data-screen-label="Hero">
@@ -26,29 +30,29 @@ export default function HeroV4() {
 
         <div className="fg">
           <div className="copy">
-            <p className="kicker an" style={{ '--d': '120ms' } as React.CSSProperties}><span className="pip"></span>L&rsquo;OS de votre e-commerce</p>
-            <h1 className="an" style={{ '--d': '220ms' } as React.CSSProperties}><span className="hl-1">Sortez de la</span><span className="hl-2"><span className="accent">jungle.</span></span></h1>
-            <p className="subtitle an" style={{ '--d': '360ms' } as React.CSSProperties}><strong>Commandes en auto, confirmations, Tracking Uber style, Suivi COD.</strong> Une seule app pour tout piloter.</p>
-            <div className="cta an" style={{ '--d': '500ms' } as React.CSSProperties}><a className="btn" href="/pricing">Commencer gratuitement</a></div>
-            <p className="micro an" style={{ '--d': '640ms' } as React.CSSProperties}>Rejoignez les vendeurs qui ont quitté la jungle.</p>
+            <p className="kicker an" style={{ '--d': '120ms' } as React.CSSProperties}><span className="pip"></span>{t("kicker")}</p>
+            <h1 className="an" style={{ '--d': '220ms' } as React.CSSProperties}><span className="hl-1">{t("headlineLine1")}</span><span className="hl-2"><span className="accent">{t("headlineAccent")}</span></span></h1>
+            <p className="subtitle an" style={{ '--d': '360ms' } as React.CSSProperties}><strong>{t("subtitleStrong")}</strong>{t("subtitleRest")}</p>
+            <div className="cta an" style={{ '--d': '500ms' } as React.CSSProperties}><Link className="btn" href="/pricing">{t("cta")}</Link></div>
+            <p className="micro an" style={{ '--d': '640ms' } as React.CSSProperties}>{t("micro")}</p>
           </div>
 
           <div className="product an" style={{ '--d': '420ms' } as React.CSSProperties}>
             <div className="panel">
               <div className="p-top">
                 <div>
-                  <div className="p-title">Commandes <b>·</b> aujourd&rsquo;hui</div>
-                  <div className="p-sub">42 confirmées · 6 en tournée</div>
+                  <div className="p-title">{t("panelTitle")} <b>{t("panelTitleSep")}</b> {t("panelToday")}</div>
+                  <div className="p-sub">{t("panelSub")}</div>
                 </div>
                 <div className="p-tabs">
-                  <span className="p-tab on">Toutes</span><span className="p-tab">COD</span><span className="p-tab">Statut</span>
+                  <span className="p-tab on">{t("tabAll")}</span><span className="p-tab">{t("tabCod")}</span><span className="p-tab">{t("tabStatus")}</span>
                 </div>
               </div>
               <div className="rows">
-                <div className="row"><span className="ini" style={{ background: '#D97757' }}>K</span><div><div className="r-name">Karim Benali</div><div className="r-meta">Alger Centre · #LV-2841</div></div><div className="r-right"><div className="r-amt">5 400 DA</div><span className="badge b-ok"><span className="b-dot"></span>Livré</span></div></div>
-                <div className="row"><span className="ini" style={{ background: '#C9954D' }}>Y</span><div><div className="r-name">Yacine Toumi</div><div className="r-meta">Oran · #LV-2840</div></div><div className="r-right"><div className="r-amt">12 900 DA</div><span className="badge b-go"><span className="b-dot"></span>En tournée</span></div></div>
-                <div className="row"><span className="ini" style={{ background: '#3a6b54' }}>A</span><div><div className="r-name">Amel Saïdi</div><div className="r-meta">Constantine · #LV-2839</div></div><div className="r-right"><div className="r-amt">3 200 DA</div><span className="badge b-ok"><span className="b-dot"></span>Livré</span></div></div>
-                <div className="row"><span className="ini" style={{ background: '#9CA3AF' }}>S</span><div><div className="r-name">Sofiane Mansouri</div><div className="r-meta">Blida · #LV-2838</div></div><div className="r-right"><div className="r-amt">7 750 DA</div><span className="badge b-wait"><span className="b-dot"></span>À confirmer</span></div></div>
+                <div className="row"><span className="ini" style={{ background: '#D97757' }}>K</span><div><div className="r-name">Karim Benali</div><div className="r-meta">Alger Centre · #LV-2841</div></div><div className="r-right"><div className="r-amt">5 400 DA</div><span className="badge b-ok"><span className="b-dot"></span>{t("badgeDelivered")}</span></div></div>
+                <div className="row"><span className="ini" style={{ background: '#C9954D' }}>Y</span><div><div className="r-name">Yacine Toumi</div><div className="r-meta">Oran · #LV-2840</div></div><div className="r-right"><div className="r-amt">12 900 DA</div><span className="badge b-go"><span className="b-dot"></span>{t("badgeOnRoute")}</span></div></div>
+                <div className="row"><span className="ini" style={{ background: '#3a6b54' }}>A</span><div><div className="r-name">Amel Saïdi</div><div className="r-meta">Constantine · #LV-2839</div></div><div className="r-right"><div className="r-amt">3 200 DA</div><span className="badge b-ok"><span className="b-dot"></span>{t("badgeDelivered")}</span></div></div>
+                <div className="row"><span className="ini" style={{ background: '#9CA3AF' }}>S</span><div><div className="r-name">Sofiane Mansouri</div><div className="r-meta">Blida · #LV-2838</div></div><div className="r-right"><div className="r-amt">7 750 DA</div><span className="badge b-wait"><span className="b-dot"></span>{t("badgeToConfirm")}</span></div></div>
               </div>
             </div>
 
@@ -62,18 +66,18 @@ export default function HeroV4() {
                 </svg>
                 <span className="dest"></span>
                 <span className="courier"></span>
-                <span className="map-badge"><span className="live"></span>En direct</span>
+                <span className="map-badge"><span className="live"></span>{t("mapLive")}</span>
               </div>
               <div className="map-foot">
-                <div className="mf-top"><span className="mf-name">Colis #LV-2840</span><span className="mf-eta">ETA 22 min</span></div>
-                <div className="mf-sub">Yacine T. · en route vers Oran · livreur Bilal</div>
+                <div className="mf-top"><span className="mf-name">Colis #LV-2840</span><span className="mf-eta">{t("mapEta")}</span></div>
+                <div className="mf-sub">{t("mapSub")}</div>
               </div>
             </div>
           </div>
 
           {/* EXPORT 12 — Voix arabizi en stack léger (≤1080 only via CSS). 3 cartes nettes. */}
           <div className="hero-voices" aria-hidden="true">
-            <p className="hv-label">Pendant ce temps, dans la jungle…</p>
+            <p className="hv-label">{t("voicesLabel")}</p>
             <div className="hv-stack">
               <div className="hv-card">
                 <div className="hv-head">
@@ -119,7 +123,7 @@ export default function HeroV4() {
           </div>
         </div>
 
-        <div className="scroll-hint"><span className="line"></span>Découvrir</div>
+        <div className="scroll-hint"><span className="line"></span>{t("scrollHint")}</div>
       </section>
       <div className="lp-seam"></div>
     </>
