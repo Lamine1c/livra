@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPush } from "@/lib/expo-push";
+import { deliveryCancelled } from "@/lib/push-messages";
 
 // F1 — Cascade d'annulation vendeur → livraison "Livreur perso" (moto_perso).
 //
@@ -70,16 +71,17 @@ export async function POST(
   // Push Expo au livreur — best-effort, ne bloque pas la cascade.
   const { data: driver } = await service
     .from("drivers")
-    .select("expo_push_token")
+    .select("expo_push_token, locale")
     .eq("id", delivery.driver_id)
     .maybeSingle();
 
   if (driver?.expo_push_token) {
     const reference = order.reference ?? `#${id.slice(0, 8).toUpperCase()}`;
+    const { title, body } = deliveryCancelled(driver.locale, { reference });
     const pushResult = await sendExpoPush(
       driver.expo_push_token,
-      "Course annulée",
-      `Course annulée — ${reference}`,
+      title,
+      body,
       { orderId: id, deliveryId: delivery.id, type: "delivery_cancelled" }
     );
     if (!pushResult.success) {

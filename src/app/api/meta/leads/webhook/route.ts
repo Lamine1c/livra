@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyWebhookSignature, getLeadData } from "@/lib/meta";
 import { sendExpoPush } from "@/lib/expo-push";
+import { metaLead } from "@/lib/push-messages";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 
 // GET — Meta webhook verification handshake
@@ -125,15 +126,18 @@ export async function POST(req: NextRequest) {
         // Push notification to vendor
         const { data: profile } = await supabase
           .from("profiles")
-          .select("expo_push_token")
+          .select("expo_push_token, locale")
           .eq("id", subscription.user_id)
           .single();
 
         if (profile?.expo_push_token) {
+          const { title, body } = metaLead(profile.locale, {
+            clientName: lead.name ?? "Nouveau client",
+          });
           void sendExpoPush(
             profile.expo_push_token,
-            "🎯 Nouveau lead Meta Ads",
-            `${lead.name ?? "Nouveau client"} — complétez la commande dans LIVRA`,
+            title,
+            body,
             { orderId: order.id, type: "meta_lead" }
           );
         }

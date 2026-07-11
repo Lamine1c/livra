@@ -4,6 +4,7 @@ import { verifyDriverToken, generateBuyerToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
+import { deliveryStarted } from "@/lib/push-messages";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -137,15 +138,19 @@ export async function POST(req: NextRequest) {
   if (order?.user_id) {
     const { data: vendorPush } = await supabase
       .from("profiles")
-      .select("expo_push_token")
+      .select("expo_push_token, locale")
       .eq("id", order.user_id)
       .single();
 
     if (vendorPush?.expo_push_token) {
+      const { title, body } = deliveryStarted(vendorPush.locale, {
+        driverName: driverPrenom,
+        reference: orderId.slice(0, 8).toUpperCase(),
+      });
       const pushResult = await sendExpoPush(
         vendorPush.expo_push_token,
-        "🛵 Livreur en route",
-        `${driverPrenom} a démarré la livraison de la commande #${orderId.slice(0, 8).toUpperCase()}.`,
+        title,
+        body,
         { orderId, type: "delivery_started" }
       );
       if (!pushResult.success) {
