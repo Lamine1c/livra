@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import LivraLogoHorizontal from "@/components/brand/LivraLogoHorizontal";
 
 // Active-state : un lien de page est "actif" (grisé + non-cliquable) quand la
@@ -49,7 +49,45 @@ function DrawerLink({
   );
 }
 
+// Sélecteur de langue FR | العربية — bascule en préservant le chemin courant.
+// `variant` : "nav" (desktop) ou "drawer" (mobile). Le libellé « Français » /
+// « العربية » reste tel quel dans les deux langues (glossaire inviolable).
+function LangSwitch({ variant }: { variant: "nav" | "drawer" }) {
+  const t = useTranslations("Header");
+  const locale = useLocale();
+  const pathname = usePathname(); // chemin SANS préfixe locale (@/i18n/navigation)
+  const router = useRouter();
+
+  const switchTo = (target: "fr" | "ar") => {
+    if (target === locale) return;
+    router.replace(pathname, { locale: target });
+  };
+
+  return (
+    <div className={`hg-lang hg-lang--${variant}`} role="group" aria-label={t("langue")}>
+      <button
+        type="button"
+        className={`hg-lang__opt${locale === "fr" ? " is-active" : ""}`}
+        aria-pressed={locale === "fr"}
+        onClick={() => switchTo("fr")}
+      >
+        {t("langFr")}
+      </button>
+      <span className="hg-lang__sep" aria-hidden="true" />
+      <button
+        type="button"
+        className={`hg-lang__opt${locale === "ar" ? " is-active" : ""}`}
+        aria-pressed={locale === "ar"}
+        onClick={() => switchTo("ar")}
+      >
+        {t("langAr")}
+      </button>
+    </div>
+  );
+}
+
 export default function HeaderGlobal() {
+  const t = useTranslations("Header");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false); // garde SSR pour le portal
@@ -92,11 +130,12 @@ export default function HeaderGlobal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <Link href="/#produit" className="hg-drawer__link" onClick={close} tabIndex={open ? 0 : -1}>Produit</Link>
-      <DrawerLink href="/pricing" label="Tarifs" pathname={pathname} open={open} onClose={close} />
-      <DrawerLink href="/magazine" label="Magazine" pathname={pathname} open={open} onClose={close} />
-      <DrawerLink href="/telecharger" label="Télécharger" pathname={pathname} open={open} onClose={close} />
-      <Link href="/telecharger" className="hg-drawer__link hg-drawer__link--login" onClick={close} tabIndex={open ? 0 : -1}>Se connecter</Link>
+      <Link href="/#produit" className="hg-drawer__link" onClick={close} tabIndex={open ? 0 : -1}>{t("produit")}</Link>
+      <DrawerLink href="/pricing" label={t("tarifs")} pathname={pathname} open={open} onClose={close} />
+      <DrawerLink href="/magazine" label={t("magazine")} pathname={pathname} open={open} onClose={close} />
+      <DrawerLink href="/telecharger" label={t("telecharger")} pathname={pathname} open={open} onClose={close} />
+      <Link href="/telecharger" className="hg-drawer__link hg-drawer__link--login" onClick={close} tabIndex={open ? 0 : -1}>{t("seConnecter")}</Link>
+      <LangSwitch variant="drawer" />
     </div>
   );
 
@@ -123,6 +162,21 @@ export default function HeaderGlobal() {
         .hg-link:hover { color: var(--ivoire); }
         .hg-login { color: var(--ivoire); font-weight: 500; }
         .hg-active { color: var(--mist); opacity: 0.4; pointer-events: none; cursor: default; }
+
+        /* Sélecteur de langue FR | العربية — couleurs cohérentes avec la nav (mist/ivoire) */
+        .hg-lang { display: inline-flex; align-items: center; gap: 8px; }
+        .hg-lang__opt {
+          background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
+          color: var(--mist); font-size: 14px; line-height: 1;
+          transition: color .3s ease, opacity .3s ease;
+        }
+        .hg-lang__opt:hover { color: var(--ivoire); }
+        .hg-lang__opt.is-active { color: var(--ivoire); font-weight: 500; opacity: 1; cursor: default; }
+        .hg-lang__sep { width: 1px; height: 12px; background: var(--hair); }
+        /* Variante drawer : plus grande, alignée sur les liens du drawer */
+        .hg-lang--drawer { gap: 14px; margin-top: 10px; }
+        .hg-lang--drawer .hg-lang__opt { font-size: 18px; padding: 8px 4px; min-height: 36px; }
+        .hg-lang--drawer .hg-lang__sep { height: 16px; }
 
         /* Burger → croix (bouton fonctionnel, z-60 au-dessus du drawer = bouton fermer) */
         .hg-burger {
@@ -179,26 +233,28 @@ export default function HeaderGlobal() {
       `}</style>
 
       <div className="hg-inner">
-        <Link href="/" aria-label="LIVRA — Accueil" className="hg-logo">
+        <Link href="/" aria-label={t("logoAria")} className="hg-logo">
           <LivraLogoHorizontal height={22} />
         </Link>
 
         {/* Nav desktop (≥1081px) */}
         <nav className="hg-links" aria-label="Navigation principale">
           {/* Produit = ancre vers la section ProductDemo de la LP — toujours cliquable */}
-          <Link href="/#produit" className="hg-link">Produit</Link>
-          <PageLink href="/pricing" label="Tarifs" pathname={pathname} />
-          <PageLink href="/magazine" label="Magazine" pathname={pathname} />
-          <PageLink href="/telecharger" label="Télécharger" pathname={pathname} />
+          <Link href="/#produit" className="hg-link">{t("produit")}</Link>
+          <PageLink href="/pricing" label={t("tarifs")} pathname={pathname} />
+          <PageLink href="/magazine" label={t("magazine")} pathname={pathname} />
+          <PageLink href="/telecharger" label={t("telecharger")} pathname={pathname} />
           {/* Se connecter = CTA ghost, toujours cliquable (pas de login web → /telecharger) */}
-          <Link href="/telecharger" className="hg-link hg-login">Se connecter</Link>
+          <Link href="/telecharger" className="hg-link hg-login">{t("seConnecter")}</Link>
+          {/* Sélecteur de langue FR | العربية */}
+          <LangSwitch variant="nav" />
         </nav>
 
         {/* Burger (≤1080px) */}
         <button
           type="button"
           className={`hg-burger${open ? " is-open" : ""}`}
-          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-label={open ? t("fermerMenu") : t("ouvrirMenu")}
           aria-expanded={open}
           aria-controls="hg-drawer"
           onClick={() => setOpen((v) => !v)}

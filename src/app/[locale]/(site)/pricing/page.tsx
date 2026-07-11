@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Footer from "@/components/site/Footer";
 import SignupModal from "@/components/SignupModal";
 
@@ -22,26 +23,37 @@ const ArrowSvg = () => (
 );
 
 // ── Features (markup identique entre les 2 cards — la teinte de la puce est
-//    gérée par le sélecteur parent .pv-card--founder, cf. CSS) ───────────────
-const FEATURES: { icon: React.ReactNode; label: React.ReactNode }[] = [
-  { icon: <FeatIcon><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></FeatIcon>, label: <><strong>Bouclier anti-scam</strong> — OTP + signal système</> },
-  { icon: <FeatIcon><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></FeatIcon>, label: "Tracking GPS style Uber + partage position client par WhatsApp" },
-  { icon: <FeatIcon><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" /></FeatIcon>, label: "WhatsApp automatique — confirmation, en route, livraison" },
-  { icon: <FeatIcon><path d="M10 17h4V5H2v12h3" /><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></FeatIcon>, label: "Compatible avec la plupart des transporteurs nationaux" },
-  { icon: <FeatIcon><path d="M3 3v18h18" /><rect x="7" y="11" width="3" height="6" /><rect x="13" y="7" width="3" height="10" /></FeatIcon>, label: "Suivi du cash en circulation" },
-  { icon: <FeatIcon><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /></FeatIcon>, label: "Mises à jour à vie" },
-  { icon: <FeatIcon><path d="M3 18v-6a9 9 0 0 1 18 0v6" /><path d="M21 19a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h3zM3 19a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H3z" /></FeatIcon>, label: "Support 24/7" },
+//    gérée par le sélecteur parent .pv-card--founder, cf. CSS). Les icônes sont
+//    statiques ; les libellés sont traduits dans FeatureList via next-intl. ──
+const FEATURE_ICONS: React.ReactNode[] = [
+  <FeatIcon key="f1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></FeatIcon>,
+  <FeatIcon key="f2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></FeatIcon>,
+  <FeatIcon key="f3"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" /></FeatIcon>,
+  <FeatIcon key="f4"><path d="M10 17h4V5H2v12h3" /><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></FeatIcon>,
+  <FeatIcon key="f5"><path d="M3 3v18h18" /><rect x="7" y="11" width="3" height="6" /><rect x="13" y="7" width="3" height="10" /></FeatIcon>,
+  <FeatIcon key="f6"><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /></FeatIcon>,
+  <FeatIcon key="f7"><path d="M3 18v-6a9 9 0 0 1 18 0v6" /><path d="M21 19a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h3zM3 19a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H3z" /></FeatIcon>,
 ];
 
 function FeatureList() {
+  const t = useTranslations("Pricing");
+  const labels: React.ReactNode[] = [
+    <><strong>{t("featStrong")}</strong>{t("feat1Suffix")}</>,
+    t("feat2"),
+    t("feat3"),
+    t("feat4"),
+    t("feat5"),
+    t("feat6"),
+    t("feat7"),
+  ];
   return (
     <>
-      <div className="pv-incl">Tout est inclus</div>
+      <div className="pv-incl">{t("toutInclus")}</div>
       <div className="pv-feats">
-        {FEATURES.map((f, i) => (
+        {FEATURE_ICONS.map((icon, i) => (
           <div className="pv-feat" key={i}>
-            <span className="ic">{f.icon}</span>
-            <span>{f.label}</span>
+            <span className="ic">{icon}</span>
+            <span>{labels[i]}</span>
           </div>
         ))}
       </div>
@@ -50,6 +62,7 @@ function FeatureList() {
 }
 
 export default function PricingPage() {
+  const t = useTranslations("Pricing");
   const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -222,11 +235,11 @@ export default function PricingPage() {
       <main className="pv">
         {/* Hero */}
         <header className="pv-hero">
-          <p className="pv-eyebrow"><span className="pv-pip" />Tarifs LIVRA</p>
-          <h1 className="pv-h1">Un seul outil. <em>{"Deux façons d'y entrer."}</em></h1>
+          <p className="pv-eyebrow"><span className="pv-pip" />{t("eyebrow")}</p>
+          <h1 className="pv-h1">{t("h1Prefix")}<em>{t("h1Em")}</em></h1>
           <p className="pv-hero-sub">
-            Tout LIVRA, sans piège ni engagement.<br />
-            <strong>7 jours gratuits, sans carte requise.</strong>
+            {t("heroSubLine1")}<br />
+            <strong>{t("heroSubLine2")}</strong>
           </p>
         </header>
 
@@ -241,23 +254,23 @@ export default function PricingPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="8" r="6" /><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12" />
                   </svg>
-                  Fondateur
+                  {t("founderBadge")}
                   <span className="sep" />
-                  <span className="count"><b>50</b> premiers</span>
+                  <span className="count">{t.rich("founderCount", { b: (chunks) => <b>{chunks}</b> })}</span>
                 </span>
 
                 <div className="pv-price">
                   <span className="pv-strike">1 999</span>
                   <span className="pv-amt">499</span>
-                  <span className="pv-per">DA / mois</span>
+                  <span className="pv-per">{t("perMois")}</span>
                 </div>
                 <p className="pv-life">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" />
                   </svg>
-                  À vie
+                  {t("aVie")}
                 </p>
-                <p className="pv-life-note">{"tant que l'abonnement reste actif"}</p>
+                <p className="pv-life-note">{t("aVieNote")}</p>
               </div>
 
               <button
@@ -265,7 +278,7 @@ export default function PricingPage() {
                 className="pv-cta pv-cta--primary"
                 onClick={() => openModal("founders")}
               >
-                Devenir Fondateur
+                {t("founderCta")}
                 <ArrowSvg />
               </button>
 
@@ -275,17 +288,17 @@ export default function PricingPage() {
             {/* ═══ STANDARD ═══ */}
             <article className="pv-card pv-card--standard">
               <div className="pv-head">
-                <span className="pv-label">Standard</span>
+                <span className="pv-label">{t("standardLabel")}</span>
 
                 <div className="pv-price">
                   <span className="pv-amt">999</span>
-                  <span className="pv-per">DA / mois</span>
+                  <span className="pv-per">{t("perMois")}</span>
                 </div>
-                <p className="pv-standard-note">Sans engagement. Annulation en 1 clic.</p>
+                <p className="pv-standard-note">{t("standardNote")}</p>
               </div>
 
               <button type="button" className="pv-cta pv-cta--ghost" onClick={() => openModal("monthly")}>
-                Commencer gratuitement
+                {t("standardCta")}
                 <ArrowSvg />
               </button>
 
@@ -298,15 +311,15 @@ export default function PricingPage() {
           <div className="pv-trust">
             <span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              Paiement sécurisé
+              {t("trustPaiement")}
             </span>
             <span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></svg>
-              Données chiffrées
+              {t("trustDonnees")}
             </span>
             <span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /></svg>
-              Annulation en 1 clic
+              {t("trustAnnulation")}
             </span>
           </div>
         </section>

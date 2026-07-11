@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Status = "idle" | "sending" | "ok" | "error";
 
 export default function ContactForm() {
+  const t = useTranslations("Contact");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
@@ -24,7 +26,7 @@ export default function ContactForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setErr(data.error ?? "Une erreur est survenue.");
+        setErr(data.error ?? t("errGeneric"));
         setStatus("error");
         return;
       }
@@ -34,7 +36,7 @@ export default function ContactForm() {
       setRole("");
       setMessage("");
     } catch {
-      setErr("Erreur réseau. Vérifie ta connexion et réessaie.");
+      setErr(t("errReseau"));
       setStatus("error");
     }
   }
@@ -42,10 +44,10 @@ export default function ContactForm() {
   if (status === "ok") {
     return (
       <div className="ct-success" role="status">
-        <p className="ct-success__title">Message envoyé ✓</p>
-        <p className="ct-success__body">Merci, on te répond au plus vite par email.</p>
+        <p className="ct-success__title">{t("successTitle")}</p>
+        <p className="ct-success__body">{t("successBody")}</p>
         <button type="button" className="ct-btn ct-btn--ghost" onClick={() => setStatus("idle")}>
-          Envoyer un autre message
+          {t("successAutre")}
         </button>
       </div>
     );
@@ -53,7 +55,7 @@ export default function ContactForm() {
 
   return (
     <form className="ct-form" onSubmit={handleSubmit} noValidate>
-      <label className="ct-label" htmlFor="ct-name">Nom</label>
+      <label className="ct-label" htmlFor="ct-name">{t("labelNom")}</label>
       <input
         id="ct-name"
         className="ct-input"
@@ -64,7 +66,7 @@ export default function ContactForm() {
         autoComplete="name"
       />
 
-      <label className="ct-label" htmlFor="ct-email">Email</label>
+      <label className="ct-label" htmlFor="ct-email">{t("labelEmail")}</label>
       <input
         id="ct-email"
         type="email"
@@ -75,20 +77,20 @@ export default function ContactForm() {
         autoComplete="email"
       />
 
-      <label className="ct-label" htmlFor="ct-role">Je suis</label>
+      <label className="ct-label" htmlFor="ct-role">{t("labelRole")}</label>
       <select
         id="ct-role"
         className="ct-input"
         value={role}
         onChange={(e) => setRole(e.target.value)}
       >
-        <option value="">Préciser (optionnel)</option>
-        <option value="vendeur">Vendeur</option>
-        <option value="acheteur">Acheteur</option>
-        <option value="autre">Autre</option>
+        <option value="">{t("roleDefault")}</option>
+        <option value="vendeur">{t("roleVendeur")}</option>
+        <option value="acheteur">{t("roleAcheteur")}</option>
+        <option value="autre">{t("roleAutre")}</option>
       </select>
 
-      <label className="ct-label" htmlFor="ct-message">Message</label>
+      <label className="ct-label" htmlFor="ct-message">{t("labelMessage")}</label>
       <textarea
         id="ct-message"
         className="ct-input ct-textarea"
@@ -103,7 +105,7 @@ export default function ContactForm() {
       {status === "error" && <p className="ct-error">{err}</p>}
 
       <button type="submit" className="ct-btn" disabled={status === "sending"}>
-        {status === "sending" ? "Envoi…" : "Envoyer le message"}
+        {status === "sending" ? t("envoiEnCours") : t("envoyer")}
       </button>
 
       <style>{`

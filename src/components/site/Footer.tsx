@@ -1,9 +1,11 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 // Footer site — visuel pleine largeur calqué sur landing/Footer (le footer LP
 // "gagnant"). Styles .sf-* scopés ici (zéro dépendance à livra-landing.css),
 // tokens Onyx v1 depuis globals.css. mt-auto = sticky-footer sur pages courtes.
 export default function Footer() {
+  const t = useTranslations("Footer");
   return (
     <footer className="sf mt-auto">
       <style>{`
@@ -47,24 +49,24 @@ export default function Footer() {
       <div className="sf-inner">
         <div className="sf-top">
           <div className="sf-brand-block">
-            <span className="sf-brand">LIVRA</span>
-            <p className="sf-tagline">La transaction protégée des deux côtés.</p>
+            <span className="sf-brand">{t("brand")}</span>
+            <p className="sf-tagline">{t("tagline")}</p>
           </div>
         </div>
 
         <div className="sf-divider" />
 
         <div className="sf-bottom">
-          <nav className="sf-nav" aria-label="Liens du pied de page">
-            <Link href="/#produit">Produit</Link>
-            <Link href="/pricing">Tarifs</Link>
-            <Link href="/magazine">Magazine</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/privacy">Confidentialité</Link>
-            <Link href="/cgu">CGU</Link>
-            <Link href="/contact">Contact</Link>
+          <nav className="sf-nav" aria-label={t("navAria")}>
+            <Link href="/#produit">{t("produit")}</Link>
+            <Link href="/pricing">{t("tarifs")}</Link>
+            <Link href="/magazine">{t("magazine")}</Link>
+            <Link href="/faq">{t("faq")}</Link>
+            <Link href="/privacy">{t("confidentialite")}</Link>
+            <Link href="/cgu">{t("cgu")}</Link>
+            <Link href="/contact">{t("contact")}</Link>
           </nav>
-          <p className="sf-copy">© 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)</p>
+          <p className="sf-copy">{t("copyright")}</p>
         </div>
       </div>
     </footer>
