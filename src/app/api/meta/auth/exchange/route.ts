@@ -52,6 +52,20 @@ export async function POST(req: NextRequest) {
       { onConflict: "user_id" }
     );
 
+    // Reconnexion NON destructive : on préserve l'état "active" des pages qui
+    // persistent (sinon chaque reconnexion — désormais fréquente vu l'expiration
+    // ~60j du token — désactiverait toutes les souscriptions du vendeur).
+    const { data: existingSubs } = await supabase
+      .from("meta_page_subscriptions")
+      .select("page_id, active")
+      .eq("user_id", userId);
+    const activeByPage = new Map(
+      ((existingSubs as { page_id: string; active: boolean }[] | null) ?? []).map((s) => [
+        s.page_id,
+        s.active,
+      ])
+    );
+
     for (const page of pages) {
       await supabase.from("meta_page_subscriptions").upsert(
         {
@@ -59,10 +73,21 @@ export async function POST(req: NextRequest) {
           page_id: page.id,
           page_name: page.name,
           page_access_token: page.access_token,
-          active: false,
+          active: activeByPage.get(page.id) ?? false,
         },
         { onConflict: "user_id,page_id" }
       );
+    }
+
+    // Retire les pages qui ne sont plus renvoyées par Meta (page supprimée ou
+    // dont le vendeur a retiré l'accès) → la liste reflète la connexion fraîche.
+    const freshPageIds = pages.map((p) => p.id);
+    if (freshPageIds.length > 0) {
+      await supabase
+        .from("meta_page_subscriptions")
+        .delete()
+        .eq("user_id", userId)
+        .not("page_id", "in", `(${freshPageIds.join(",")})`);
     }
 
     // Never return the access token to the mobile client

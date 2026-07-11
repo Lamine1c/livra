@@ -32,6 +32,13 @@ export async function POST(req: NextRequest, { params }: Params) {
   );
 
   if (!res.ok) {
+    // Token expiré/révoqué (code 190 / OAuthException) → statut dédié pour que
+    // l'app affiche « Connexion Meta expirée — reconnecte-toi » au lieu d'un
+    // toggle muet.
+    const err = (res.data as { error?: { code?: number; type?: string } } | null)?.error;
+    if (err?.code === 190 || err?.type === "OAuthException") {
+      return NextResponse.json({ error: "META_AUTH_EXPIRED" }, { status: 401 });
+    }
     console.error("[meta/pages/subscribe POST] Graph API error:", res.data);
     return NextResponse.json({ error: "Meta API error", detail: res.data }, { status: 502 });
   }
