@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 const HeartIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
 );
@@ -5,7 +7,8 @@ const ReplyIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 17l-5-5 5-5"/><path d="M4 12h11a5 5 0 0 1 5 5v2"/></svg>
 );
 
-export default function PainWall() {
+export default async function PainWall() {
+  const t = await getTranslations("PainWall");
   return (
     <>
       <section className="section2">
@@ -27,9 +30,9 @@ export default function PainWall() {
         </div>
         <div className="section2__inner">
           <header className="section2__header">
-            <p className="section2__eyebrow"><span className="section2__pip"></span>Le quotidien actuel</p>
-            <h2 className="section2__h2">Pendant ce temps, les e-commerçants souffrent…</h2>
-            <p className="section2__subtitle">Des milliers de vendeurs perdent du temps, de l&rsquo;argent, et des clients.</p>
+            <p className="section2__eyebrow"><span className="section2__pip"></span>{t("eyebrow")}</p>
+            <h2 className="section2__h2">{t("h2")}</h2>
+            <p className="section2__subtitle">{t("subtitle")}</p>
           </header>
           <div className="section2__cards">
             <article className="section2__card">
@@ -117,7 +120,7 @@ export default function PainWall() {
               </footer>
             </article>
           </div>
-          <p className="section2__punch">Ce chaos, <span className="section2__brand">LIVRA</span> l&rsquo;a résolu.</p>
+          <p className="section2__punch">{t("punchBefore")}<span className="section2__brand">{t("punchBrand")}</span>{t("punchAfter")}</p>
         </div>
       </section>
       <div className="lp-seam"></div>
