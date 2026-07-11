@@ -3,6 +3,7 @@ title: "Clients qui annulent à la livraison COD : le trend des retours qui saig
 slug: clients-qui-annulent-a-la-livraison-cod
 date: 2026-07-11
 author: LIVRA
+draft: true
 excerpt: Annuler à la livraison est devenu un trend en Algérie. La seule parade : valider la commande avant de l'expédier, par code OTP WhatsApp. Le touriste se filtre.
 ---
 

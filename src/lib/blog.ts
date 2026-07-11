@@ -8,6 +8,7 @@ export type BlogPost = {
   author: string;
   excerpt: string;
   ogImage?: string; // image OG dédiée (optionnelle) — sinon /og-image-livra.png
+  draft?: boolean;  // frontmatter `draft: true` → dépublié (exclu du rendu public)
   paragraphs: string[]; // content split by \n\n, trimmed
 };
 
@@ -41,6 +42,7 @@ export function getAllPosts(): BlogPost[] {
         author: fm.author ?? "Equipe LIVRA",
         excerpt: fm.excerpt ?? "",
         ogImage: fm.ogImage || undefined,
+        draft: fm.draft === "true",
         paragraphs: body
           .split(/\n\n+/)
           .map((p) => p.trim())
@@ -51,6 +53,10 @@ export function getAllPosts(): BlogPost[] {
           .filter((p) => !/^-{3,}$/.test(p)),
       };
     })
+    // Dépublication : les articles `draft: true` disparaissent de partout
+    // (liste /magazine, sitemap, generateStaticParams → 404 sur l'URL directe).
+    // Le contenu reste en source ; republier = retirer la ligne draft.
+    .filter((post) => !post.draft)
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
