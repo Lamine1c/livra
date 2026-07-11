@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPush } from "@/lib/expo-push";
+import { buyerLocationConfirmed } from "@/lib/push-messages";
 
 export async function GET(req: NextRequest) {
   const t = req.nextUrl.searchParams.get("t");
@@ -100,15 +101,18 @@ export async function POST(req: NextRequest) {
   if (!wasAlreadyLocated && orderBefore?.user_id) {
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("expo_push_token")
+      .select("expo_push_token, locale")
       .eq("id", orderBefore.user_id)
       .single();
 
     if (vendor?.expo_push_token) {
+      const { title, body } = buyerLocationConfirmed(vendor.locale, {
+        reference: result.orderId.slice(0, 8).toUpperCase(),
+      });
       const pushResult = await sendExpoPush(
         vendor.expo_push_token,
-        "📍 Position client confirmée",
-        `Votre client a partagé sa position pour la commande #${result.orderId.slice(0, 8).toUpperCase()}.`,
+        title,
+        body,
         { orderId: result.orderId, type: "buyer_location_confirmed" }
       );
       if (!pushResult.success) {

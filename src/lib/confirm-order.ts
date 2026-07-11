@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
+import { orderCancelled } from "@/lib/push-messages";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -248,7 +249,7 @@ export async function handleInboundReply(
     // Contexte MSG 6 : boutique (profil vendeur) + prénom (client).
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("store_name, full_name, expo_push_token")
+      .select("store_name, full_name, expo_push_token, locale")
       .eq("id", order.user_id)
       .single();
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
@@ -266,10 +267,13 @@ export async function handleInboundReply(
     }
 
     if (vendor?.expo_push_token) {
+      const { title, body } = orderCancelled(vendor.locale, {
+        reference: order.id.slice(0, 8).toUpperCase(),
+      });
       const pushResult = await sendExpoPush(
         vendor.expo_push_token,
-        "❌ Commande annulée",
-        `Le client a changé d'avis — commande #${order.id.slice(0, 8).toUpperCase()}.`,
+        title,
+        body,
         { orderId: order.id, type: "order_cancelled" }
       );
       if (!pushResult.success) console.error("[whatsapp/inbound] expo push (cancel) failed:", pushResult.error);

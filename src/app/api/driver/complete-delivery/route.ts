@@ -4,6 +4,7 @@ import { verifyDriverToken } from "@/lib/qr-token";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
+import { orderDelivered } from "@/lib/push-messages";
 
 export async function POST(req: NextRequest) {
   let body: { deviceToken?: unknown; deliveryId?: unknown; orderId?: unknown };
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("store_name, full_name, expo_push_token")
+      .select("store_name, full_name, expo_push_token, locale")
       .eq("id", order.user_id)
       .single();
     const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
@@ -136,10 +137,13 @@ export async function POST(req: NextRequest) {
 
     // Push notif to vendor — delivery completed
     if (vendor?.expo_push_token) {
+      const { title, body } = orderDelivered(vendor.locale, {
+        reference: orderId.slice(0, 8).toUpperCase(),
+      });
       const pushResult = await sendExpoPush(
         vendor.expo_push_token,
-        "✅ Commande livrée",
-        `La commande #${orderId.slice(0, 8).toUpperCase()} a été livrée avec succès !`,
+        title,
+        body,
         { orderId, type: "delivery_completed" }
       );
       if (!pushResult.success) {
