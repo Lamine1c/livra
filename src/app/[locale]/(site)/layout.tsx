@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import HeaderGlobal from "@/components/site/HeaderGlobal";
 
 // JSON-LD Organization — présent sur toutes les pages marketing (portée (site)).
@@ -19,9 +20,12 @@ const ORGANIZATION_LD = {
 // this layout creates a proper scroll context for marketing pages.
 // HeaderGlobal is rendered once here so every marketing route shares the
 // exact same header (replaces the per-page <Header/> + the LP inline nav).
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  // lang={locale} porte la langue du contenu (texte-first : traduire + annoncer
+  // la langue, sans retourner la structure — pas de dir="rtl" global).
+  const locale = await getLocale();
   return (
-    <div className="bg-onyx text-ivoire min-h-screen flex flex-col" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
+    <div lang={locale} className="bg-onyx text-ivoire min-h-screen flex flex-col" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_LD) }}
