@@ -1,13 +1,15 @@
 import crypto from "crypto";
 
 // Transport WhatsApp = Meta Cloud API (Twilio retiré — Meta Step 2 terminé).
-// Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID lu depuis
-// l'env (WHATSAPP_PHONE_NUMBER_ID, posé dans Vercel), fallback sur l'ID connu.
+// Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
+// WHATSAPP_PHONE_NUMBER_ID, source UNIQUE : pas de fallback hardcodé (un id figé
+// a déjà bité — id périmé). Absent/vide → on ne construit pas d'URL et l'envoi
+// échoue proprement, plutôt que d'envoyer vers un id erroné en silence.
 const GRAPH_VERSION = "v23.0";
-const FALLBACK_PHONE_NUMBER_ID = "1081472725051661";
 
-function graphMessagesUrl(): string {
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID ?? FALLBACK_PHONE_NUMBER_ID;
+function graphMessagesUrl(): string | null {
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!phoneId) return null;
   return `https://graph.facebook.com/${GRAPH_VERSION}/${phoneId}/messages`;
 }
 
@@ -42,10 +44,12 @@ interface WhatsAppResult {
 // Meta exige un TEMPLATE approuvé → l'envoi texte échoue (voir rapport transport).
 // On ne logge JAMAIS le numéro ni le corps du message (PII) : status + erreur Meta.
 async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+  const url = graphMessagesUrl();
+  if (!url) return { ok: false, error: "WHATSAPP_PHONE_NUMBER_ID manquant" };
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   if (!token) return { ok: false, error: "WHATSAPP_ACCESS_TOKEN manquant" };
 
-  const res = await fetch(graphMessagesUrl(), {
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
