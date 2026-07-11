@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import Footer from "@/components/site/Footer";
 
 const CARD_SHADOW = "0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 16px rgba(0,0,0,0.4)";
@@ -51,8 +52,8 @@ const MapPinIcon = () => (
 
 // Drapeau Algérie (ancrage DZ) — SVG inline couleur, pas d'emoji (rendu inconsistant cross-browser).
 // Seule icône non-monochrome de la trust line : vert/blanc + croissant & étoile rouges.
-const DzFlagIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="Drapeau de l'Algérie">
+const DzFlagIcon = ({ label }: { label: string }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" role="img" aria-label={label}>
     <defs>
       <clipPath id="dz-flag">
         <rect x="0" y="0" width="24" height="24" rx="3" />
@@ -75,15 +76,6 @@ const DzFlagIcon = () => (
     </g>
   </svg>
 );
-
-// Trust line — sécurité (1) + différenciation LIVRA (2,3) + commercial (4) + ancrage marché (5)
-const TRUST: { icon: React.ReactNode; label: string }[] = [
-  { icon: <LockIcon />, label: "Données chiffrées" },
-  { icon: <ShieldIcon />, label: "Bouclier anti-scam" },
-  { icon: <MapPinIcon />, label: "Position 100% privée" },
-  { icon: <CheckCircleIcon />, label: "Sans engagement" },
-  { icon: <DzFlagIcon />, label: "Made in Bledi" },
-];
 
 // ── Store card ────────────────────────────────────────────────────────────────
 
@@ -128,6 +120,14 @@ function StoreCard({ storeName, href, subLabel, btnIcon }: StoreCardProps) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TelechargerPage() {
+  const t = useTranslations("Telecharger");
+  const TRUST: { icon: React.ReactNode; label: string }[] = [
+    { icon: <LockIcon />, label: t("trustDonnees") },
+    { icon: <ShieldIcon />, label: t("trustBouclier") },
+    { icon: <MapPinIcon />, label: t("trustPosition") },
+    { icon: <CheckCircleIcon />, label: t("trustEngagement") },
+    { icon: <DzFlagIcon label={t("flagAria")} />, label: t("trustBledi") },
+  ];
   return (
     <>
       <style>{`
@@ -149,13 +149,13 @@ export default function TelechargerPage() {
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "760px", margin: "0 auto", padding: "clamp(48px,7vw,88px) 24px clamp(44px,5vw,64px)" }}>
           <p style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontSize: "12.5px", fontWeight: 500, letterSpacing: "0.22em", textTransform: "uppercase", color: "#8A8A8E", marginBottom: "22px" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#D97757", boxShadow: "0 0 12px 1px rgba(217,119,87,0.7)", flexShrink: 0 }} />
-            L&apos;application
+            {t("eyebrow")}
           </p>
           <h1 style={{ fontWeight: 800, fontSize: "clamp(48px,7vw,72px)", lineHeight: "1.0", letterSpacing: "-0.04em", color: "#F5F0E8" }}>
-            Télécharge LIVRA
+            {t("h1")}
           </h1>
           <p style={{ margin: "22px auto 0", maxWidth: "44ch", fontSize: "clamp(15px,1.4vw,18px)", lineHeight: "1.55", color: "#8A8A8E" }}>
-            Gère tes commandes, tes livreurs et tes clients depuis ton iPhone ou Android.
+            {t("heroSub")}
           </p>
         </div>
 
@@ -164,13 +164,13 @@ export default function TelechargerPage() {
           <StoreCard
             storeName="App Store"
             href="https://apps.apple.com/app/livra/id_PLACEHOLDER"
-            subLabel="Télécharger sur l'App Store"
+            subLabel={t("appleSub")}
             btnIcon={<AppleLogo size={32} />}
           />
           <StoreCard
             storeName="Google Play"
             href="https://play.google.com/store/apps/details?id=app.golivra.mobile"
-            subLabel="Disponible sur Google Play"
+            subLabel={t("playSub")}
             btnIcon={<PlayLogo size={32} />}
           />
         </div>
@@ -185,7 +185,7 @@ export default function TelechargerPage() {
           fontSize: "13px",
           color: "#8A8A8E",
         }}>
-          Déjà inscrit·e ? La connexion se fait directement dans l&apos;app.
+          {t("dejaInscrit")}
         </p>
 
         {/* ── Trust ── */}
