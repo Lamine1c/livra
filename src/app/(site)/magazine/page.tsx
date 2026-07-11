@@ -4,9 +4,25 @@ import Footer from "@/components/site/Footer";
 import { getAllPosts, type BlogPost } from "@/lib/blog";
 
 export const metadata: Metadata = {
-  title: "Magazine LIVRA — Conseils e-commerce et livraison en Algérie",
+  title: "Magazine — LIVRA",
   description:
-    "Analyses, stratégies et chiffres réels du marché e-commerce algérien, par l'équipe LIVRA.",
+    "Analyses, stratégies et chiffres réels du e-commerce et de la livraison COD en Algérie, par l'équipe LIVRA.",
+  alternates: { canonical: "/magazine" },
+  openGraph: {
+    type: "website",
+    title: "Magazine — LIVRA",
+    description:
+      "Analyses, stratégies et chiffres réels du e-commerce et de la livraison COD en Algérie, par l'équipe LIVRA.",
+    url: "/magazine",
+    images: [{ url: "/og-image-livra.png", width: 1200, height: 630, alt: "LIVRA" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Magazine — LIVRA",
+    description:
+      "Analyses, stratégies et chiffres réels du e-commerce et de la livraison COD en Algérie, par l'équipe LIVRA.",
+    images: ["/og-image-livra.png"],
+  },
 };
 
 // Formateur de date déterministe : server === client → pas de hydration mismatch.
