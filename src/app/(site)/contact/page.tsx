@@ -64,8 +64,8 @@ export default function ContactPage() {
               Écris-nous directement
             </h2>
             <p className="text-sm mb-6" style={{ color: "var(--mist)", lineHeight: 1.6 }}>
-              Tu préfères WhatsApp ? On est joignables au <strong>+213 652 20 84 85</strong>, du samedi
-              au jeudi. Réponse rapide en journée.
+              Tu préfères WhatsApp ? On est joignables au <strong>+213 652 20 84 85</strong>, tous les
+              jours sauf le vendredi. Réponse rapide en journée.
             </p>
             <a
               href={WHATSAPP_URL}
