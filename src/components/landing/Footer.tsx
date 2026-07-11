@@ -16,9 +16,10 @@ export default function Footer() {
             <a href="#produit">Produit</a>
             <Link href="/pricing">Tarifs</Link>
             <Link href="/magazine">Magazine</Link>
+            <Link href="/faq">FAQ</Link>
             <Link href="/privacy">Confidentialité</Link>
             <Link href="/cgu">CGU</Link>
-            <a href="mailto:hello@golivra.app">Contact</a>
+            <Link href="/contact">Contact</Link>
           </nav>
           <p className="lp-footer-copy">
             © 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)
