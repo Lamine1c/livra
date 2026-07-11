@@ -1,15 +1,17 @@
 import HeaderGlobal from "@/components/site/HeaderGlobal";
 
 // JSON-LD Organization — présent sur toutes les pages marketing (portée (site)).
-// sameAs : réseaux officiels LIVRA. ⚠️ Instagram concret ; ajouter l'URL exacte
-// de la page Facebook LIVRA quand elle est fournie.
+// sameAs : réseaux officiels LIVRA (Instagram + page Facebook).
 const ORGANIZATION_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "LIVRA",
   url: "https://golivra.app",
   logo: "https://golivra.app/android-chrome-512x512.png",
-  sameAs: ["https://www.instagram.com/livra_go"],
+  sameAs: [
+    "https://www.instagram.com/livra_go",
+    "https://www.facebook.com/profile.php?id=1171190276069055",
+  ],
 };
 
 // Scrollable wrapper for all public site pages.
