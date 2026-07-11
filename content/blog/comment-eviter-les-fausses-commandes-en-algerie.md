@@ -3,6 +3,7 @@ title: Comment éviter les fausses commandes en Algérie : le guide complet du v
 slug: comment-eviter-les-fausses-commandes-en-algerie
 date: 2026-07-11
 author: LIVRA
+draft: true
 excerpt: La fausse commande est le fléau n°1 du COD en Algérie. La seule parade qui marche : valider chaque commande avant de l'expédier, par code OTP WhatsApp.
 ---
 
