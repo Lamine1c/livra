@@ -68,7 +68,7 @@ export default async function ContactPage() {
               {t("asideTitle")}
             </h2>
             <p className="text-sm mb-6" style={{ color: "var(--mist)", lineHeight: 1.6 }}>
-              {t("asideBodyPrefix")}<strong>{t("asidePhone")}</strong>{t("asideBodySuffix")}
+              {t("asideBodyPrefix")}<strong><bdi>{t("asidePhone")}</bdi></strong>{t("asideBodySuffix")}
             </p>
             <a
               href={WHATSAPP_URL}

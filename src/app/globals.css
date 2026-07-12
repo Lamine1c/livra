@@ -101,3 +101,36 @@ body {
 .blog-back-link:hover {
   color: var(--ivoire);
 }
+
+/* ── i18n AR — lisibilité bidi (texte-first) ──────────────────────────
+   Le contenu marketing est traduit mais la STRUCTURE n'est pas retournée
+   (pas de dir="rtl" sur <html> ni sur les grilles/cards). `unicode-bidi:
+   plaintext` calcule la direction de CHAQUE bloc depuis son propre contenu :
+   → un bloc arabe passe en RTL (lisible : ponctuation, ordre des mots corrects),
+   → la marque, les prix, numéros, emails/URLs et l'arabizi décoratif (latin)
+     restent LTR AUTOMATIQUEMENT, sans reverser flex/grid.
+   Portée : sous le wrapper marketing `lang="ar"` uniquement (FR intact, billing
+   intact). Source de vérité unique. */
+[lang="ar"] p,
+[lang="ar"] h1, [lang="ar"] h2, [lang="ar"] h3, [lang="ar"] h4,
+[lang="ar"] li, [lang="ar"] blockquote, [lang="ar"] summary,
+[lang="ar"] label, [lang="ar"] figcaption,
+[lang="ar"] div, [lang="ar"] span, [lang="ar"] a, [lang="ar"] button {
+  unicode-bidi: plaintext;
+}
+
+/* Alignement à droite des vrais blocs de copy (pas les conteneurs de layout). */
+[lang="ar"] p,
+[lang="ar"] li,
+[lang="ar"] blockquote,
+[lang="ar"] summary,
+[lang="ar"] figcaption {
+  text-align: right;
+}
+
+/* Isolation LTR explicite quand nécessaire (marque, prix, tél, email, URL). */
+[lang="ar"] bdi,
+[lang="ar"] .ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
