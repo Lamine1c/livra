@@ -168,8 +168,13 @@ export type InboundReplyResult =
   | { action: "code"; result: InboundConfirmResult };
 
 // Détecteurs OUI / NON bilingues (darija AR + FR + EN), insensible à la casse.
-const YES_RE = /^(oui|إيه|ايه|اه|نعم|yes|ok)$/i;
-const NO_RE = /^(non|لا|لأ|no)$/i;
+// ⚠️ PAS ancré ^$ : un bouton quick-reply APPROUVÉ renvoie le LIBELLÉ COMPLET
+// (« ✅ إيه / OUI », « ❌ لا / NON »), pas juste « oui »/« non ». On matche donc
+// le mot-clé où qu'il soit, borné par une non-lettre Unicode (\p{L}) pour éviter
+// les faux positifs sur les mots adjacents (arabe inclus). Les libellés des
+// boutons d'objection contiennent déjà « dispo / avis / cher » (regex contains).
+const YES_RE = /(?:^|[^\p{L}])(oui|yes|ok|نعم|إيه|ايه|اه)(?:[^\p{L}]|$)/iu;
+const NO_RE = /(?:^|[^\p{L}])(non|no|لا|لأ)(?:[^\p{L}]|$)/iu;
 // Branches d'objection (boutons MSG 4 → texte bilingue, match partiel).
 const NOT_AVAIL_RE = /dispo|ماشي اليوم/i;
 const MIND_CHANGED_RE = /avis|بدلت/i;

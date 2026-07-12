@@ -1,7 +1,18 @@
 import crypto from "crypto";
+import { buildTemplatePayload, type WhatsAppTemplate } from "./whatsapp-templates";
 
-const PHONE_NUMBER_ID = "1081472725051661";
-const GRAPH_API_URL = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
+// Transport WhatsApp = Meta Cloud API (Twilio retiré — Meta Step 2 terminé).
+// Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
+// WHATSAPP_PHONE_NUMBER_ID, source UNIQUE : pas de fallback hardcodé (un id figé
+// a déjà bité — id périmé). Absent/vide → on ne construit pas d'URL et l'envoi
+// échoue proprement, plutôt que d'envoyer vers un id erroné en silence.
+const GRAPH_VERSION = "v23.0";
+
+function graphMessagesUrl(): string | null {
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!phoneId) return null;
+  return `https://graph.facebook.com/${GRAPH_VERSION}/${phoneId}/messages`;
+}
 
 export function generateOTP(): string {
   return crypto.randomInt(100000, 999999).toString();
@@ -28,67 +39,53 @@ interface WhatsAppResult {
   error?: string;
 }
 
-// ─── TWILIO ───────────────────────────────────────────────
-async function sendViaTwilio(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_WHATSAPP_FROM ?? "whatsapp:+14155238886";
-
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-  const toFormatted = `whatsapp:+${to}`;
-
-  const body = new URLSearchParams({
-    From: from,
-    To: toFormatted,
-    Body: message,
-  });
+// ─── ENVOI via Meta Cloud API (texte ou template) ─────────────
+// ⚠️ Fenêtre 24h : un message TEXTE "de service" n'est délivré que dans les 24h
+// suivant un message ENTRANT du client. Hors fenêtre (business-initiated), Meta
+// exige un TEMPLATE approuvé. On ne logge JAMAIS de PII : status + erreur Meta.
+async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string }> {
+  const url = graphMessagesUrl();
+  if (!url) return { ok: false, error: "WHATSAPP_PHONE_NUMBER_ID manquant" };
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  if (!token) return { ok: false, error: "WHATSAPP_ACCESS_TOKEN manquant" };
 
   const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64"),
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
-  });
-
-  const data = await res.json();
-  console.log("[Twilio API]", { status: res.status, body: data });
-
-  if (!res.ok) {
-    return { ok: false, error: data?.message ?? "Twilio error" };
-  }
-  return { ok: true };
-}
-
-// ─── META ─────────────────────────────────────────────────
-async function sendViaMeta(to: string, clientName: string, otp: string, message: string): Promise<{ ok: boolean; error?: string }> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME;
-
-  const body = templateName
-    ? buildTemplatePayload(to, templateName, clientName, otp)
-    : buildTextPayload(to, message);
-
-  const res = await fetch(GRAPH_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
 
-  const data = await res.json();
-  console.log("[Meta WhatsApp API]", { status: res.status, body: data });
+  const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
 
   if (!res.ok) {
-    return { ok: false, error: data?.error?.message ?? "Meta error" };
+    console.error("[Meta WhatsApp] échec", { label, status: res.status, error: data?.error });
+    return { ok: false, error: data?.error?.message ?? `Meta error ${res.status}` };
   }
   return { ok: true };
 }
 
-// ─── SEND OTP (auto-switch Twilio → Meta) ─────────────────
+async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+  return postToMeta(buildTextPayload(to, message), "text");
+}
+
+// Envoi d'un TEMPLATE Meta approuvé (message business-initiated, hors fenêtre 24h).
+// Un template encore "In review" échoue PROPREMENT ici (Meta renvoie une erreur,
+// loggée, non bloquante) jusqu'à son approbation — aucun crash côté flux métier.
+export async function sendWhatsAppTemplate(
+  phone: string,
+  template: WhatsAppTemplate,
+  variables: string[]
+): Promise<{ success: boolean; error?: string }> {
+  const to = normalizePhoneNumber(phone);
+  const payload = buildTemplatePayload(to, template, variables);
+  const result = await postToMeta(payload, `template:${template.name}`);
+  return { success: result.ok, error: result.error };
+}
+
+// ─── SEND OTP (message business-initiated → template requis hors fenêtre) ──
 export interface OtpMessageContext {
   boutique?: string;
   total?: number;
@@ -105,14 +102,7 @@ export async function sendOtpWhatsApp(
   const masked = maskedPhone(phone);
   const message = buildOtpMessage(clientName, otp, ctx);
 
-  // Twilio disponible → on l'utilise
-  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-    const result = await sendViaTwilio(to, message);
-    return { success: result.ok, maskedPhone: masked, error: result.error };
-  }
-
-  // Fallback Meta (et futur 360dialog : même payload texte)
-  const result = await sendViaMeta(to, clientName, otp, message);
+  const result = await sendMetaText(to, message);
   return { success: result.ok, maskedPhone: masked, error: result.error };
 }
 
@@ -138,51 +128,18 @@ function buildOtpMessage(clientName: string, otp: string, ctx?: OtpMessageContex
   );
 }
 
-// ─── NOTIFICATION GÉNÉRIQUE (statuts, tracking) ───────────
+// ─── NOTIFICATION GÉNÉRIQUE (statuts, tracking, réponses tunnel) ──────────
+// Texte libre via Meta. Délivré uniquement dans la fenêtre 24h (réponses aux
+// messages entrants du client). Les notifications business-initiated hors
+// fenêtre (crons, livraison) échoueront tant que les templates ne sont pas
+// approuvés (voir rapport transport).
 export async function sendWhatsAppNotification(
   phone: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
   const to = normalizePhoneNumber(phone);
-
-  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-    const result = await sendViaTwilio(to, message);
-    return { success: result.ok, error: result.error };
-  }
-
-  // Meta fallback — text simple
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const res = await fetch(GRAPH_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(buildTextPayload(to, message)),
-  });
-
-  return { success: res.ok };
-}
-
-function buildTemplatePayload(to: string, templateName: string, clientName: string, otp: string) {
-  return {
-    messaging_product: "whatsapp",
-    to,
-    type: "template",
-    template: {
-      name: templateName,
-      language: { code: "fr" },
-      components: [
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: clientName },
-            { type: "text", text: otp },
-          ],
-        },
-      ],
-    },
-  };
+  const result = await sendMetaText(to, message);
+  return { success: result.ok, error: result.error };
 }
 
 function buildTextPayload(to: string, message: string) {

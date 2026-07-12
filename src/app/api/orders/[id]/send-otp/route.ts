@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateOTP, sendWhatsAppNotification, normalizePhoneNumber } from "@/lib/whatsapp";
-import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { generateOTP, sendWhatsAppTemplate, normalizePhoneNumber } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
 
@@ -92,14 +92,14 @@ export async function POST(
   const totalTxt = new Intl.NumberFormat("en-US").format(Math.round(order.total_amount));
   const produitTxt = produit ?? "";
 
-  const message = renderTemplateText(TEMPLATES.order_confirmation_request, [
+  // MSG 1 = TEMPLATE approuvé order_confirmation_request. Business-initiated,
+  // hors fenêtre 24h → DOIT partir en template (le texte libre serait rejeté).
+  const result = await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request, [
     prenom,
     boutique,
     produitTxt,
     totalTxt,
   ]);
-
-  const result = await sendWhatsAppNotification(client.phone, message);
 
   if (!result.success) {
     return NextResponse.json(
