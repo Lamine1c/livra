@@ -64,7 +64,7 @@ export default function Footer() {
             <Link href="/cgu">CGU</Link>
             <Link href="/contact">Contact</Link>
           </nav>
-          <p className="sf-copy">© 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)</p>
+          <p className="sf-copy">© 2026 LIVRA · Plateforme LIVRA (9516-1998 Québec inc.)</p>
         </div>
       </div>
     </footer>
