@@ -22,7 +22,7 @@ export default function Footer() {
             <Link href="/contact">Contact</Link>
           </nav>
           <p className="lp-footer-copy">
-            © 2026 LIVRA · LIVRA Technologies (9516-1998 Quebec Inc.)
+            © 2026 LIVRA · Plateforme LIVRA (9516-1998 Québec inc.)
           </p>
         </div>
       </div>
