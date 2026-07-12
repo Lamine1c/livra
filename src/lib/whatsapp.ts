@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { buildTemplatePayload, type WhatsAppTemplate } from "./whatsapp-templates";
 
 // Transport WhatsApp = Meta Cloud API (Twilio retiré — Meta Step 2 terminé).
 // Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
@@ -38,12 +39,11 @@ interface WhatsAppResult {
   error?: string;
 }
 
-// ─── ENVOI TEXTE via Meta Cloud API ───────────────────────────
-// ⚠️ Fenêtre 24h : un message texte "de service" n'est délivré que dans les 24h
-// suivant un message ENTRANT du client. Hors fenêtre (message business-initiated),
-// Meta exige un TEMPLATE approuvé → l'envoi texte échoue (voir rapport transport).
-// On ne logge JAMAIS le numéro ni le corps du message (PII) : status + erreur Meta.
-async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+// ─── ENVOI via Meta Cloud API (texte ou template) ─────────────
+// ⚠️ Fenêtre 24h : un message TEXTE "de service" n'est délivré que dans les 24h
+// suivant un message ENTRANT du client. Hors fenêtre (business-initiated), Meta
+// exige un TEMPLATE approuvé. On ne logge JAMAIS de PII : status + erreur Meta.
+async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string }> {
   const url = graphMessagesUrl();
   if (!url) return { ok: false, error: "WHATSAPP_PHONE_NUMBER_ID manquant" };
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -55,16 +55,34 @@ async function sendMetaText(to: string, message: string): Promise<{ ok: boolean;
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(buildTextPayload(to, message)),
+    body: JSON.stringify(payload),
   });
 
   const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
 
   if (!res.ok) {
-    console.error("[Meta WhatsApp] échec envoi", { status: res.status, error: data?.error });
+    console.error("[Meta WhatsApp] échec", { label, status: res.status, error: data?.error });
     return { ok: false, error: data?.error?.message ?? `Meta error ${res.status}` };
   }
   return { ok: true };
+}
+
+async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+  return postToMeta(buildTextPayload(to, message), "text");
+}
+
+// Envoi d'un TEMPLATE Meta approuvé (message business-initiated, hors fenêtre 24h).
+// Un template encore "In review" échoue PROPREMENT ici (Meta renvoie une erreur,
+// loggée, non bloquante) jusqu'à son approbation — aucun crash côté flux métier.
+export async function sendWhatsAppTemplate(
+  phone: string,
+  template: WhatsAppTemplate,
+  variables: string[]
+): Promise<{ success: boolean; error?: string }> {
+  const to = normalizePhoneNumber(phone);
+  const payload = buildTemplatePayload(to, template, variables);
+  const result = await postToMeta(payload, `template:${template.name}`);
+  return { success: result.ok, error: result.error };
 }
 
 // ─── SEND OTP (message business-initiated → template requis hors fenêtre) ──
