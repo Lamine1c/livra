@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -121,7 +121,14 @@ function extractMessages(
 }
 
 // ─── POST : messages entrants ─────────────────────────────────
+// RÈGLE ANTI-RETRY : Meta re-livre le webhook s'il ne reçoit pas un 200 RAPIDE.
+// Notre traitement (DB + envois Graph) prend plusieurs secondes → il ne doit PAS
+// bloquer la réponse. On valide la signature (rapide), on ACK 200 immédiatement,
+// puis on traite APRÈS la réponse via after() (Vercel garde la fonction vivante).
+// Couplé au dédup wamid, un retry résiduel est de toute façon ignoré.
 export async function POST(req: NextRequest) {
+  const startedAt = Date.now();
+
   // Corps BRUT lu AVANT tout parsing (nécessaire à la vérification de signature).
   const rawBody = Buffer.from(await req.arrayBuffer());
 
@@ -137,25 +144,32 @@ export async function POST(req: NextRequest) {
     return new Response("OK", { status: 200 });
   }
 
-  // Le Realtime vendeur est déjà branché → l'écran passe à « Confirmée » seul
-  // quand l'order est mis à jour. L'entrée manuelle vendeur reste le fallback.
-  for (const m of extractMessages(payload)) {
-    try {
-      // Dédup : ignore un message déjà traité (retry Meta / double livraison).
-      if (m.wamid) {
-        const fresh = await claimInboundWamid(m.wamid);
-        if (!fresh) {
-          console.log(`[whatsapp/inbound] wamid ${m.wamid} déjà traité → ignoré (doublon/retry Meta)`);
-          continue;
-        }
-      }
-      await handleInboundReply(m.from, m.body);
-    } catch (err) {
-      // Pas de catch muet : on logge, et on continue les autres messages.
-      console.error("[whatsapp/inbound] erreur traitement message:", err);
-    }
-  }
+  const messages = extractMessages(payload);
 
-  // Toujours 200 : Meta re-tente agressivement sur tout autre statut.
+  // Traitement DÉPORTÉ après la réponse. Le Realtime vendeur est déjà branché →
+  // l'écran passe à « Confirmée » seul quand l'order est mis à jour.
+  after(async () => {
+    for (const m of messages) {
+      try {
+        // Dédup : ignore un message déjà traité (retry Meta / double livraison).
+        if (m.wamid) {
+          const fresh = await claimInboundWamid(m.wamid);
+          if (!fresh) {
+            console.log(`[whatsapp/inbound] wamid ${m.wamid} déjà traité → ignoré (doublon/retry Meta)`);
+            continue;
+          }
+        }
+        await handleInboundReply(m.from, m.body);
+      } catch (err) {
+        // Pas de catch muet : on logge, et on continue les autres messages.
+        console.error("[whatsapp/inbound] erreur traitement message:", err);
+      }
+    }
+  });
+
+  // ACK 200 immédiat + mesure du temps de réponse (doit être quelques ms).
+  console.log(
+    `[whatsapp/inbound] ACK 200 en ${Date.now() - startedAt}ms · ${messages.length} message(s) → traitement async`
+  );
   return new Response("OK", { status: 200 });
 }
