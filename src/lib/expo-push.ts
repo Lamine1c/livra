@@ -42,6 +42,13 @@ export async function sendExpoPush(
     channelId: "commandes-v1",
   };
 
+  // Mesure la latence serveur → Expo (preuve d'envoi immédiat). Aucun PII loggé
+  // (ni token, ni corps) : uniquement le type d'event + le temps d'aller-retour.
+  // Un délai de livraison côté device (ex. optimisation batterie ZTE) est alors
+  // isolable en comparant ce timestamp à l'event déclencheur.
+  const startedAt = Date.now();
+  const kind = typeof data.type === "string" ? data.type : "?";
+
   try {
     const res = await fetch("https://exp.host/--/api/v2/push/send", {
       method: "POST",
@@ -63,6 +70,7 @@ export async function sendExpoPush(
       return { success: false, error: json.data.message ?? "Expo push error" };
     }
 
+    console.log(`[expo-push] envoyé type=${kind} en ${Date.now() - startedAt}ms (accepté par Expo)`);
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
