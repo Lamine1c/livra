@@ -1,6 +1,24 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
+// (à traiter), false si déjà vu (doublon / retry Meta → ignorer). Fail-open sur
+// une erreur infra (table absente, réseau) pour ne jamais perdre un vrai message.
+async function claimInboundWamid(wamid: string): Promise<boolean> {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("whatsapp_inbound_events").insert({ wamid });
+    if (!error) return true; // insertion OK → première fois
+    if (error.code === "23505") return false; // violation d'unicité → doublon
+    console.error("[whatsapp/inbound] dedup indisponible, traitement quand même:", error.message);
+    return true;
+  } catch (err) {
+    console.error("[whatsapp/inbound] dedup exception, traitement quand même:", err);
+    return true;
+  }
+}
 
 // Webhook WhatsApp ENTRANT (réponses des clients) — WhatsApp Cloud API, Meta direct.
 // Transport 100 % Meta : l'authenticité repose sur la signature HMAC
@@ -49,6 +67,7 @@ function isAuthentic(req: NextRequest, rawBody: Buffer): boolean {
 // ─── Parsing Cloud API — texte + réponses interactives ────────
 type CloudMessage = {
   from?: string;
+  id?: string; // wamid — identifiant unique du message (dédup des retries Meta)
   type?: string;
   text?: { body?: string };
   interactive?: {
@@ -86,13 +105,15 @@ function messageBody(m: CloudMessage): string | null {
   return null;
 }
 
-function extractMessages(payload: CloudInboundPayload): Array<{ from: string; body: string }> {
-  const out: Array<{ from: string; body: string }> = [];
+function extractMessages(
+  payload: CloudInboundPayload
+): Array<{ from: string; body: string; wamid: string | null }> {
+  const out: Array<{ from: string; body: string; wamid: string | null }> = [];
   for (const entry of payload.entry ?? []) {
     for (const change of entry.changes ?? []) {
       for (const m of change.value?.messages ?? []) {
         const body = messageBody(m);
-        if (m.from && body) out.push({ from: m.from, body });
+        if (m.from && body) out.push({ from: m.from, body, wamid: m.id ?? null });
       }
     }
   }
@@ -100,7 +121,14 @@ function extractMessages(payload: CloudInboundPayload): Array<{ from: string; bo
 }
 
 // ─── POST : messages entrants ─────────────────────────────────
+// RÈGLE ANTI-RETRY : Meta re-livre le webhook s'il ne reçoit pas un 200 RAPIDE.
+// Notre traitement (DB + envois Graph) prend plusieurs secondes → il ne doit PAS
+// bloquer la réponse. On valide la signature (rapide), on ACK 200 immédiatement,
+// puis on traite APRÈS la réponse via after() (Vercel garde la fonction vivante).
+// Couplé au dédup wamid, un retry résiduel est de toute façon ignoré.
 export async function POST(req: NextRequest) {
+  const startedAt = Date.now();
+
   // Corps BRUT lu AVANT tout parsing (nécessaire à la vérification de signature).
   const rawBody = Buffer.from(await req.arrayBuffer());
 
@@ -116,17 +144,32 @@ export async function POST(req: NextRequest) {
     return new Response("OK", { status: 200 });
   }
 
-  // Le Realtime vendeur est déjà branché → l'écran passe à « Confirmée » seul
-  // quand l'order est mis à jour. L'entrée manuelle vendeur reste le fallback.
-  for (const m of extractMessages(payload)) {
-    try {
-      await handleInboundReply(m.from, m.body);
-    } catch (err) {
-      // Pas de catch muet : on logge, et on continue les autres messages.
-      console.error("[whatsapp/inbound] erreur traitement message:", err);
-    }
-  }
+  const messages = extractMessages(payload);
 
-  // Toujours 200 : Meta re-tente agressivement sur tout autre statut.
+  // Traitement DÉPORTÉ après la réponse. Le Realtime vendeur est déjà branché →
+  // l'écran passe à « Confirmée » seul quand l'order est mis à jour.
+  after(async () => {
+    for (const m of messages) {
+      try {
+        // Dédup : ignore un message déjà traité (retry Meta / double livraison).
+        if (m.wamid) {
+          const fresh = await claimInboundWamid(m.wamid);
+          if (!fresh) {
+            console.log(`[whatsapp/inbound] wamid ${m.wamid} déjà traité → ignoré (doublon/retry Meta)`);
+            continue;
+          }
+        }
+        await handleInboundReply(m.from, m.body);
+      } catch (err) {
+        // Pas de catch muet : on logge, et on continue les autres messages.
+        console.error("[whatsapp/inbound] erreur traitement message:", err);
+      }
+    }
+  });
+
+  // ACK 200 immédiat + mesure du temps de réponse (doit être quelques ms).
+  console.log(
+    `[whatsapp/inbound] ACK 200 en ${Date.now() - startedAt}ms · ${messages.length} message(s) → traitement async`
+  );
   return new Response("OK", { status: 200 });
 }

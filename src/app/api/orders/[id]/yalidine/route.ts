@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createYalidineParcel } from "@/lib/yalidine";
 import { Order } from "@/types";
 import { getPostHogClient } from "@/lib/posthog-server";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
-import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
@@ -95,10 +95,7 @@ export async function POST(
       const buyerToken = generateBuyerToken(order.id);
       const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
       const prenom = (clientData.full_name ?? "").split(" ")[0] ?? "";
-      await sendWhatsAppNotification(
-        clientData.phone,
-        renderTemplateText(TEMPLATES.delivery_mode_carrier, [prenom, vendorName, "Yalidine", trackingUrl])
-      );
+      await sendWhatsAppTemplate(clientData.phone, TEMPLATES.delivery_mode_carrier, [prenom, vendorName, "Yalidine", trackingUrl]);
     }
   } catch (err) {
     console.error("[yalidine] buyer WA failed:", err);

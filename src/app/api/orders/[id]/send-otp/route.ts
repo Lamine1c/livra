@@ -22,7 +22,7 @@ export async function POST(
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
-    .select("id, user_id, status, otp_verified_at, otp_sent_at, total_amount, client:clients(full_name, phone), items:order_items(product_name)")
+    .select("id, user_id, status, otp_verified_at, otp_sent_at, otp_code, otp_expires_at, total_amount, client:clients(full_name, phone), items:order_items(product_name)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -58,8 +58,20 @@ export async function POST(
     return NextResponse.json({ error: "Client introuvable" }, { status: 400 });
   }
 
-  const otp = generateOTP();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  // Idempotence : si un code ACTIF (non expiré, non encore vérifié) existe déjà
+  // pour cette commande, on le RÉUTILISE au lieu d'en régénérer un — sinon un
+  // renvoi (ou un double-clic / retry) invaliderait le code que le client a
+  // peut-être déjà reçu. On ne prolonge pas l'expiration d'un code réutilisé.
+  const nowMs = Date.now();
+  const activeCode =
+    order.otp_code && order.otp_expires_at && new Date(order.otp_expires_at).getTime() > nowMs
+      ? order.otp_code
+      : null;
+  const otp = activeCode ?? generateOTP();
+  const expiresAt =
+    activeCode && order.otp_expires_at
+      ? order.otp_expires_at
+      : new Date(nowMs + 10 * 60 * 1000).toISOString();
   const sentAt = new Date().toISOString();
 
   const { error: updateError } = await supabase
