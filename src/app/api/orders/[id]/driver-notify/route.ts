@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
-import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
@@ -49,9 +49,7 @@ export async function POST(
   const buyerToken = generateBuyerToken(order.id);
   const trackingUrl = `https://golivra.app/track?t=${buyerToken}`;
   const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
-  const message = renderTemplateText(TEMPLATES.delivery_perso_enroute, [prenom, vendorName, trackingUrl]);
-
-  const waResult = await sendWhatsAppNotification(client.phone, message);
+  const waResult = await sendWhatsAppTemplate(client.phone, TEMPLATES.delivery_perso_enroute, [prenom, vendorName, trackingUrl]);
 
   if (!waResult.success) {
     console.error("[driver-notify] WhatsApp send failed:", waResult.error);

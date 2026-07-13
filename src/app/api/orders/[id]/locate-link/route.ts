@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateLocateToken } from "@/lib/qr-token";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
-import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 
 export async function POST(
   req: NextRequest,
@@ -52,8 +52,7 @@ export async function POST(
   const vendorName = vendor?.store_name ?? vendor?.full_name ?? "votre boutique";
 
   const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
-  const message = renderTemplateText(TEMPLATES.delivery_mode_perso, [prenom, vendorName, url]);
-  const waResult = await sendWhatsAppNotification(client.phone, message);
+  const waResult = await sendWhatsAppTemplate(client.phone, TEMPLATES.delivery_mode_perso, [prenom, vendorName, url]);
 
   if (!waResult.success) {
     console.error("[locate-link] WhatsApp send failed:", waResult.error);
