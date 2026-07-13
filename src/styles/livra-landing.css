@@ -328,10 +328,10 @@
      le paragraphe suivant ne remonte pas se caler à droite du « O ». */
   .pql-body p.pql-lead { font-weight: 700; display: flow-root; margin-bottom: 0; }
   .pql-lead::first-letter {
-    float: left;
+    float: inline-start;
     font-size: 2.6em;
     line-height: 0.86;
-    margin-right: 8px;
+    margin-inline-end: 8px;
     margin-top: -14px;
     color: var(--terracotta);
     font-weight: 700;
@@ -3156,10 +3156,10 @@ body {
     grid-column: 2; grid-row: 1;
     margin: 0;
     max-width: 460px;
-    text-align: left;
+    text-align: start;
   }
   .section4 .s4-eyebrow { justify-content: flex-start; }
-  .section4 .s4-sub { margin-left: 0; margin-right: 0; max-width: 40ch; border-left: 2px solid rgba(217, 119, 87, 0.45); padding-left: 16px; }
+  .section4 .s4-sub { margin-inline: 0; max-width: 40ch; border-inline-start: 2px solid rgba(217, 119, 87, 0.45); padding-inline-start: 16px; }
   .section4 .s4-flow { justify-content: flex-start; }
   .section4 .s4-caption  { grid-column: 1 / -1; grid-row: 2; }
   .section4 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
@@ -3178,7 +3178,7 @@ body {
     grid-column: 1; grid-row: 1;
     max-width: 460px;
     margin: 0;
-    text-align: left;
+    text-align: start;
   }
   .s5 .s5-eyebrow { justify-content: flex-start; }
   .s5 .s5-pills { justify-content: flex-start; margin-top: 30px; }
@@ -3213,12 +3213,12 @@ body {
 .s5-copy .punch em { color: var(--terracotta); font-style: normal; }
 .s5-copy .pain-sol {
   display: flex; flex-direction: column; gap: 12px;
-  padding-left: 16px;
-  border-left: 2px solid rgba(217, 119, 87, 0.45);
+  padding-inline-start: 16px;
+  border-inline-start: 2px solid rgba(217, 119, 87, 0.45);
 }
 @media (max-width: 1080px) {
-  .s5-copy { align-items: center; text-align: center; max-width: 46ch; margin-left: auto; margin-right: auto; }
-  .s5-copy .pain-sol { border-left: 0; padding-left: 0; align-items: center; }
+  .s5-copy { align-items: center; text-align: center; max-width: 46ch; margin-inline: auto; }
+  .s5-copy .pain-sol { border-inline-start: 0; padding-inline-start: 0; align-items: center; }
 }
 
 /* 4) « LA CONFIANCE » (.s6) — horizontal en miroir (même pattern que .section4) */
@@ -3234,10 +3234,10 @@ body {
     grid-column: 2; grid-row: 1;
     margin: 0;
     max-width: 460px;
-    text-align: left;
+    text-align: start;
   }
   .s6 .s6-eyebrow { justify-content: flex-start; }
-  .s6 .s6-sub { margin-left: 0; margin-right: 0; max-width: 40ch; border-left: 2px solid rgba(217, 119, 87, 0.45); padding-left: 16px; }
+  .s6 .s6-sub { margin-inline: 0; max-width: 40ch; border-inline-start: 2px solid rgba(217, 119, 87, 0.45); padding-inline-start: 16px; }
   .s6 .s6-pills { justify-content: flex-start; }
   .s6 .s6-caption  { grid-column: 1 / -1; grid-row: 2; }
   .s6 .lp-cta-wrap { grid-column: 1 / -1; grid-row: 3; }
@@ -3820,7 +3820,7 @@ body {
   .hero .bg .ghosts .g8 { top: 31%;  bottom: auto; left: auto;  right: -14px; transform: scale(0.82) rotate(5deg);  display: flex !important; }
   .hero .bg .ghosts .g3 { top: auto; bottom: 21%;  left: -14px; right: auto;  transform: scale(0.80) rotate(6deg);  opacity: 0.22 !important; }
   .hero .bg .ghosts .g6 { top: auto; bottom: 5%;   left: auto;  right: -10px; transform: scale(0.82) rotate(-5deg); opacity: 0.22 !important; }
-  .pql-lead::first-letter { margin-right: 3px !important; }
+  .pql-lead::first-letter { margin-inline-end: 3px !important; }
   .section2 { overflow-x: hidden; }
   .section2 .s2-ghosts .s2-ghost { display: none !important; }
   .section2 .s2-ghosts .q1,

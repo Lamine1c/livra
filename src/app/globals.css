@@ -134,3 +134,45 @@ body {
   direction: ltr;
   unicode-bidi: isolate;
 }
+
+/* ── i18n AR — corrections de LAYOUT (plaintext ne corrige que le texte) ──
+   Les propriétés logiques (float:inline-start, margin-inline-end…) se résolvent
+   d'après la `direction` CSS, PAS d'après le bidi rendu par plaintext. On passe
+   donc en RTL les blocs de copie qui portent une mise en page directionnelle
+   (drop-cap), pour que leurs propriétés logiques tombent du bon côté. Scopé AR
+   uniquement → le FR reste LTR, zéro régression. */
+[lang="ar"] .pql-lead {
+  direction: rtl;
+}
+
+/* Sections 4/5/6 (desktop 2-colonnes) : la COLONNE DE COPIE passe en RTL pour que
+   texte, filet d'accent (border-inline-start) et eyebrows/pills (flex flex-start)
+   tombent à DROITE. La grille n'est PAS inversée (la colonne garde sa place ; seul
+   son contenu se retourne — cohérent avec l'approche texte-first). Scopé AR. */
+[lang="ar"] .section4__header,
+[lang="ar"] .s5-anchor,
+[lang="ar"] .s6-anchor {
+  direction: rtl;
+}
+
+/* Sous-titres / accroches / eyebrows / captions CENTRÉS : la règle générique
+   [lang="ar"] p { text-align:right } force à droite des <p> qui, en FR, sont
+   centrés (hérité du parent). On ré-impose un centrage EXPLICITE (indépendant de
+   la direction). Spécificité [lang][class] (0,2,0) > [lang] p (0,1,1).
+   Portée : uniquement les blocs centrés à TOUTES les largeurs (rangées CTA pleine
+   largeur, sections centrées). Les sous-titres de sections 2-colonnes (.s4/5/6-sub)
+   sont volontairement EXCLUS : en desktop ils sont alignés à gauche + filet
+   d'accent (traités en propriétés logiques, pas en centrage). */
+[lang="ar"] .lp-cta-sub,
+[lang="ar"] .s4-cta-sub,
+[lang="ar"] .s9-eyebrow,
+[lang="ar"] .s9-sub,
+[lang="ar"] .s9-assure,
+[lang="ar"] .section2__eyebrow,
+[lang="ar"] .section2__subtitle,
+[lang="ar"] .s75-eyebrow,
+[lang="ar"] .pql-eyebrow,
+[lang="ar"] .section1__caption,
+[lang="ar"] .s6-caption {
+  text-align: center;
+}
