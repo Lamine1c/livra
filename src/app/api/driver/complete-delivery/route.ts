@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
-import { sendWhatsAppTemplate } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate, maskPhoneForLog } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 import { orderDelivered } from "@/lib/push-messages";
@@ -129,6 +129,10 @@ export async function POST(req: NextRequest) {
       const waResult = await sendWhatsAppTemplate(client.phone, TEMPLATES.delivery_completed, [vendorName]);
       if (!waResult.success) {
         console.error("[complete-delivery] WhatsApp send failed:", waResult.error);
+      } else {
+        console.log(
+          `[complete-delivery] WhatsApp delivery_completed sent OK → wamid=${waResult.wamid ?? "?"} phone=${maskPhoneForLog(client.phone)}`
+        );
       }
     } else {
       console.error("[complete-delivery] client phone missing, WA skipped");
