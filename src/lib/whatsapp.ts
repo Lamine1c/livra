@@ -33,6 +33,14 @@ function maskedPhone(phone: string): string {
   return "+" + normalized.slice(0, 5) + "XXXXX" + normalized.slice(-2);
 }
 
+// Masque un numéro pour les logs — format DZ « 0X ** ** XX XX ». Jamais en clair.
+export function maskPhoneForLog(phone: string): string {
+  const n = normalizePhoneNumber(phone);
+  const local = n.startsWith("213") ? "0" + n.slice(3) : n.startsWith("0") ? n : "0" + n;
+  if (local.length < 10) return "0* ** ** ** **";
+  return `${local.slice(0, 2)} ** ** ${local.slice(6, 8)} ${local.slice(8, 10)}`;
+}
+
 interface WhatsAppResult {
   success: boolean;
   maskedPhone: string;
@@ -43,7 +51,7 @@ interface WhatsAppResult {
 // ⚠️ Fenêtre 24h : un message TEXTE "de service" n'est délivré que dans les 24h
 // suivant un message ENTRANT du client. Hors fenêtre (business-initiated), Meta
 // exige un TEMPLATE approuvé. On ne logge JAMAIS de PII : status + erreur Meta.
-async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string }> {
+async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string; wamid?: string }> {
   const url = graphMessagesUrl();
   if (!url) return { ok: false, error: "WHATSAPP_PHONE_NUMBER_ID manquant" };
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -58,13 +66,16 @@ async function postToMeta(payload: object, label: string): Promise<{ ok: boolean
     body: JSON.stringify(payload),
   });
 
-  const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+  const data = (await res.json().catch(() => null)) as {
+    error?: { message?: string };
+    messages?: Array<{ id?: string }>;
+  } | null;
 
   if (!res.ok) {
     console.error("[Meta WhatsApp] échec", { label, status: res.status, error: data?.error });
     return { ok: false, error: data?.error?.message ?? `Meta error ${res.status}` };
   }
-  return { ok: true };
+  return { ok: true, wamid: data?.messages?.[0]?.id };
 }
 
 async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
@@ -78,11 +89,11 @@ export async function sendWhatsAppTemplate(
   phone: string,
   template: WhatsAppTemplate,
   variables: string[]
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; wamid?: string }> {
   const to = normalizePhoneNumber(phone);
   const payload = buildTemplatePayload(to, template, variables);
   const result = await postToMeta(payload, `template:${template.name}`);
-  return { success: result.ok, error: result.error };
+  return { success: result.ok, error: result.error, wamid: result.wamid };
 }
 
 // ─── SEND OTP (message business-initiated → template requis hors fenêtre) ──
