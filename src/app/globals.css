@@ -145,14 +145,39 @@ body {
   direction: rtl;
 }
 
-/* Sections 4/5/6 (desktop 2-colonnes) : la COLONNE DE COPIE passe en RTL pour que
-   texte, filet d'accent (border-inline-start) et eyebrows/pills (flex flex-start)
-   tombent à DROITE. La grille n'est PAS inversée (la colonne garde sa place ; seul
-   son contenu se retourne — cohérent avec l'approche texte-first). Scopé AR. */
-[lang="ar"] .section4__header,
-[lang="ar"] .s5-anchor,
-[lang="ar"] .s6-anchor {
-  direction: rtl;
+/* Titre HERO : forcé à droite en AR (h1 hors de la règle de base [lang="ar"] p). */
+[lang="ar"] .hero h1 {
+  text-align: right;
+}
+
+/* Sections 4/5/6 (desktop 2-col) : alignement à DROITE SANS `direction:rtl` — ce
+   dernier réordonnait les boîtes inline des titres multi-segments (îlots latins
+   LIVRA/OTP dans les <em>) = « chamboulé ». `unicode-bidi:plaintext` (règle de base)
+   ordonne déjà correctement le texte mixte ; on ne fait ici que l'ALIGNEMENT (titres
+   h2, hors règle p), le sens des flex (eyebrows/pills) et le côté du filet d'accent.
+   Scopé AR — FR desktop intact. */
+[lang="ar"] .s4-title,
+[lang="ar"] .s5-h2,
+[lang="ar"] .s6-h2 {
+  text-align: right;
+}
+
+[lang="ar"] .section4 .s4-eyebrow,
+[lang="ar"] .s4-flow,
+[lang="ar"] .s5 .s5-eyebrow,
+[lang="ar"] .s5 .s5-pills,
+[lang="ar"] .s6 .s6-eyebrow,
+[lang="ar"] .s6 .s6-pills {
+  justify-content: flex-end;
+}
+
+[lang="ar"] .section4 .s4-sub,
+[lang="ar"] .s6 .s6-sub,
+[lang="ar"] .s5-copy .pain-sol {
+  border-inline-start: 0;
+  border-inline-end: 2px solid rgba(217, 119, 87, 0.45);
+  padding-inline-start: 0;
+  padding-inline-end: 16px;
 }
 
 /* Sous-titres / accroches / eyebrows / captions CENTRÉS : la règle générique
