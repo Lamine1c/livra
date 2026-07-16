@@ -1,0 +1,21 @@
+-- 028_orders_replica_identity_full.sql
+-- Realtime + RLS sur public.orders — l'UPDATE serveur "delivered" n'était pas diffusé.
+--
+-- Symptôme : le statut "delivered" écrit côté serveur par le livreur
+-- (/api/driver/complete-delivery → orders.status="delivered") n'atteignait JAMAIS
+-- l'abonnement Realtime du vendeur (app/(vendor)/orders/[id].tsx:274-288) tant qu'il
+-- restait sur l'écran ; il n'apparaissait qu'au refetch de focus (useFocusEffect).
+--
+-- Cause : la table orders est sous RLS (policy SELECT `auth.uid() = user_id`) ET en
+-- REPLICA IDENTITY par défaut ('d' = clé primaire seule, confirmé via
+-- `SELECT relreplident FROM pg_class WHERE relname='orders'`). Pour un UPDATE/DELETE
+-- sur une table RLS, Supabase Realtime doit évaluer la policy SELECT sur l'ANCIEN
+-- tuple avant de diffuser l'event. En replica identity 'd', cet ancien tuple ne
+-- contient que la PK → la policy (qui référence user_id) ne peut pas être évaluée →
+-- l'event UPDATE est droppé (fail-closed). (Les INSERT, ex. delivery_positions,
+-- passent sans FULL car un INSERT n'a pas d'ancien tuple.)
+--
+-- Fix : REPLICA IDENTITY FULL fournit l'ancien tuple COMPLET → l'UPDATE passe le
+-- check RLS et est délivré au vendeur en temps réel (le useFocusEffect reste en filet).
+-- Coût : léger surcroît de WAL sur les UPDATE d'orders (table à faible volume) — négligeable.
+ALTER TABLE public.orders REPLICA IDENTITY FULL;
