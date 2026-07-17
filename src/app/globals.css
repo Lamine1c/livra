@@ -137,11 +137,14 @@ body {
 @media (min-width: 1081px) {
   /* s4/s5/s6 : la caption EST un enfant du grid (__inner) → on la place dans la
      colonne du stage, largeur = mockup central (320px), justify-self:center =
-     centrée sur le mockup. +20px via row-gap. */
+     centrée sur le mockup. Collée au mockup : row-gap 5px (c'est CE levier, pas
+     le margin-top des captions qui est à 0 !important). NB : ce row-gap agit
+     aussi entre caption(row2) et CTA(row3) → l'air du CTA est rendu par un
+     margin-top dédié sur .lp-cta-wrap (voir plus bas). */
   [lang="ar"] .section4__inner,
   [lang="ar"] .s5 .s5-inner,
   [lang="ar"] .s6 .s6-inner {
-    row-gap: 20px;
+    row-gap: 5px;
   }
   [lang="ar"] .section4 .s4-caption { grid-column: 1; }
   [lang="ar"] .s5 .s5-caption       { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)); }
@@ -166,7 +169,21 @@ body {
     width: 320px;
     max-width: 100%;
     margin-inline: auto;
+    margin-top: 5px;              /* collée au mockup (hors grid → margin-top direct) */
     transform: translateX(-265px);
+  }
+
+  /* CTA des sections (lp-cta-wrap, partagé s1/s4/s5/s6) : trop collé à la caption
+     (surtout après le resserrage à 5px). On redonne de l'air. À CALER. */
+  [lang="ar"] .lp-cta-wrap {
+    margin-top: clamp(44px, 5vw, 64px);
+  }
+
+  /* HERO : le mockup (.product, col 2 = GAUCHE en RTL) était justify-self:center
+     → centré dans sa colonne → grosse bande vide au bord gauche. justify-self:end
+     (= gauche en RTL) le colle au bord gauche → comble le vide. */
+  [lang="ar"] .hero .product {
+    justify-self: end;
   }
 
   /* [10] s5 : le mockup CHEVAUCHE la colonne texte. Cause = translateX(+170px)
