@@ -56,7 +56,7 @@
   /* left copy */
   .copy{max-width:560px;}
   .kicker{display:inline-flex; align-items:center; font-size:13px; font-weight:500; letter-spacing:0.24em; text-transform:uppercase; color:var(--mist);}
-  .kicker .pip{width:6px; height:6px; border-radius:50%; background:var(--terracotta); margin-right:12px; box-shadow:0 0 12px 1px rgba(var(--accent-rgb),0.75);}
+  .kicker .pip{width:6px; height:6px; border-radius:50%; background:var(--terracotta); margin-inline-end:12px; box-shadow:0 0 12px 1px rgba(var(--accent-rgb),0.75);}
   h1{margin-top:clamp(22px,3vh,34px); font-weight:700; font-size:clamp(3rem,5.6vw,5.6rem); line-height:0.9; letter-spacing:-0.04em; color:var(--ivoire);}
   h1 .hl-1{display:block; font-size:0.46em; letter-spacing:-0.02em; line-height:1; margin-bottom:0.08em;}
   h1 .hl-2{display:block;}
