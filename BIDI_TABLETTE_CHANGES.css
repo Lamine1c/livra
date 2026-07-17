@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════════════
+   BIDI AR — AJUSTEMENTS TABLETTE (~614px)
+   Gate Claude in Chrome. Distinct du desktop (BIDI_LIVE_CHANGES.css).
+   cc : breakpoint tablette (≤1080px), scopées [lang="ar"]. FR intact. px @614.
+   ═══════════════════════════════════════════════ */
+
+/* ── HERO ── */
+.livemap { transform: translateY(-40px); }
+.hero .btn { padding: 10px 60px; }
+.hero .card, .hero .hv-card { direction: ltr; }             /* témoignages arabizi LATIN → NE PAS flipper */
+.scroll-hint { font-size: 16.5px; }
+
+/* ── SECTION 1 (تطبيق واحد) ── */
+.section1__phone--left  { transform: translateX(-40px); }
+.section1__phone--right { transform: translateX(40px); }
+/* CTA جرّب — إنها مجانية : padding-left/right 80px ; wrap : translateY(20px) */
+.section1__caption { transform: translateY(-15px); }
+
+/* ── SECTION 2 ── */
+.section2__eyebrow { font-size: 15px; }
+
+/* ── SECTION 4 (درع LIVRA / OTP) ── */
+.s4-eyebrow { font-size: 15px; }
+.s4-phone-l { transform: translateX(-40px); }
+.s4-phone-r { transform: translateX(40px); }
+/* CTA تخلّص : padding-left/right +20 (32→52) ; wrap : translateY(20px) */
+.section4 { padding-bottom: +30px vs base; }
+
+/* ── SECTION 5 (Pinpoint) ── */
+.s5-eyebrow { font-size: 15px; }
+.s5-stage { width: 570px; max-width: 570px; }               /* élargi pour décropper les latéraux */
+.s5-phone-l { transform: translateX(-40px); }
+.s5-phone-r { transform: translateX(40px); }
+.s5-caption { transform: translateY(-25px); }               /* montée 25 */
+/* CTA تم تحديد الموقع : padding-left/right +20 (32→52) */
+/* 🔴 BUG CC À CORRIGER : les mockups latéraux s5 (l/r) sont trop PETITS et
+   mal positionnés/croppés vs s4 (correct). Le central est bon.
+   FIX = aligner le layout .s5-stage tablette sur .s4-stage (mêmes dimensions
+   de phones + mêmes positions latérales). PAS un scale (casse les positions). */
+
+/* ── SECTION 6 (Tracking) ── */
+.s6-eyebrow { font-size: 15px; }
+.s6-stage { width: 570px; max-width: 570px; }               /* élargi pour décropper les latéraux (était 420) */
+.s6-phone-l { transform: translateX(-50px); }               /* écarté */
+.s6-phone-r { transform: translateX(50px); }                /* écarté */
+.s6-caption { transform: translateY(-20px); }               /* montée 20 */
+/* CTA مبيعات أكثر، ولاء أكثر : padding-left/right +30 (32→62) */
+
+/* ── SECTION 7.5 (فلسفتنا / philosophie) ── */
+.s75-eyebrow { font-size: 15px; }
+.s75-tenet, .s75-credo { direction: rtl; text-align: right; padding-left: 4px; padding-right: 60px; }  /* items 01/02/03 : texte à droite + place pour le numéro */
+.s75-tenet .no, .s75-credo .no { left: auto; right: 0; }  /* numéro à DROITE (était left:0 physique) */
+.s75-sign { direction: rtl; text-align: right; unicode-bidi: isolate; }  /* —فريق LIVRA. remis RTL */
+
+/* ── SECTION 9 (جاهز؟ / CTA final) ── */
+.s9-eyebrow { font-size: 15px; }
+/* CTA final ابدأ مجانًا : padding-left/right +25 (36→61) */
+
+/* ═══════════════════════════════════════════════
+   ✅ GATE TABLETTE (~614px) TERMINÉ — hero → section 9.
+   ⚠️ Bug s5 mockups (petits+crochés) laissé à cc (voir section 5).
+   ⚠️ Corrections philosophie (numéros/RTL/signature) = bugs bidi
+      probablement AUSSI en desktop → cc applique aux DEUX.
+   ═══════════════════════════════════════════════ */
