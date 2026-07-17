@@ -195,7 +195,7 @@ body {
     margin-inline: auto;
     margin-top: 0;
     text-align: center;
-    transform: translateX(-261px) translateY(30px);
+    transform: translateX(-261px) translateY(10px);
   }
 
   /* ── CTA par section (lp-cta-wrap + lp-cta partagés → scopés par section) ── */
