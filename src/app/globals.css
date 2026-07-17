@@ -179,9 +179,14 @@ body {
     margin-top: clamp(44px, 5vw, 64px);
   }
 
-  /* HERO : le mockup (.product, col 2 = GAUCHE en RTL) était justify-self:center
-     → centré dans sa colonne → grosse bande vide au bord gauche. justify-self:end
-     (= gauche en RTL) le colle au bord gauche → comble le vide. */
+  /* HERO : grosse bande vide au bord gauche en RTL. Double correction :
+     1. .fg élargi (max-width 1280→1560) → moins de marge de centrage → le mockup
+        va plus à gauche ET se sépare mieux du texte (à droite). À CALER (1560).
+     2. .product (col2=gauche en RTL) : justify-self:center → end (= gauche en RTL)
+        → collé au bord gauche de sa colonne. */
+  [lang="ar"] .hero .fg {
+    max-width: 1560px;
+  }
   [lang="ar"] .hero .product {
     justify-self: end;
   }
