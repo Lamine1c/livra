@@ -127,18 +127,60 @@ body {
   direction: ltr;
 }
 
-/* Captions des sections 2-col : ramenées sous les mockups + centrées (valeurs
-   Lamine, à re-caler au gate sous le régime RTL). */
-[lang="ar"] .s4-caption,
-[lang="ar"] .s5-caption {
-  grid-column: 1 / 2;
-  text-align: center;
-  transform: translateY(-40px);
+/* Captions des sections 1/4/5/6 (desktop 2-col) : elles expliquent le mockup →
+   elles se placent DANS la même colonne de grille que leur stage (donc même
+   largeur + alignement horizontal), ligne 2, à +20px sous le bas du stage.
+   Le +20px vient d'un `row-gap:20px` sur l'inner (le `gap` shorthand mettait
+   40-96px) ; on neutralise les margin-top !important existants des captions.
+   Colonnes : s1 stage=col2 · s4 stage=col1 · s5 stage=col2 · s6 stage=col1. */
+@media (min-width: 1081px) {
+  [lang="ar"] .section1__inner,
+  [lang="ar"] .section4__inner,
+  [lang="ar"] .s5 .s5-inner,
+  [lang="ar"] .s6 .s6-inner {
+    row-gap: 20px;
+  }
+  [lang="ar"] .section1 .section1__caption { grid-column: 2; grid-row: 2; }
+  [lang="ar"] .section4 .s4-caption        { grid-column: 1; grid-row: 2; }
+  [lang="ar"] .s5 .s5-caption              { grid-column: 2; grid-row: 2; }
+  [lang="ar"] .s6 .s6-caption              { grid-column: 1; grid-row: 2; }
+  [lang="ar"] .section1 .section1__caption,
+  [lang="ar"] .section4 .s4-caption,
+  [lang="ar"] .s5 .s5-caption,
+  [lang="ar"] .s6 .s6-caption {
+    text-align: center;
+    margin-top: 0 !important;
+    transform: none;
+  }
+
+  /* [10] s5 : le mockup CHEVAUCHE la colonne texte. Cause = translateX(+170px)
+     PHYSIQUE : sous RTL la colonne stage passe à gauche mais le +translateX
+     pousse encore vers la DROITE (= vers le texte). On MIROITE l'offset. */
+  [lang="ar"] .s5 .s5-mockups {
+    transform: translateX(clamp(-170px, -9vw, -70px));
+  }
+
+  /* [11] s9-cta — valeurs finales Lamine (AR desktop). */
+  [lang="ar"] .s9-cta {
+    margin-top: 156px;
+    padding: 23px 85px;
+    font-size: 20px;
+  }
 }
-[lang="ar"] .s6-caption {
-  grid-column: 1 / 2;
-  text-align: center;
-  transform: translateY(-100px);
+
+/* [1-3] Eyebrows harmonisés à 18px en AR (hero .kicker + s75 + s9). */
+@media (min-width: 1081px) {
+  [lang="ar"] .kicker,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow {
+    font-size: 18px;
+  }
+}
+
+/* [5] pql : le paragraphe partait à gauche → la lettrine ن (float droite) se
+   détachait. text-align:right sur .pql-body réunit texte + lettrine (fix Lamine). */
+[lang="ar"] .pql-body {
+  text-align: right;
 }
 
 /* Section 1 : H2 sur 2 lignes en AR (« تطبيق واحد. » puis le reste). Le saut de

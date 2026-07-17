@@ -3138,8 +3138,8 @@ body {
 /* 1) « UNE SEULE APP » (.section1) — CTA + filet terracotta */
 @media (min-width: 1081px) {
   .section1__sub {
-    border-left: 2px solid rgba(217, 119, 87, 0.45);
-    padding-left: 16px;
+    border-inline-start: 2px solid rgba(217, 119, 87, 0.45);
+    padding-inline-start: 16px;
   }
 }
 

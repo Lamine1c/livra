@@ -48,3 +48,6 @@ LIVRA_Section*.html
 design_handoff_*/
 .claude/
 CLAUDE.md.backup-*
+
+# Rapport de travail CC (écrasé à chaque rendu, local-only)
+CC_RAPPORT.md
