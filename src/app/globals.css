@@ -135,17 +135,17 @@ body {
    stage (s1=2, s4=1, s5=2, s6=1). s5 : le stage est décalé par translateX → la
    caption reçoit le MÊME offset pour rester sous le mockup. */
 @media (min-width: 1081px) {
-  [lang="ar"] .section1__inner,
+  /* s4/s5/s6 : la caption EST un enfant du grid (__inner) → on la place dans la
+     colonne du stage, largeur = mockup central (320px), justify-self:center =
+     centrée sur le mockup. +20px via row-gap. */
   [lang="ar"] .section4__inner,
   [lang="ar"] .s5 .s5-inner,
   [lang="ar"] .s6 .s6-inner {
     row-gap: 20px;
   }
-  [lang="ar"] .section1 .section1__caption { grid-column: 2; }
-  [lang="ar"] .section4 .s4-caption        { grid-column: 1; }
-  [lang="ar"] .s5 .s5-caption              { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)); }
-  [lang="ar"] .s6 .s6-caption              { grid-column: 1; }
-  [lang="ar"] .section1 .section1__caption,
+  [lang="ar"] .section4 .s4-caption { grid-column: 1; }
+  [lang="ar"] .s5 .s5-caption       { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)); }
+  [lang="ar"] .s6 .s6-caption       { grid-column: 1; }
   [lang="ar"] .section4 .s4-caption,
   [lang="ar"] .s5 .s5-caption,
   [lang="ar"] .s6 .s6-caption {
@@ -155,6 +155,18 @@ body {
     justify-self: center;
     text-align: center;
     margin-top: 0 !important;
+  }
+
+  /* section1 : CAS PARTICULIER — la caption est HORS du grid (bloc niveau-section,
+     sibling de .section1__inner) → grid-column/justify-self inopérants, d'où le
+     centrage sur la PAGE. On la dimensionne au mockup (320px) et on la décale sur
+     l'axe du mockup central (colonne stage = à GAUCHE en RTL) via translateX.
+     Offset ≈ constant pour un viewport ≥ 1320px ; À CALER si l'écran diffère. */
+  [lang="ar"] .section1__caption {
+    width: 320px;
+    max-width: 100%;
+    margin-inline: auto;
+    transform: translateX(-265px);
   }
 
   /* [10] s5 : le mockup CHEVAUCHE la colonne texte. Cause = translateX(+170px)
