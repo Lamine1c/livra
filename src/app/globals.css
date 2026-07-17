@@ -141,8 +141,9 @@ body {
 }
 
 /* Pattern 2 — cartes témoignage hero = arabizi LATIN → NE PAS flipper (règle le
-   point qui devançait l'avatar + les messages inversés). */
-[lang="ar"] .hero .card {
+   point qui devançait l'avatar + les messages inversés). Inclut .hv-card. */
+[lang="ar"] .hero .card,
+[lang="ar"] .hero .hv-card {
   direction: ltr;
 }
 
@@ -240,4 +241,78 @@ body {
    \n) reste sur une seule ligne → inchangé. */
 [lang="ar"] .section1__h2 {
   white-space: pre-line;
+}
+
+/* ══ BIDI AR — PHILOSOPHIE (.s75) : bugs bidi présents desktop ET tablette ══
+   Sous RTL, .s75-credo a text-align:left (base) et les numéros .no sont en
+   left:0 (physique) → ils tombent à GAUCHE. On repasse en RTL : texte à droite,
+   numéro 01/02/03 à droite, signature —فريق LIVRA. remise RTL. Tous breakpoints. */
+[lang="ar"] .s75-credo {
+  direction: rtl;
+  text-align: right;
+}
+[lang="ar"] .s75-tenet {
+  direction: rtl;
+  text-align: right;
+  padding-left: 4px;
+  padding-right: 60px;              /* place pour le numéro passé à droite */
+}
+[lang="ar"] .s75-tenet .no {
+  left: auto;
+  right: 0;                          /* numéro à DROITE (était left:0 physique) */
+}
+[lang="ar"] .s75-sign {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+/* ══ BIDI AR — TABLETTE (gate live @614px) — px @614 → responsive, FR intact ══ */
+@media (max-width: 1080px) {
+  /* Hero */
+  [lang="ar"] .livemap  { transform: translateY(-40px); }
+  [lang="ar"] .hero .btn { padding: 10px clamp(44px, 9vw, 60px); }
+  [lang="ar"] .scroll-hint { font-size: 16.5px; }
+  /* Eyebrows tablette → 15px */
+  [lang="ar"] .section2__eyebrow,
+  [lang="ar"] .s4-eyebrow,
+  [lang="ar"] .s5-eyebrow,
+  [lang="ar"] .s6-eyebrow,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow { font-size: 15px; }
+  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical */
+  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  [lang="ar"] .s5-caption { transform: translateY(-25px); }
+  [lang="ar"] .s6-caption { transform: translateY(-20px); }
+  /* CTA (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
+  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
+  [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; }
+  [lang="ar"] .section4 { padding-bottom: 82px; }     /* base tablette 52 + 30 */
+}
+
+/* Géométrie mockups au ≤720px (là où le bug s5/s6 vit + où s4 a sa règle tablette) */
+@media (max-width: 720px) {
+  /* 🔴 FIX BUG s5/s6 : à ≤720 les latéraux gardent leur base scale(0.62) (petits,
+     croppés) car le bloc 721px+ (scale 0.94) ne s'applique pas. On les aligne sur
+     le traitement TABLETTE de s4 (280×606, scale 0.97, translate ±80) + stage
+     élargi à 570 pour décropper. Pas un scale global (qui casse les positions). */
+  [lang="ar"] .s5-stage,
+  [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
+  [lang="ar"] .s5-phone-l,
+  [lang="ar"] .s6-phone-l {
+    left: 50%; top: 50%; width: 280px; height: 606px;
+    transform: translate(calc(-50% - 80px), -50%) scale(0.97);
+  }
+  [lang="ar"] .s5-phone-r,
+  [lang="ar"] .s6-phone-r {
+    left: 50%; top: 50%; width: 280px; height: 606px;
+    transform: translate(calc(-50% + 80px), -50%) scale(0.97);
+  }
+  /* section1 : écartement latéral gaté (à vérifier au re-gate : 3D éventuel). */
+  [lang="ar"] .section1__phone--left  { transform: translateX(-40px); }
+  [lang="ar"] .section1__phone--right { transform: translateX(40px); }
 }
