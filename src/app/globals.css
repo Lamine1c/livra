@@ -127,88 +127,31 @@ body {
   direction: ltr;
 }
 
-/* Captions des sections 1/4/5/6 (desktop 2-col) : ALIGNÉES SUR LE MOCKUP CENTRAL
-   de leur stage (pas centrées sur la colonne). Les 4 mockups centraux font 320px
-   de large et sont CENTRÉS dans leur stage (flex justify-center) → on donne à la
-   caption width:320px + justify-self:center = elle se centre sur le mockup central.
-   +20px sous le bas du stage via row-gap:20px sur l'inner. Colonnes = celle du
-   stage (s1=2, s4=1, s5=2, s6=1). s5 : le stage est décalé par translateX → la
-   caption reçoit le MÊME offset pour rester sous le mockup. */
-@media (min-width: 1081px) {
-  /* s4/s5/s6 : la caption EST un enfant du grid (__inner) → on la place dans la
-     colonne du stage, largeur = mockup central (320px), justify-self:center =
-     centrée sur le mockup. Collée au mockup : row-gap 5px (c'est CE levier, pas
-     le margin-top des captions qui est à 0 !important). NB : ce row-gap agit
-     aussi entre caption(row2) et CTA(row3) → l'air du CTA est rendu par un
-     margin-top dédié sur .lp-cta-wrap (voir plus bas). */
-  [lang="ar"] .section4__inner,
-  [lang="ar"] .s5 .s5-inner,
-  [lang="ar"] .s6 .s6-inner {
-    row-gap: 5px;
-  }
-  [lang="ar"] .section4 .s4-caption { grid-column: 1; }
-  [lang="ar"] .s5 .s5-caption       { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)); }
-  [lang="ar"] .s6 .s6-caption       { grid-column: 1; }
-  [lang="ar"] .section4 .s4-caption,
-  [lang="ar"] .s5 .s5-caption,
-  [lang="ar"] .s6 .s6-caption {
-    grid-row: 2;
-    width: 320px;
-    max-width: 100%;
-    justify-self: center;
-    text-align: center;
-    margin-top: 0 !important;
-  }
+/* ══ BIDI AR — implémentation du gate live Lamine (BIDI_LIVE_CHANGES.css) ══
+   Valeurs px @1728 traduites en logique RESPONSIVE (l'intention prime, pas le px
+   brut). Tout [lang="ar"] — FR strictement intact. */
 
-  /* section1 : CAS PARTICULIER — la caption est HORS du grid (bloc niveau-section,
-     sibling de .section1__inner) → grid-column/justify-self inopérants, d'où le
-     centrage sur la PAGE. On la dimensionne au mockup (320px) et on la décale sur
-     l'axe du mockup central (colonne stage = à GAUCHE en RTL) via translateX.
-     Offset ≈ constant pour un viewport ≥ 1320px ; À CALER si l'écran diffère. */
-  [lang="ar"] .section1__caption {
-    width: 320px;
-    max-width: 100%;
-    margin-inline: auto;
-    margin-top: 5px;              /* collée au mockup (hors grid → margin-top direct) */
-    transform: translateX(-265px);
-  }
-
-  /* CTA des sections (lp-cta-wrap, partagé s1/s4/s5/s6) : trop collé à la caption
-     (surtout après le resserrage à 5px). On redonne de l'air. À CALER. */
-  [lang="ar"] .lp-cta-wrap {
-    margin-top: clamp(44px, 5vw, 64px);
-  }
-
-  /* HERO : grosse bande vide au bord gauche en RTL. Double correction :
-     1. .fg élargi (max-width 1280→1560) → moins de marge de centrage → le mockup
-        va plus à gauche ET se sépare mieux du texte (à droite). À CALER (1560).
-     2. .product (col2=gauche en RTL) : justify-self:center → end (= gauche en RTL)
-        → collé au bord gauche de sa colonne. */
-  [lang="ar"] .hero .fg {
-    max-width: 1560px;
-  }
-  [lang="ar"] .hero .product {
-    justify-self: end;
-  }
-
-  /* [10] s5 : le mockup CHEVAUCHE la colonne texte. Cause = translateX(+170px)
-     PHYSIQUE : sous RTL la colonne stage passe à gauche mais le +translateX
-     pousse encore vers la DROITE (= vers le texte). On MIROITE l'offset. */
-  [lang="ar"] .s5 .s5-mockups {
-    transform: translateX(clamp(-170px, -9vw, -70px));
-  }
-
-  /* [11] s9-cta — valeurs finales Lamine (AR desktop). */
-  [lang="ar"] .s9-cta {
-    margin-top: 156px;
-    padding: 23px 85px;
-    font-size: 20px;
-  }
+/* Pattern 1 — flèches de flow/pills : pointent à GAUCHE en RTL. */
+[lang="ar"] .section1__arrow,
+[lang="ar"] .s4-arr,
+[lang="ar"] .s5-arr,
+[lang="ar"] .s6-arr {
+  display: inline-block;
+  transform: scaleX(-1);
 }
 
-/* [2-3] Tailles hero/eyebrows en AR (desktop). Correction gate 2 : le « اكتشف »
-   à passer à 18px est le .scroll-hint (PAS .kicker, corrigé). .micro → 15px. */
+/* Pattern 2 — cartes témoignage hero = arabizi LATIN → NE PAS flipper (règle le
+   point qui devançait l'avatar + les messages inversés). */
+[lang="ar"] .hero .card {
+  direction: ltr;
+}
+
+/* Pattern 4 — eyebrows petits agrandis pour lisibilité AR. */
 @media (min-width: 1081px) {
+  [lang="ar"] .pql-eyebrow,
+  [lang="ar"] .section2__eyebrow {
+    font-size: 19px;
+  }
   [lang="ar"] .scroll-hint,
   [lang="ar"] .s75-eyebrow,
   [lang="ar"] .s9-eyebrow {
@@ -219,8 +162,75 @@ body {
   }
 }
 
-/* [5] pql : le paragraphe partait à gauche → la lettrine ن (float droite) se
-   détachait. text-align:right sur .pql-body réunit texte + lettrine (fix Lamine). */
+@media (min-width: 1081px) {
+  /* ── Pattern 3 — CAPTIONS centrées sous le mockup CENTRAL + offset vertical gaté.
+     s4/s5/s6 : VRAI centrage (justify-self sur la colonne du stage, largeur ≈
+     mockup). section1 : hors-grid → translateX (exception structurelle, à caler).
+     Le row-gap:5px pose la caption au bas du stage ; le translateY gaté la remonte
+     sous le bas VISUEL du mockup (les mockups s5/s6 ont un scale → bas visuel plus
+     haut que le bas de la boîte). */
+  [lang="ar"] .section4__inner,
+  [lang="ar"] .s5 .s5-inner,
+  [lang="ar"] .s6 .s6-inner {
+    row-gap: 5px;
+  }
+  [lang="ar"] .section4 .s4-caption { grid-column: 1; transform: translateY(-30px); }
+  [lang="ar"] .s5 .s5-caption       { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)) translateY(-100px); }
+  [lang="ar"] .s6 .s6-caption       { grid-column: 1; transform: translateY(-100px); }
+  [lang="ar"] .section4 .s4-caption,
+  [lang="ar"] .s5 .s5-caption,
+  [lang="ar"] .s6 .s6-caption {
+    grid-row: 2;
+    width: 320px;
+    max-width: 100%;
+    justify-self: center;
+    text-align: center;
+    margin-top: 0 !important;
+  }
+  /* section1 : caption HORS du grid → centrage par translateX (pas de justify-self
+     possible). Largeur ≈ mockup, +30px sous lui. translateX À CALER (structurel). */
+  [lang="ar"] .section1__caption {
+    width: 329px;
+    max-width: 100%;
+    margin-inline: auto;
+    margin-top: 0;
+    text-align: center;
+    transform: translateX(-261px) translateY(30px);
+  }
+
+  /* ── CTA par section (lp-cta-wrap + lp-cta partagés → scopés par section) ── */
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(90px); }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(30px); }
+  [lang="ar"] .s5 .lp-cta-wrap       { transform: translateY(-50px); }
+  [lang="ar"] .s6 .lp-cta-wrap       { transform: translateY(-75px); }
+  [lang="ar"] .section1 .lp-cta { padding: clamp(20px, 3.2vw, 24px) clamp(40px, 4.8vw, 60px); }
+  [lang="ar"] .section4 .lp-cta { padding: clamp(20px, 3.2vw, 20px) clamp(40px, 8vw, 60px); }
+  [lang="ar"] .s6 .lp-cta       { padding: clamp(20px, 1.5vw, 20px) clamp(90px, 4.4vw, 90px); }
+  /* section1 : + d'air en bas de section */
+  [lang="ar"] .section1 { padding-bottom: clamp(120px, 12vw, 200px); }
+
+  /* ── HERO (approche gatée : .panel décalé à gauche + cartes témoignage
+     repositionnées). NB : on RETIRE l'approche max-width:1560/justify-self des
+     gates précédents — Lamine a re-gaté avec .panel/.card. ── */
+  [lang="ar"] .hero .btn   { padding: 12px clamp(40px, 3.5vw, 50px); }
+  [lang="ar"] .hero .panel { transform: translateX(-63px); }
+  [lang="ar"] .hero .s-tl  { left: 100px; right: auto; }      /* Karim B. ~100px du bord gauche */
+  [lang="ar"] .hero .s-tr  { right: 500px; left: auto; }      /* Yacine ~500px du bord droit */
+
+  /* s5 mockup : offset physique miroité (sinon chevauche le texte en RTL). */
+  [lang="ar"] .s5 .s5-mockups {
+    transform: translateX(clamp(-170px, -9vw, -70px));
+  }
+
+  /* s9-cta (FinalCta) — valeurs gatées. */
+  [lang="ar"] .s9-cta {
+    margin-top: 156px;
+    padding: 23px 85px;
+    font-size: 20px;
+  }
+}
+
+/* pql : réunit le paragraphe et la lettrine ن (float droite). */
 [lang="ar"] .pql-body {
   text-align: right;
 }
