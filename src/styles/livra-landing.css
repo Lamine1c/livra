@@ -3802,6 +3802,21 @@ body {
 @media (max-width: 360px)                        { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.78; } }
 /* ── fin EXPORT 13.M4 ── */
 
+/* ── FOND NOIR MOBILE — ombre portée des phones (FR + AR, PAS de scope [lang]) ──
+   Cause mesurée sur device (Lamine, iPhone 393 + ZTE) : le drop shadow
+   `0 50px 90px -40px rgba(0,0,0,0.85)` des mockups. En desktop il est diffus
+   sous un grand phone. En mobile (≤560, --mob-m < 1) les phones sont scalés ET
+   resserrés (latéraux ±80) → les 3 ombres se poolent = masse noire sous les
+   sections. Présent en FR comme en AR (donc pas bidi). On adoucit le drop au
+   mobile ; on GARDE l'inset blanc (le liseré des coques). */
+@media (max-width: 560px) {
+  .section1__phone, .s4-phone, .s5-phone, .s6-phone {
+    box-shadow:
+      0 2px 2px rgba(255,255,255,0.06) inset,
+      0 14px 34px -30px rgba(0,0,0,0.35) !important;
+  }
+}
+
 
 /* ═════════════════════════════════════════════════════════════════════
    EXPORT 13.M5 — REVUE MOBILE CD (20 juin) : air voix + swarm 4 ghosts + s4/s5/cta
