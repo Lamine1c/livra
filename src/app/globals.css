@@ -308,25 +308,25 @@ body {
   [lang="ar"] .pql-eyebrow { font-size: 19px; }
   /* pql : respiration latérale tablette. */
   [lang="ar"] .pql { margin-left: 5px; margin-right: 5px; }
-  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical */
-  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical.
+     s1 caption/CTA déplacés en 561-1080 (pas mobile — cf. bloc dédié plus bas). */
   [lang="ar"] .s5-caption { transform: translateY(-25px); }
   [lang="ar"] .s6-caption { transform: translateY(-20px); }
-  /* CTA (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
-  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
-  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
-  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
-  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
+  /* CTA s5/s6 (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
   [lang="ar"] .s5 .lp-cta { padding-left: 52px; padding-right: 52px; }
   [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-15px); }
   [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
   [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; transform: translateY(60px); }
 }
 
-/* + d'air en bas des sections 1/4 : TABLETTE UNIQUEMENT (561-1080). En MOBILE (≤560)
-   ce padding créait un « fond noir » (vide sombre) en bas des sections, absent en FR
-   → on le laisse à la base au mobile. */
+/* Réglages s1/s4 (captions, CTA, air en bas) : TABLETTE UNIQUEMENT (561-1080).
+   En MOBILE (≤560), s1/s4 héritent du CSS de base (= FR) — zéro règle AR. */
 @media (min-width: 561px) and (max-width: 1080px) {
+  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
   [lang="ar"] .section1 { padding-bottom: 102px; }
   [lang="ar"] .section4 { padding-bottom: 97px; }
 }
@@ -337,10 +337,21 @@ body {
   [lang="ar"] .s5-stage,
   [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
 
-  /* ⚠️ PIÈGE 3D (piège #1 Lamine) : le translateX d'écartement DOIT venir AVANT le
-     translate/scale existant — sinon il s'applique dans l'espace déjà transformé →
-     mockup brisé. Le bloc de base (~ligne 3789) pose ces transforms en !important
-     pour section1/s5/s6 → on remet !important pour l'emporter. s4 aligné idem. */
+  /* s5/s6 latéraux écartés (OK au mobile). */
+  [lang="ar"] .s5-phone-l,
+  [lang="ar"] .s6-phone-l {
+    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s5-phone-r,
+  [lang="ar"] .s6-phone-r {
+    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+}
+
+/* s1/s4 latéraux écartés : TABLETTE UNIQUEMENT (561-720). PAS en mobile (≤560) — le
+   spread poussait les latéraux hors du stage étroit = crop/fond noir. Au mobile, s1/s4
+   gardent la position de base (= FR). */
+@media (min-width: 561px) and (max-width: 720px) {
   [lang="ar"] .section1__phone--left {
     transform: translateX(-30px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
   }
@@ -352,14 +363,6 @@ body {
   }
   [lang="ar"] .s4-phone-r {
     transform: translateX(40px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
-  }
-  [lang="ar"] .s5-phone-l,
-  [lang="ar"] .s6-phone-l {
-    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
-  }
-  [lang="ar"] .s5-phone-r,
-  [lang="ar"] .s6-phone-r {
-    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
   }
 }
 
@@ -395,39 +398,9 @@ body {
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
 
-/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : MÊME traitement que s5/s6 ══
-   Cause : au mobile, s5/s6 ont un override `scale(--mob-m * 0.9)` sur leur groupe de
-   mockups + `height *0.9` sur leur stage → les 3 phones RÉTRÉCISSENT et tiennent avec
-   des peeks propres, ET le stage épouse les mockups (pas de vide = pas de fond noir).
-   s1/s4 n'avaient PAS ce *0.9 → central plus gros, latéraux hors écran, + le stage
-   trop haut (fond noir). On applique le MÊME *0.9 :
-   - s1 scale via .section1__mockups (comme s5) ; s4 scale via .s4-stage (sa structure).
-   - stage height *0.9 + min-height:0 pour supprimer tout vide sombre en bas.
-   Les latéraux restent à la base ±80 (= s5), pas de spread ajouté. Scopé AR ≤560. */
-@media (max-width: 560px) {
-  /* CENTRAGE robuste : la technique base `left:50% + translateX(-50%)` sur un
-     .section1__mockups de 440px pousse le groupe à -220px (mesuré device) car le
-     stage est plus étroit → mal-centré. On CENTRE par flex à la place (direction-
-     agnostique) et on retire le left/translateX du groupe (juste le scale *0.9). */
-  [lang="ar"] .section1__stage {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    height: calc(700px * var(--mob-m, 0.82) * 0.9) !important;
-    min-height: 0 !important;
-    overflow: hidden !important;      /* les débords latéraux du groupe = peeks propres */
-  }
-  [lang="ar"] .section1__mockups {
-    left: auto !important;
-    transform: scale(calc(var(--mob-m, 0.82) * 0.9)) !important;
-    transform-origin: top center !important;
-  }
-  /* s4 : structure différente (le STAGE se centre dans la section, scalé par --s4m).
-     On garde son centrage de base + on applique le *0.9 sur le scale du stage. Si le
-     même push -220 apparaît sur s4 au test device, on lui appliquera aussi le flex. */
-  [lang="ar"] .s4-stage {
-    transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important;
-    height: calc(700px * var(--s4m, 0.82) * 0.9) !important;
-    min-height: 0 !important;
-  }
-}
+/* ── MOBILE ≤560 : AUCUNE règle AR sur les mockups/stages de s1 & s4. ──
+   Le FR est nickel sur iPhone/ZTE/iPad avec le CSS de base ; nos règles AR mobile
+   étaient la cause du crop/fond noir/push. On les a toutes SUPPRIMÉES → au mobile,
+   /ar hérite exactement du CSS de /fr pour s1/s4. Le RTL natif (dir=rtl) suffit pour
+   le texte ; les mockups sont identiques dans les 2 langues (LTR via .section1__stage
+   direction:ltr, tous breakpoints). */
