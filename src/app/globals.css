@@ -101,3 +101,291 @@ body {
 .blog-back-link:hover {
   color: var(--ivoire);
 }
+
+/* ── i18n AR — RTL NATIF (décision 17 juil) ───────────────────────────
+   Le wrapper marketing [lang="ar"] passe en dir="rtl" (attribut HTML, cf.
+   (site)/layout.tsx). Le RTL natif aligne le texte à droite, retourne l'ordre
+   des colonnes/flex et gère la ponctuation → plus besoin de `plaintext` ni de
+   `text-align:right` forcés. On ne garde que les EXCEPTIONS LTR + quelques
+   repositionnements ci-dessous. Portée : [lang="ar"] uniquement (FR intact). */
+
+/* Isolation LTR explicite quand nécessaire (marque, prix, tél, email, URL). */
+[lang="ar"] bdi,
+[lang="ar"] .ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Mockups/stages : NE doivent PAS se retourner (pixel-designés LTR). La grille
+   parente les place côté opposé (miroir voulu) ; on force juste leur direction
+   INTERNE en LTR pour préserver leur mise en page d'origine (pins, phones…). */
+[lang="ar"] .hero .product,
+[lang="ar"] .section1__stage,
+[lang="ar"] .s4-stage,
+[lang="ar"] .s5-stage,
+[lang="ar"] .s6-stage {
+  direction: ltr;
+}
+
+/* ══ BIDI AR — implémentation du gate live Lamine (BIDI_LIVE_CHANGES.css) ══
+   Valeurs px @1728 traduites en logique RESPONSIVE (l'intention prime, pas le px
+   brut). Tout [lang="ar"] — FR strictement intact. */
+
+/* Pattern 1 — flèches de flow/pills : pointent à GAUCHE en RTL. */
+[lang="ar"] .section1__arrow,
+[lang="ar"] .s4-arr,
+[lang="ar"] .s5-arr,
+[lang="ar"] .s6-arr {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* Pattern 2 — cartes témoignage hero = arabizi LATIN → NE PAS flipper (règle le
+   point qui devançait l'avatar + les messages inversés). Inclut .hv-card. */
+[lang="ar"] .hero .card,
+[lang="ar"] .hero .hv-card {
+  direction: ltr;
+}
+
+/* Pattern 4 — eyebrows petits agrandis pour lisibilité AR. */
+@media (min-width: 1081px) {
+  [lang="ar"] .pql-eyebrow,
+  [lang="ar"] .section2__eyebrow {
+    font-size: 19px;
+  }
+  [lang="ar"] .scroll-hint,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow {
+    font-size: 18px;
+  }
+  [lang="ar"] .micro {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1081px) {
+  /* ── Pattern 3 — CAPTIONS centrées sous le mockup CENTRAL + offset vertical gaté.
+     s4/s5/s6 : VRAI centrage (justify-self sur la colonne du stage, largeur ≈
+     mockup). section1 : hors-grid → translateX (exception structurelle, à caler).
+     Le row-gap:5px pose la caption au bas du stage ; le translateY gaté la remonte
+     sous le bas VISUEL du mockup (les mockups s5/s6 ont un scale → bas visuel plus
+     haut que le bas de la boîte). */
+  [lang="ar"] .section4__inner,
+  [lang="ar"] .s5 .s5-inner,
+  [lang="ar"] .s6 .s6-inner {
+    row-gap: 5px;
+  }
+  [lang="ar"] .section4 .s4-caption { grid-column: 1; transform: translateY(-30px); }
+  [lang="ar"] .s5 .s5-caption       { grid-column: 2; transform: translateX(clamp(-170px, -9vw, -70px)) translateY(-100px); }
+  [lang="ar"] .s6 .s6-caption       { grid-column: 1; transform: translateY(-100px); }
+  [lang="ar"] .section4 .s4-caption,
+  [lang="ar"] .s5 .s5-caption,
+  [lang="ar"] .s6 .s6-caption {
+    grid-row: 2;
+    width: 320px;
+    max-width: 100%;
+    justify-self: center;
+    text-align: center;
+    margin-top: 0 !important;
+  }
+  /* section1 : caption HORS du grid → centrage par translateX (pas de justify-self
+     possible). Largeur ≈ mockup, +30px sous lui. translateX À CALER (structurel). */
+  [lang="ar"] .section1__caption {
+    width: 329px;
+    max-width: 100%;
+    margin-inline: auto;
+    margin-top: 0;
+    text-align: center;
+    transform: translateX(-261px) translateY(10px);
+  }
+
+  /* ── CTA par section (lp-cta-wrap + lp-cta partagés → scopés par section) ── */
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(90px); }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(30px); }
+  [lang="ar"] .s5 .lp-cta-wrap       { transform: translateY(-50px); }
+  [lang="ar"] .s6 .lp-cta-wrap       { transform: translateY(-75px); }
+  [lang="ar"] .section1 .lp-cta { padding: clamp(20px, 3.2vw, 24px) clamp(40px, 4.8vw, 60px); }
+  [lang="ar"] .section4 .lp-cta { padding: clamp(20px, 3.2vw, 20px) clamp(40px, 8vw, 60px); }
+  [lang="ar"] .s6 .lp-cta       { padding: clamp(20px, 1.5vw, 20px) clamp(90px, 4.4vw, 90px); }
+  /* section1 : + d'air en bas de section */
+  [lang="ar"] .section1 { padding-bottom: clamp(120px, 12vw, 200px); }
+
+  /* ── HERO (approche gatée : .panel décalé à gauche + cartes témoignage
+     repositionnées). NB : on RETIRE l'approche max-width:1560/justify-self des
+     gates précédents — Lamine a re-gaté avec .panel/.card. ── */
+  [lang="ar"] .hero .btn   { padding: 12px clamp(40px, 3.5vw, 50px); }
+  [lang="ar"] .hero .panel { transform: translateX(-63px); }
+  [lang="ar"] .hero .s-tl  { left: 100px; right: auto; }      /* Karim B. ~100px du bord gauche */
+  [lang="ar"] .hero .s-tr  { right: 500px; left: auto; }      /* Yacine ~500px du bord droit */
+
+  /* s5 mockup : offset physique miroité (sinon chevauche le texte en RTL). */
+  [lang="ar"] .s5 .s5-mockups {
+    transform: translateX(clamp(-170px, -9vw, -70px));
+  }
+
+  /* s9-cta (FinalCta) — valeurs gatées. */
+  [lang="ar"] .s9-cta {
+    margin-top: 156px;
+    padding: 23px 85px;
+    font-size: 20px;
+  }
+}
+
+/* pql : réunit le paragraphe et la lettrine ن (float droite). */
+[lang="ar"] .pql-body {
+  text-align: right;
+}
+
+/* Section 1 : H2 sur 2 lignes en AR (« تطبيق واحد. » puis le reste). Le saut de
+   ligne vient d'ar.json (\n) ; white-space:pre-line le rend visible. Le FR (sans
+   \n) reste sur une seule ligne → inchangé. */
+[lang="ar"] .section1__h2 {
+  white-space: pre-line;
+}
+
+/* ══ BIDI AR — PHILOSOPHIE (.s75) : bugs bidi présents desktop ET tablette ══
+   Sous RTL, .s75-credo a text-align:left (base) et les numéros .no sont en
+   left:0 (physique) → ils tombent à GAUCHE. On repasse en RTL : texte à droite,
+   numéro 01/02/03 à droite, signature —فريق LIVRA. remise RTL. Tous breakpoints. */
+[lang="ar"] .s75-credo {
+  direction: rtl;
+  text-align: right;
+}
+[lang="ar"] .s75-tenet {
+  direction: rtl;
+  text-align: right;
+  padding-left: 4px;
+  padding-right: 60px;              /* place pour le numéro passé à droite */
+}
+[lang="ar"] .s75-tenet .no {
+  left: auto;
+  right: 0;                          /* numéro à DROITE (était left:0 physique) */
+}
+[lang="ar"] .s75-sign {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+/* Les 4 cartes .s75-card (ولاية/خزينة/دعم/أمان) : bug bidi — `text-align:left` hérité
+   de .s75-cards + icônes restées à gauche. On aligne à droite (texte + icône).
+   width:100% sur titre/texte sinon flex-end les rétrécit → texte démarrait au centre.
+   Tous breakpoints (le bug est en base, donc desktop aussi). */
+[lang="ar"] .s75-card,
+[lang="ar"] .s75-ctitle,
+[lang="ar"] .s75-ctext {
+  text-align: right;
+}
+[lang="ar"] .s75-card {
+  align-items: flex-end;
+}
+[lang="ar"] .s75-ic {
+  align-self: flex-end;
+  margin-left: auto;
+  margin-right: 0;
+  margin-bottom: 5px;
+}
+[lang="ar"] .s75-ctitle,
+[lang="ar"] .s75-ctext {
+  width: 100%;
+  align-self: stretch;
+}
+
+/* ══ BIDI AR — TABLETTE (gate live @614px) — px @614 → responsive, FR intact ══ */
+@media (max-width: 1080px) {
+  /* Hero */
+  [lang="ar"] .livemap  { transform: translateY(-40px); }
+  [lang="ar"] .hero .btn { padding: 10px clamp(44px, 9vw, 60px); }
+  [lang="ar"] .scroll-hint { font-size: 16.5px; }
+  /* Eyebrows tablette → 15px (pql-eyebrow reste 19 en AR). */
+  [lang="ar"] .section2__eyebrow,
+  [lang="ar"] .section2__subtitle,
+  [lang="ar"] .s4-eyebrow,
+  [lang="ar"] .s5-eyebrow,
+  [lang="ar"] .s6-eyebrow,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow { font-size: 15px; }
+  [lang="ar"] .pql-eyebrow { font-size: 19px; }
+  /* pql : respiration latérale tablette. */
+  [lang="ar"] .pql { margin-left: 5px; margin-right: 5px; }
+  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical */
+  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  [lang="ar"] .s5-caption { transform: translateY(-25px); }
+  [lang="ar"] .s6-caption { transform: translateY(-20px); }
+  /* CTA (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
+  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .s5 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-15px); }
+  [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
+  [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; transform: translateY(60px); }
+  /* + d'air en bas des sections (base tablette 72). */
+  [lang="ar"] .section1 { padding-bottom: 102px; }
+  [lang="ar"] .section4 { padding-bottom: 97px; }
+}
+
+/* Géométrie mockups au ≤720px. Stages s5/s6 élargis (décrop). Écartement des
+   latéraux gaté au re-gate 18 juil. */
+@media (max-width: 720px) {
+  [lang="ar"] .s5-stage,
+  [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
+
+  /* ⚠️ PIÈGE 3D (piège #1 Lamine) : le translateX d'écartement DOIT venir AVANT le
+     translate/scale existant — sinon il s'applique dans l'espace déjà transformé →
+     mockup brisé. Le bloc de base (~ligne 3789) pose ces transforms en !important
+     pour section1/s5/s6 → on remet !important pour l'emporter. s4 aligné idem. */
+  [lang="ar"] .section1__phone--left {
+    transform: translateX(-30px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .section1__phone--right {
+    transform: translateX(30px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s4-phone-l {
+    transform: translateX(-40px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s4-phone-r {
+    transform: translateX(40px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s5-phone-l,
+  [lang="ar"] .s6-phone-l {
+    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s5-phone-r,
+  [lang="ar"] .s6-phone-r {
+    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+}
+
+/* ══ BIDI AR — MOBILE (gate 390px, 18 juil) — boundary LP = 561px ══
+   Ces règles s'appliquent SOUS la tablette (≤560) et priment (source order). */
+@media (max-width: 560px) {
+  /* Eyebrows : retour à la base 13px en mobile (la tablette forçait 15/19 → trop
+     gros sur 390). « TOUS harmonisés à 13px » (gate mobile). */
+  [lang="ar"] .section2__eyebrow,
+  [lang="ar"] .s4-eyebrow,
+  [lang="ar"] .s5-eyebrow,
+  [lang="ar"] .s6-eyebrow,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow,
+  [lang="ar"] .pql-eyebrow { font-size: 13px; }
+
+  /* s5 CTA « تم تحديد الموقع… » (= .s5 .lp-cta) : texte long → padding horizontal
+     réduit pour l'étaler + bouton élargi. ⚠️ padding/width en !important pour battre
+     `.lp-cta { width:auto; padding:16px 32px } !important` (mobile, livra-landing ~3847). */
+  [lang="ar"] .s5 .lp-cta {
+    padding: 20px 8px !important;
+    line-height: 1.5;
+    width: 343px !important;
+    max-width: none;
+  }
+  [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-20px); }
+
+  /* s6 CTA « مبيعات أكثر، ولاء أكثر » : wrap remonté. */
+  [lang="ar"] .s6 .lp-cta-wrap { transform: translateY(-20px); }
+
+  /* 🔴 s9-cta : NE PAS le descendre (transform → chevauchement). Pour l'air sous le
+     sous-titre انضمّ إلى…, on utilise margin-top (58 = base 38 + 20), PAS translateY. */
+  [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
+}

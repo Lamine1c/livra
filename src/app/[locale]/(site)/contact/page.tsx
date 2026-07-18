@@ -1,43 +1,47 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Footer from "@/components/site/Footer";
 import ContactForm from "./contact-form";
 
-export const metadata: Metadata = {
-  title: "Contact — LIVRA",
-  description:
-    "Une question sur LIVRA ? Écris-nous via le formulaire ou directement sur WhatsApp. On répond aux vendeurs comme aux acheteurs.",
-  alternates: { canonical: "/contact" },
-  openGraph: {
-    type: "website",
-    title: "Contact — LIVRA",
-    description: "Écris-nous via le formulaire ou directement sur WhatsApp.",
-    url: "/contact",
-    images: [{ url: "/og-image-livra.png", width: 1200, height: 630, alt: "LIVRA" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Contact — LIVRA",
-    description: "Écris-nous via le formulaire ou directement sur WhatsApp.",
-    images: ["/og-image-livra.png"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Contact");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    alternates: { canonical: "/contact" },
+    openGraph: {
+      type: "website",
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      url: "/contact",
+      images: [{ url: "/og-image-livra.png", width: 1200, height: 630, alt: "LIVRA" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      images: ["/og-image-livra.png"],
+    },
+  };
+}
 
 const WHATSAPP_URL = "https://wa.me/213652208485";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const t = await getTranslations("Contact");
   return (
     <>
       <main style={{ maxWidth: "62rem", margin: "0 auto", padding: "6rem 1.5rem 7rem" }}>
         <h1 className="text-4xl font-semibold mb-3" style={{ color: "var(--ivoire)" }}>
-          Contact
+          {t("h1")}
         </h1>
         <p className="text-lg mb-12" style={{ color: "var(--mist)", maxWidth: "40rem" }}>
-          Une question, un souci, une idée ? Écris-nous — on répond aux vendeurs comme aux acheteurs.
+          {t("intro")}
         </p>
 
         <div className="ct-grid">
           <section
-            aria-label="Formulaire de contact"
+            aria-label={t("formAria")}
             style={{
               background: "var(--surface)",
               border: "1px solid var(--hair)",
@@ -49,7 +53,7 @@ export default function ContactPage() {
           </section>
 
           <aside
-            aria-label="Contact WhatsApp"
+            aria-label={t("asideAria")}
             style={{
               background: "var(--surface)",
               border: "1px solid var(--hair)",
@@ -61,11 +65,10 @@ export default function ContactPage() {
             }}
           >
             <h2 className="text-xl font-semibold mb-2" style={{ color: "var(--ivoire)" }}>
-              Écris-nous directement
+              {t("asideTitle")}
             </h2>
             <p className="text-sm mb-6" style={{ color: "var(--mist)", lineHeight: 1.6 }}>
-              Tu préfères WhatsApp ? On est joignables au <strong>+213 652 20 84 85</strong>, tous les
-              jours sauf le vendredi. Réponse rapide en journée.
+              {t("asideBodyPrefix")}<strong><bdi>{t("asidePhone")}</bdi></strong>{t("asideBodySuffix")}
             </p>
             <a
               href={WHATSAPP_URL}
@@ -85,7 +88,7 @@ export default function ContactPage() {
                 textDecoration: "none",
               }}
             >
-              <span aria-hidden="true">💬</span> Ouvrir WhatsApp
+              <span aria-hidden="true">💬</span> {t("ouvrirWhatsapp")}
             </a>
           </aside>
         </div>

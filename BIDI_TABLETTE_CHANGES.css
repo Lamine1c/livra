@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════
+   BIDI AR — AJUSTEMENTS TABLETTE (~614px)
+   Gate Claude in Chrome. Distinct du desktop (BIDI_LIVE_CHANGES.css).
+   cc : breakpoint tablette (≤1080px), scopées [lang="ar"]. FR intact. px @614.
+   ═══════════════════════════════════════════════ */
+
+/* ── HERO ── */
+.livemap { transform: translateY(-40px); }
+.hero .btn { padding: 10px 60px; }
+.hero .card, .hero .hv-card { direction: ltr; }             /* témoignages arabizi LATIN → NE PAS flipper */
+.scroll-hint { font-size: 16.5px; }
+
+/* ── SECTION 1 (تطبيق واحد) ── */
+/* ⚠️ CC : les phones s1 ont une MATRICE 3D (rotateY/perspective). Le translateX
+   DOIT être appliqué AVANT la matrice (transform: translateX(±30px) <matrice>),
+   sinon le translate se fait dans l'espace 3D déformé → mockup brisé. */
+.section1__phone--left  { transform: translateX(-30px) <matrice3d existante>; }   /* écarté +30 (re-gate 18 juil) */
+.section1__phone--right { transform: translateX(30px) <matrice3d existante>; }    /* écarté +30 (re-gate 18 juil) */
+.section1 { padding-bottom: 102px; }                        /* +30 d'air sous le CTA (base 72) — re-gate 18 juil */
+/* CTA جرّب — إنها مجانية : padding-left/right 80px ; wrap : translateY(20px) */
+.section1__caption { transform: translateY(-15px); }
+
+/* ── SECTION 2 ── */
+.section2__eyebrow { font-size: 15px; }
+.section2__subtitle { font-size: 15px; }                    /* « آلاف البائعين يخسرون… » (re-gate 18 juil) */
+
+/* ── SECTION لماذا LIVRA (pql) ── */
+.pql { margin-left: 5px; margin-right: 5px; }               /* respiration latérale tablette (re-gate 18 juil) */
+.pql-eyebrow { font-size: 19px; }
+
+/* ── SECTION 4 (درع LIVRA / OTP) ── */
+.s4-eyebrow { font-size: 15px; }
+.s4-phone-l { transform: translateX(-40px) <transform existant>; }   /* écarté 40 (re-gate 18 juil) */
+.s4-phone-r { transform: translateX(40px) <transform existant>; }    /* écarté 40 (re-gate 18 juil) */
+/* CTA تخلّص : padding-left/right +20 (32→52) ; wrap : translateY(20px) */
+.section4 { padding-bottom: 97px; }                         /* +25 d'air en bas (base 72) — re-gate 18 juil */
+
+/* ── SECTION 5 (Pinpoint) ── */
+.s5-eyebrow { font-size: 15px; }
+.s5-stage { width: 570px; max-width: 570px; }               /* élargi pour décropper les latéraux */
+.s5-phone-l { transform: translateX(-60px) <transform existant>; }  /* écarté 60 (re-gate 18 juil) */
+.s5-phone-r { transform: translateX(60px) <transform existant>; }   /* écarté 60 (re-gate 18 juil) */
+.s5-caption { transform: translateY(-25px); }               /* montée 25 */
+/* CTA تم تحديد الموقع : padding-left/right +20 (32→52) ; wrap : translateY(-15px) re-gate 18 juil */
+/* ✅ BUG RÉSOLU par cc (commit f4f85bc) : les latéraux étaient à scale(0.62)
+   (le bloc min-width:721px scale(0.94) ne s'applique pas ≤720). cc les a alignés
+   sur le traitement tablette de s4 : 280×606, scale(0.97), translate(±80px). ✅ validé */
+
+/* ── SECTION 6 (Tracking / ثقة LIVRA) ── */
+.s6-eyebrow { font-size: 15px; }
+.s6-stage { width: 570px; max-width: 570px; }               /* élargi pour décropper les latéraux (était 420) */
+.s6-phone-l { transform: translateX(-60px) <transform existant>; }  /* écarté 60 (re-gate 18 juil) */
+.s6-phone-r { transform: translateX(60px) <transform existant>; }   /* écarté 60 (re-gate 18 juil) */
+.s6-caption { transform: translateY(-20px); }               /* montée 20 */
+/* CTA مبيعات أكثر، ولاء أكثر : padding-left/right +30 (32→62) */
+
+/* ── SECTION 7.5 (فلسفتنا / philosophie) ── */
+.s75-eyebrow { font-size: 15px; }
+.s75-tenet, .s75-credo { direction: rtl; text-align: right; padding-left: 4px; padding-right: 60px; }  /* items 01/02/03 : texte à droite + place pour le numéro */
+.s75-tenet .no, .s75-credo .no { left: auto; right: 0; }  /* numéro à DROITE (était left:0 physique) */
+.s75-sign { direction: rtl; text-align: right; unicode-bidi: isolate; }  /* —فريق LIVRA. remis RTL */
+
+/* 🔴 LES 4 CARTES (ولاية / خزينة / دعم / أمان) — bug bidi trouvé au re-gate 18 juil.
+   Elles avaient `text-align: left` EN DUR + les icônes restées à gauche.
+   ⚠️ VÉRIFIER SI LE BUG EXISTE AUSSI EN DESKTOP → appliquer aux 2 breakpoints. */
+.s75-card, .s75-ctitle, .s75-ctext { text-align: right; }
+.s75-card { align-items: flex-end; }                        /* pousse icône + contenu à droite */
+.s75-ic { align-self: flex-end; margin-left: auto; margin-right: 0; margin-bottom: 5px; }  /* icône à droite + 5px sous elle */
+.s75-ctitle, .s75-ctext { width: 100%; align-self: stretch; }  /* sinon flex-end rétrécit le texte → démarrait au centre */
+
+/* ── SECTION 9 (جاهز؟ / CTA final) ── */
+.s9-eyebrow { font-size: 15px; }
+.s9-cta { transform: translateY(60px); }                    /* CTA final descendu 60 (re-gate 18 juil) */
+/* CTA final ابدأ مجانًا : padding-left/right +25 (36→61) */
+
+/* ═══════════════════════════════════════════════
+   ✅ RE-GATE TABLETTE (~614px) TERMINÉ — 18 juillet, hero → section 9.
+
+   🔴 2 POINTS CRITIQUES POUR CC :
+   1. MATRICE 3D : les phones .section1__phone--left/right ont un rotateY.
+      Le translateX DOIT venir AVANT la matrice, sinon le mockup se brise.
+   2. LES 4 CARTES .s75-card avaient `text-align:left` EN DUR + icônes à gauche
+      → bug bidi. VÉRIFIER SI ÇA EXISTE AUSSI EN DESKTOP.
+
+   ⏭️ RESTE : gate MOBILE 390px (via DevTools mode Device).
+   ═══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   ✅ GATE TABLETTE (~614px) TERMINÉ — hero → section 9.
+   ⚠️ Bug s5 mockups (petits+crochés) laissé à cc (voir section 5).
+   ⚠️ Corrections philosophie (numéros/RTL/signature) = bugs bidi
+      probablement AUSSI en desktop → cc applique aux DEUX.
+   ═══════════════════════════════════════════════ */

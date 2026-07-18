@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════
+   BIDI AR — CHANGEMENTS VALIDÉS EN LIVE PAR LAMINE (COMPLET)
+   Gate Claude in Chrome, preview laqcpal44, viewport 1728px, zoom 100%
+   Page /ar gatée de bout en bout : hero → section 6.
+
+   ⚠️ POUR CC — LIRE AVANT D'IMPLÉMENTER :
+   - Ces valeurs px sont ABSOLUES @1728px. NE PAS les coller telles quelles.
+   - INTENTION > valeur brute. Traduire chaque fixe en logique responsive.
+   - Les CTA : j'ai utilisé des data-attr temporaires (data-claudy=...).
+     Trouve la vraie classe/sélecteur unique de CHAQUE CTA de section.
+   - Les CAPTIONS : la LOGIQUE = caption centrée horizontalement sous le
+     mockup CENTRAL de son stage (largeur ≈ mockup), + offset vertical indiqué.
+     Le translateX brut n'est qu'un moyen d'y arriver @1728 — utilise plutôt
+     un vrai centrage (justify-self / margin auto sur la colonne du mockup).
+   - Tout est scopé [lang="ar"] / dir="rtl" — FR intact obligatoire.
+   ═══════════════════════════════════════════════ */
+
+/* ── HERO ── */
+.hero .btn { padding: 12px 50px; }                /* CTA ابدأ مجانًا */
+.hero .card { direction: ltr; }                    /* cartes témoignage = arabizi LATIN → NE PAS flipper (règle le point qui devançait l'avatar + messages inversés) */
+.hero .panel { transform: translateX(-63px); }     /* grande carte dashboard → ~250px du bord gauche */
+.card.s-tl { left: 100px; right: auto; }           /* Karim B. → 100px du bord gauche */
+.card.s-tr { left: 932px; right: auto; }           /* Yacine → 500px du bord droit @1728 */
+
+/* ── SECTION 1 (تطبيق واحد) ── */
+.section1__caption {                                /* INTENTION : centrée sous mockup central (LV-2605-8429) + 30px sous lui */
+  width: 329px;
+  transform: translateX(-261px) translateY(30px);
+  margin: 0; text-align: center;
+}
+.section1 .lp-cta-wrap { transform: translateY(90px); }   /* CTA جرّب — إنها مجانية : +90 bas */
+.section1 { padding-bottom: 200px; }                       /* + d'air en bas de section */
+.section1 .lp-cta { padding: clamp(20px,3.2vw,24px) clamp(40px,4.8vw,60px); }
+.section1__arrow { transform: scaleX(-1); display:inline-block; }  /* flèches pills → pointent à GAUCHE (sens RTL) */
+/* CTA « تم تحديد الموقع وتأكيده، ومندوب التوصيل انطلق » (wrap) : transform: translateY(-70px) */
+
+/* ── لماذا LIVRA ؟ + SECTION 2 ── */
+.pql-eyebrow { font-size: 19px; }
+.section2__eyebrow { font-size: 19px; }
+
+/* ── SECTION 4 (درع LIVRA / OTP) ── */
+/* CTA « تخلّص من الطلبات الوهمية » : padding clamp(20px,3.2vw,20px) clamp(40px,8vw,60px) ; son wrap : translateY(30px) */
+.s4-caption { transform: translateY(-30px); }      /* caption OTP montée 30px (déjà centrée sous son mockup) */
+.s4-arr { transform: scaleX(-1); display:inline-block; }   /* flèches flow → GAUCHE (RTL) */
+
+/* ── SECTION 5 (Pinpoint) ── */
+.s5-arr { transform: scaleX(-1); display:inline-block; }
+.s5-caption { transform: translateX(-160px) translateY(-100px); }  /* INTENTION : centrée sous mockup Pinpoint + 100px haut */
+/* CTA section 5 wrap : translateY(-50px) (le CTA sous Pinpoint) */
+
+/* ── SECTION 6 (Tracking) ── */
+.s6-arr { transform: scaleX(-1); display:inline-block; }
+.s6-caption { transform: translateX(0px) translateY(-100px); }     /* centrée sous mockup Tracking + 100px haut */
+/* CTA « مبيعات أكثر، ولاء أكثر » (wrap) : transform: translateY(-75px)
+   CTA lui-même : padding clamp(20px,1.5vw,20px) clamp(90px,4.4vw,90px) */
+
+/* ═══════════════════════════════════════════════
+   RÈGLES TRANSVERSALES (patterns récurrents pour cc) :
+   1. Toutes les FLÈCHES de flow/pills en AR → scaleX(-1) (pointent à gauche).
+   2. Toutes les CARTES en arabizi LATIN (témoignages hero) → dir:ltr.
+   3. Toutes les CAPTIONS de mockup → centrées sous le mockup central + léger offset haut.
+   4. Les EYEBROWS petits → 18-19px en AR (lisibilité).
+   ═══════════════════════════════════════════════ */

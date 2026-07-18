@@ -1,0 +1,44 @@
+/* ═══════════════════════════════════════════════
+   BIDI AR — AJUSTEMENTS MOBILE (390px) ✅ GATE TERMINÉ
+   Gate Claude in Chrome (DevTools mode Device, 390×844), 18 juillet.
+   Distinct du desktop (BIDI_LIVE_CHANGES.css) et de la tablette
+   (BIDI_TABLETTE_CHANGES.css).
+   cc : breakpoint mobile, scopées [lang="ar"]. FR intact. px @390.
+   ⚠️ MOBILE = CŒUR DU MARCHÉ DZ (Reels, TikTok, lien WhatsApp Safari).
+   ═══════════════════════════════════════════════ */
+
+/* ── SECTION 5 (Pinpoint / ميزة LIVRA الحاسمة) ── */
+/* CTA « تم تحديد الموقع وتأكيده، ومندوب التوصيل انطلق » : le texte était trop
+   compact dans le bouton — padding horizontal 32px trop large pour un texte
+   long en mobile, il restait de l'espace inutilisé sur les côtés.
+   cc : trouver le vrai sélecteur unique de ce CTA. */
+.s5-cta-mobile {
+  padding: 20px 8px;                  /* était 16px 32px → texte étalé jusqu'aux bords */
+  line-height: 1.5;                   /* était 1.15 */
+  width: 343px;                       /* était 323 — bouton élargi +10px de chaque côté @390 */
+  max-width: none;
+}
+/* son wrap : transform: translateY(-20px) — CTA remonté de 20 */
+
+/* ── SECTION 6 (Tracking / ثقة LIVRA) ── */
+/* CTA « مبيعات أكثر، ولاء أكثر » — son wrap : transform: translateY(-20px) */
+/* eyebrows : TOUS harmonisés à 13px en mobile (valeur de base, ne pas toucher) */
+
+/* ── SECTION 7.5 (فلسفتنا / philosophie) ── */
+/* 🔴 MÊME BUG QU'EN TABLETTE : les 4 cartes ont `text-align: left` EN DUR.
+   En mobile les icônes sont déjà à droite, seul le texte était mal aligné. */
+.s75-card, .s75-ctitle, .s75-ctext { text-align: right; }
+
+/* ── SECTION 9 (جاهز؟ / CTA final) ── */
+/* ⚠️ NE PAS descendre le .s9-cta en mobile : un translateY(30px) le faisait
+   CHEVAUCHER le texte « الإلغاء بنقرة واحدة » en dessous. Laisser tel quel. */
+
+/* ═══════════════════════════════════════════════
+   ✅ GATE MOBILE 390px TERMINÉ — 18 juillet.
+
+   🔴 POINT TRANSVERSAL CONFIRMÉ (desktop + tablette + mobile) :
+   .s75-card a `text-align: left` EN DUR → bug bidi sur LES 3 BREAKPOINTS.
+   cc : corriger à la source, pas breakpoint par breakpoint.
+
+   ✅ Pas de scroll horizontal @390 (vérifié).
+   ═══════════════════════════════════════════════ */

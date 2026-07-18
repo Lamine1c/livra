@@ -1,28 +1,30 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export default function Footer() {
+  const t = useTranslations("Footer");
   return (
     <footer className="lp-footer">
       <div className="lp-footer-inner">
         <div className="lp-footer-top">
           <div className="lp-footer-brand-block">
-            <span className="lp-footer-brand">LIVRA</span>
-            <p className="lp-footer-tagline">La transaction protégée des deux côtés.</p>
+            <span className="lp-footer-brand">{t("brand")}</span>
+            <p className="lp-footer-tagline">{t("tagline")}</p>
           </div>
         </div>
         <div className="lp-footer-divider"></div>
         <div className="lp-footer-bottom">
           <nav className="lp-footer-nav">
-            <a href="#produit">Produit</a>
-            <Link href="/pricing">Tarifs</Link>
-            <Link href="/magazine">Magazine</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/privacy">Confidentialité</Link>
-            <Link href="/cgu">CGU</Link>
-            <Link href="/contact">Contact</Link>
+            <a href="#produit">{t("produit")}</a>
+            <Link href="/pricing">{t("tarifs")}</Link>
+            <Link href="/magazine">{t("magazine")}</Link>
+            <Link href="/faq">{t("faq")}</Link>
+            <Link href="/privacy">{t("confidentialite")}</Link>
+            <Link href="/cgu">{t("cgu")}</Link>
+            <Link href="/contact">{t("contact")}</Link>
           </nav>
           <p className="lp-footer-copy">
-            © 2026 LIVRA · Plateforme LIVRA (9516-1998 Québec inc.)
+            {t("copyright")}
           </p>
         </div>
       </div>

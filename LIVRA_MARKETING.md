@@ -456,5 +456,37 @@ Pas les followers : **commentaires de vendeurs réels, DM entrants, signups fond
 
 ---
 
-**Dernière mise à jour :** 10 juillet 2026 (stratégie social media « La Machine » + verdict série COD + C6 score à créer)
+## 💎 LA PHRASE DE VENTE — PROUVÉE (13 juil 2026)
+
+> ### **Le score cross-transporteur agrégé n'existe nulle part sur le marché DZ — sauf chez LIVRA.**
+
+**Ce n'est plus une supposition. C'est prouvé au code.** (Reco cc F12-bis, 13 juil, 3 sub-agents, sourcé.)
+
+**La preuve :**
+- **Ecotrack n'expose AUCUN score de fiabilité dans son API.** Zéro occurrence de `score` / `fiabil` / `trust` / `blacklist` / `reputation` dans toute la collection officielle. Ce que le vendeur voit dans son panel Ecotrack **n'est pas portable, pas accessible aux tiers, pas agrégeable.**
+- **Yalidine expose l'historique colis** (`GET /parcels/` paginé : `contact_phone` · `last_status` · `date_last_status`) — mais **chaque vendeur ne voit que SES colis.**
+- **Conséquence** : un scammer brûlé chez Yalidine est **invisible** dans Ecotrack, et inversement. Le vendeur multi-transporteurs a **trois scores partiels et aucune vue d'ensemble.**
+- **LIVRA est le seul endroit où les transporteurs convergent.** Yalidine voit les colis d'un vendeur à la fois. **LIVRA seule voit la convergence ENTRE les vendeurs.**
+
+**Pourquoi c'est le vrai moat :** le code est copiable en un week-end avec l'IA. **L'agrégat, non.** Le copieur démarre avec une base vide et y reste. Chaque vendeur ajouté rend le score plus fort pour tous les autres — effet de réseau, la seule chose que l'IA ne peut pas générer.
+
+**Angles copy dérivés :**
+
+| Angle | Copy |
+|---|---|
+| Le trou du marché | « Ton scammer est fiché chez Yalidine. Il commande chez toi via Ecotrack. Personne ne te prévient. » |
+| La convergence | « Un seul score. Tous tes transporteurs. » |
+| L'indépendance | « Ecotrack coupe la fiabilité pendant la maintenance. Ta donnée LIVRA, elle, ne s'éteint jamais. » *(verbatim terrain : les vendeurs DZ capotent dans les groupes FB quand Ecotrack coupe le score quelques jours)* |
+| Le réseau | « Plus il y a de boutiques sur LIVRA, plus ton score est fort. » |
+
+**⚠️ DISCIPLINE DE VENTE — hiérarchie non négociable :**
+1. **Le TUNNEL est le héros.** Il marche jour 1, base vide, sur un client inconnu. Zéro donnée requise. C'est la porte d'entrée.
+2. **Le SCORE est la deuxième section.** « Et ça devient plus fort chaque mois. » Contenu séparé, jamais fondu dans le tunnel.
+→ Si la copy mène avec le score, elle expose un cold start qui n'est pas le sujet.
+
+**⚠️ Le score n'est JAMAIS un annuaire.** Il n'évalue que les numéros que le vendeur possède déjà. On n'interroge jamais une base tierce sur un inconnu.
+
+---
+
+**Dernière mise à jour :** 13 juillet 2026 (phrase de vente « score cross-transporteur » PROUVÉE — reco cc F12-bis)
 **Maintenu par :** Claudy + Lamine
