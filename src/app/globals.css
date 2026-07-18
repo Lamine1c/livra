@@ -395,19 +395,14 @@ body {
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
 
-/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : latéraux + spread ══
-   Le crop venait du translateX du gate (≤720) qui poussait les latéraux hors de la
-   boîte de clip des stages s1/s4 (overflow:hidden), NON élargis contrairement à s5/s6.
-   FIX (comme s5/s6) : on ÉLARGIT d'abord les stages s1/s4 à 570px → les latéraux
-   tiennent → plus de crop. PUIS on applique le spread +15 (homogénéise avec s5/s6).
-   (Le « fond noir » en bas était un bug distinct : padding-bottom AR qui fuyait en
-   mobile → corrigé plus haut en le bornant à 561-1080.) */
+/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : spread latéraux ══
+   ⚠️ PAS de width:570 au mobile — un stage 570 dans un viewport 390 DÉBORDE et, en
+   RTL, pousse toute la compo à gauche (le 570 venait du gate tablette 614, non
+   transposable au mobile). Le stage garde donc sa largeur de BASE (tient dans le
+   viewport). Spread léger +15 (translateX ±15 AVANT le translate de base) pour
+   homogénéiser avec s5/s6 sans faire déborder. (Le fond noir était un bug distinct
+   déjà réglé : padding-bottom AR borné à 561-1080.) */
 @media (max-width: 560px) {
-  [lang="ar"] .section1__stage,
-  [lang="ar"] .s4-stage {
-    width: 570px;
-    max-width: 570px;
-  }
   [lang="ar"] .section1__phone--left,
   [lang="ar"] .s4-phone-l {
     transform: translateX(-15px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
