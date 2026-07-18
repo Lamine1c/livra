@@ -357,3 +357,34 @@ body {
     transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
   }
 }
+
+/* ══ BIDI AR — MOBILE (gate 390px, 18 juil) — boundary LP = 561px ══
+   Ces règles s'appliquent SOUS la tablette (≤560) et priment (source order). */
+@media (max-width: 560px) {
+  /* Eyebrows : retour à la base 13px en mobile (la tablette forçait 15/19 → trop
+     gros sur 390). « TOUS harmonisés à 13px » (gate mobile). */
+  [lang="ar"] .section2__eyebrow,
+  [lang="ar"] .s4-eyebrow,
+  [lang="ar"] .s5-eyebrow,
+  [lang="ar"] .s6-eyebrow,
+  [lang="ar"] .s75-eyebrow,
+  [lang="ar"] .s9-eyebrow,
+  [lang="ar"] .pql-eyebrow { font-size: 13px; }
+
+  /* s5 CTA « تم تحديد الموقع… » (= .s5 .lp-cta) : texte long → padding horizontal
+     réduit pour l'étaler + bouton élargi. Bat le .lp-cta{width:100%} de ≤600px. */
+  [lang="ar"] .s5 .lp-cta {
+    padding: 20px 8px;
+    line-height: 1.5;
+    width: 343px;
+    max-width: none;
+  }
+  [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-20px); }
+
+  /* s6 CTA « مبيعات أكثر، ولاء أكثر » : wrap remonté. */
+  [lang="ar"] .s6 .lp-cta-wrap { transform: translateY(-20px); }
+
+  /* 🔴 s9-cta : NE PAS le descendre en mobile (piège #3) — le translateY(60) de la
+     tablette le faisait CHEVAUCHER le texte « الإلغاء بنقرة واحدة » dessous. */
+  [lang="ar"] .s9-cta { transform: none; }
+}
