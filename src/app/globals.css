@@ -267,19 +267,47 @@ body {
   unicode-bidi: isolate;
 }
 
+/* Les 4 cartes .s75-card (ولاية/خزينة/دعم/أمان) : bug bidi — `text-align:left` hérité
+   de .s75-cards + icônes restées à gauche. On aligne à droite (texte + icône).
+   width:100% sur titre/texte sinon flex-end les rétrécit → texte démarrait au centre.
+   Tous breakpoints (le bug est en base, donc desktop aussi). */
+[lang="ar"] .s75-card,
+[lang="ar"] .s75-ctitle,
+[lang="ar"] .s75-ctext {
+  text-align: right;
+}
+[lang="ar"] .s75-card {
+  align-items: flex-end;
+}
+[lang="ar"] .s75-ic {
+  align-self: flex-end;
+  margin-left: auto;
+  margin-right: 0;
+  margin-bottom: 5px;
+}
+[lang="ar"] .s75-ctitle,
+[lang="ar"] .s75-ctext {
+  width: 100%;
+  align-self: stretch;
+}
+
 /* ══ BIDI AR — TABLETTE (gate live @614px) — px @614 → responsive, FR intact ══ */
 @media (max-width: 1080px) {
   /* Hero */
   [lang="ar"] .livemap  { transform: translateY(-40px); }
   [lang="ar"] .hero .btn { padding: 10px clamp(44px, 9vw, 60px); }
   [lang="ar"] .scroll-hint { font-size: 16.5px; }
-  /* Eyebrows tablette → 15px */
+  /* Eyebrows tablette → 15px (pql-eyebrow reste 19 en AR). */
   [lang="ar"] .section2__eyebrow,
+  [lang="ar"] .section2__subtitle,
   [lang="ar"] .s4-eyebrow,
   [lang="ar"] .s5-eyebrow,
   [lang="ar"] .s6-eyebrow,
   [lang="ar"] .s75-eyebrow,
   [lang="ar"] .s9-eyebrow { font-size: 15px; }
+  [lang="ar"] .pql-eyebrow { font-size: 19px; }
+  /* pql : respiration latérale tablette. */
+  [lang="ar"] .pql { margin-left: 5px; margin-right: 5px; }
   /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical */
   [lang="ar"] .section1__caption { transform: translateY(-15px); }
   [lang="ar"] .s5-caption { transform: translateY(-25px); }
@@ -289,30 +317,43 @@ body {
   [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
   [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
   [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .s5 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-15px); }
   [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
-  [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; }
-  [lang="ar"] .section4 { padding-bottom: 82px; }     /* base tablette 52 + 30 */
+  [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; transform: translateY(60px); }
+  /* + d'air en bas des sections (base tablette 72). */
+  [lang="ar"] .section1 { padding-bottom: 102px; }
+  [lang="ar"] .section4 { padding-bottom: 97px; }
 }
 
-/* Géométrie mockups au ≤720px (là où le bug s5/s6 vit + où s4 a sa règle tablette) */
+/* Géométrie mockups au ≤720px. Stages s5/s6 élargis (décrop). Écartement des
+   latéraux gaté au re-gate 18 juil. */
 @media (max-width: 720px) {
-  /* 🔴 FIX BUG s5/s6 : à ≤720 les latéraux gardent leur base scale(0.62) (petits,
-     croppés) car le bloc 721px+ (scale 0.94) ne s'applique pas. On les aligne sur
-     le traitement TABLETTE de s4 (280×606, scale 0.97, translate ±80) + stage
-     élargi à 570 pour décropper. Pas un scale global (qui casse les positions). */
   [lang="ar"] .s5-stage,
   [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
+
+  /* ⚠️ PIÈGE 3D (piège #1 Lamine) : le translateX d'écartement DOIT venir AVANT le
+     translate/scale existant — sinon il s'applique dans l'espace déjà transformé →
+     mockup brisé. Le bloc de base (~ligne 3789) pose ces transforms en !important
+     pour section1/s5/s6 → on remet !important pour l'emporter. s4 aligné idem. */
+  [lang="ar"] .section1__phone--left {
+    transform: translateX(-30px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .section1__phone--right {
+    transform: translateX(30px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s4-phone-l {
+    transform: translateX(-40px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .s4-phone-r {
+    transform: translateX(40px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
   [lang="ar"] .s5-phone-l,
   [lang="ar"] .s6-phone-l {
-    left: 50%; top: 50%; width: 280px; height: 606px;
-    transform: translate(calc(-50% - 80px), -50%) scale(0.97);
+    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
   }
   [lang="ar"] .s5-phone-r,
   [lang="ar"] .s6-phone-r {
-    left: 50%; top: 50%; width: 280px; height: 606px;
-    transform: translate(calc(-50% + 80px), -50%) scale(0.97);
+    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
   }
-  /* section1 : écartement latéral gaté (à vérifier au re-gate : 3D éventuel). */
-  [lang="ar"] .section1__phone--left  { transform: translateX(-40px); }
-  [lang="ar"] .section1__phone--right { transform: translateX(40px); }
 }
