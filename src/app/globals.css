@@ -392,13 +392,20 @@ body {
 
 /* ══ FIX iOS SAFARI (WebKit) — /ar sections 1 & 4, latéraux croppés + fond noir ══
    Cause : le translateX du gate (±30/±40) pousse les mockups latéraux au-delà de la
-   boîte de clip du stage. s5/s6 = OK (stage élargi à 570, pas de clip). s1/s4 =
-   croppés car : s1 a perspective:1400px (WebKit clippe les enfants 3D à la boîte du
-   perspective, contrairement à Blink) ; s4 a overflow:hidden sur le stage. Au mobile
-   les phones sont PLATS (pas de rotateY) → le perspective ne sert à rien → on le
-   retire ; et on laisse le stage s4 déborder (section4 a overflow-x:hidden → pas de
-   scroll horizontal). Scopé [lang="ar"] + ≤720 → FR et desktop intacts. */
-@media (max-width: 720px) {
-  [lang="ar"] .section1__stage { perspective: none; }
-  [lang="ar"] .s4-stage { overflow: visible; }
+   boîte de clip du stage (s4-stage overflow:hidden ; section1 overflow:hidden).
+   s5/s6 = OK (stage élargi à 570 au gate + pas d'overflow:hidden). FR = OK (aucun
+   translateX gate). Ce n'est PAS un bug WebKit : les 2 moteurs le montrent sur
+   device réel ; Chrome DevTools @390 ne le montrait pas (palier de scaling exact).
+   FIX robuste : au MOBILE RÉEL (≤560), on annule la fuite du translateX gate et on
+   remet les latéraux s1/s4 à leur position de BASE (±80, identique au FR qui est
+   nickel). Le spread tablette (561-720) est conservé. */
+@media (max-width: 560px) {
+  [lang="ar"] .section1__phone--left,
+  [lang="ar"] .s4-phone-l {
+    transform: translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  }
+  [lang="ar"] .section1__phone--right,
+  [lang="ar"] .s4-phone-r {
+    transform: translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  }
 }
