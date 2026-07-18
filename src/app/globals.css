@@ -395,20 +395,26 @@ body {
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
 
-/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : spread latéraux ══
-   ⚠️ PAS de width:570 au mobile — un stage 570 dans un viewport 390 DÉBORDE et, en
-   RTL, pousse toute la compo à gauche (le 570 venait du gate tablette 614, non
-   transposable au mobile). Le stage garde donc sa largeur de BASE (tient dans le
-   viewport). Spread léger +15 (translateX ±15 AVANT le translate de base) pour
-   homogénéiser avec s5/s6 sans faire déborder. (Le fond noir était un bug distinct
-   déjà réglé : padding-bottom AR borné à 561-1080.) */
+/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : MÊME traitement que s5/s6 ══
+   Cause : au mobile, s5/s6 ont un override `scale(--mob-m * 0.9)` sur leur groupe de
+   mockups + `height *0.9` sur leur stage → les 3 phones RÉTRÉCISSENT et tiennent avec
+   des peeks propres, ET le stage épouse les mockups (pas de vide = pas de fond noir).
+   s1/s4 n'avaient PAS ce *0.9 → central plus gros, latéraux hors écran, + le stage
+   trop haut (fond noir). On applique le MÊME *0.9 :
+   - s1 scale via .section1__mockups (comme s5) ; s4 scale via .s4-stage (sa structure).
+   - stage height *0.9 + min-height:0 pour supprimer tout vide sombre en bas.
+   Les latéraux restent à la base ±80 (= s5), pas de spread ajouté. Scopé AR ≤560. */
 @media (max-width: 560px) {
-  [lang="ar"] .section1__phone--left,
-  [lang="ar"] .s4-phone-l {
-    transform: translateX(-15px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+  [lang="ar"] .section1__mockups {
+    transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important;
   }
-  [lang="ar"] .section1__phone--right,
-  [lang="ar"] .s4-phone-r {
-    transform: translateX(15px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+  [lang="ar"] .section1__stage {
+    height: calc(700px * var(--mob-m, 0.82) * 0.9) !important;
+    min-height: 0 !important;
+  }
+  [lang="ar"] .s4-stage {
+    transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important;
+    height: calc(700px * var(--s4m, 0.82) * 0.9) !important;
+    min-height: 0 !important;
   }
 }
