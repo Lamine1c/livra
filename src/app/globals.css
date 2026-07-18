@@ -385,7 +385,7 @@ body {
   /* s6 CTA « مبيعات أكثر، ولاء أكثر » : wrap remonté. */
   [lang="ar"] .s6 .lp-cta-wrap { transform: translateY(-20px); }
 
-  /* 🔴 s9-cta : NE PAS le descendre en mobile (piège #3) — le translateY(60) de la
-     tablette le faisait CHEVAUCHER le texte « الإلغاء بنقرة واحدة » dessous. */
-  [lang="ar"] .s9-cta { transform: none; }
+  /* 🔴 s9-cta : NE PAS le descendre (transform → chevauchement). Pour l'air sous le
+     sous-titre انضمّ إلى…, on utilise margin-top (58 = base 38 + 20), PAS translateY. */
+  [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
