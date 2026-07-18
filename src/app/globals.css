@@ -405,13 +405,26 @@ body {
    - stage height *0.9 + min-height:0 pour supprimer tout vide sombre en bas.
    Les latéraux restent à la base ±80 (= s5), pas de spread ajouté. Scopé AR ≤560. */
 @media (max-width: 560px) {
-  [lang="ar"] .section1__mockups {
-    transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important;
-  }
+  /* CENTRAGE robuste : la technique base `left:50% + translateX(-50%)` sur un
+     .section1__mockups de 440px pousse le groupe à -220px (mesuré device) car le
+     stage est plus étroit → mal-centré. On CENTRE par flex à la place (direction-
+     agnostique) et on retire le left/translateX du groupe (juste le scale *0.9). */
   [lang="ar"] .section1__stage {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
     height: calc(700px * var(--mob-m, 0.82) * 0.9) !important;
     min-height: 0 !important;
+    overflow: hidden !important;      /* les débords latéraux du groupe = peeks propres */
   }
+  [lang="ar"] .section1__mockups {
+    left: auto !important;
+    transform: scale(calc(var(--mob-m, 0.82) * 0.9)) !important;
+    transform-origin: top center !important;
+  }
+  /* s4 : structure différente (le STAGE se centre dans la section, scalé par --s4m).
+     On garde son centrage de base + on applique le *0.9 sur le scale du stage. Si le
+     même push -220 apparaît sur s4 au test device, on lui appliquera aussi le flex. */
   [lang="ar"] .s4-stage {
     transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important;
     height: calc(700px * var(--s4m, 0.82) * 0.9) !important;
