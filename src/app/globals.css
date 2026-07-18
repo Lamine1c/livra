@@ -321,7 +321,12 @@ body {
   [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-15px); }
   [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
   [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; transform: translateY(60px); }
-  /* + d'air en bas des sections (base tablette 72). */
+}
+
+/* + d'air en bas des sections 1/4 : TABLETTE UNIQUEMENT (561-1080). En MOBILE (≤560)
+   ce padding créait un « fond noir » (vide sombre) en bas des sections, absent en FR
+   → on le laisse à la base au mobile. */
+@media (min-width: 561px) and (max-width: 1080px) {
   [lang="ar"] .section1 { padding-bottom: 102px; }
   [lang="ar"] .section4 { padding-bottom: 97px; }
 }
@@ -390,22 +395,25 @@ body {
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
 
-/* ══ FIX iOS SAFARI (WebKit) — /ar sections 1 & 4, latéraux croppés + fond noir ══
-   Cause : le translateX du gate (±30/±40) pousse les mockups latéraux au-delà de la
-   boîte de clip du stage (s4-stage overflow:hidden ; section1 overflow:hidden).
-   s5/s6 = OK (stage élargi à 570 au gate + pas d'overflow:hidden). FR = OK (aucun
-   translateX gate). Ce n'est PAS un bug WebKit : les 2 moteurs le montrent sur
-   device réel ; Chrome DevTools @390 ne le montrait pas (palier de scaling exact).
-   FIX robuste : au MOBILE RÉEL (≤560), on annule la fuite du translateX gate et on
-   remet les latéraux s1/s4 à leur position de BASE (±80, identique au FR qui est
-   nickel). Le spread tablette (561-720) est conservé. */
+/* ══ FIX MOBILE RÉEL (≤560) — /ar sections 1 & 4 : latéraux + spread ══
+   Le crop venait du translateX du gate (≤720) qui poussait les latéraux hors de la
+   boîte de clip des stages s1/s4 (overflow:hidden), NON élargis contrairement à s5/s6.
+   FIX (comme s5/s6) : on ÉLARGIT d'abord les stages s1/s4 à 570px → les latéraux
+   tiennent → plus de crop. PUIS on applique le spread +15 (homogénéise avec s5/s6).
+   (Le « fond noir » en bas était un bug distinct : padding-bottom AR qui fuyait en
+   mobile → corrigé plus haut en le bornant à 561-1080.) */
 @media (max-width: 560px) {
+  [lang="ar"] .section1__stage,
+  [lang="ar"] .s4-stage {
+    width: 570px;
+    max-width: 570px;
+  }
   [lang="ar"] .section1__phone--left,
   [lang="ar"] .s4-phone-l {
-    transform: translate(calc(-50% - 80px), -50%) scale(0.97) !important;
+    transform: translateX(-15px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
   }
   [lang="ar"] .section1__phone--right,
   [lang="ar"] .s4-phone-r {
-    transform: translate(calc(-50% + 80px), -50%) scale(0.97) !important;
+    transform: translateX(15px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
   }
 }
