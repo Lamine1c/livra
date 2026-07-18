@@ -389,3 +389,16 @@ body {
      sous-titre انضمّ إلى…, on utilise margin-top (58 = base 38 + 20), PAS translateY. */
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
+
+/* ══ FIX iOS SAFARI (WebKit) — /ar sections 1 & 4, latéraux croppés + fond noir ══
+   Cause : le translateX du gate (±30/±40) pousse les mockups latéraux au-delà de la
+   boîte de clip du stage. s5/s6 = OK (stage élargi à 570, pas de clip). s1/s4 =
+   croppés car : s1 a perspective:1400px (WebKit clippe les enfants 3D à la boîte du
+   perspective, contrairement à Blink) ; s4 a overflow:hidden sur le stage. Au mobile
+   les phones sont PLATS (pas de rotateY) → le perspective ne sert à rien → on le
+   retire ; et on laisse le stage s4 déborder (section4 a overflow-x:hidden → pas de
+   scroll horizontal). Scopé [lang="ar"] + ≤720 → FR et desktop intacts. */
+@media (max-width: 720px) {
+  [lang="ar"] .section1__stage { perspective: none; }
+  [lang="ar"] .s4-stage { overflow: visible; }
+}
