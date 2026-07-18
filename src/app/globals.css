@@ -372,11 +372,12 @@ body {
   [lang="ar"] .pql-eyebrow { font-size: 13px; }
 
   /* s5 CTA « تم تحديد الموقع… » (= .s5 .lp-cta) : texte long → padding horizontal
-     réduit pour l'étaler + bouton élargi. Bat le .lp-cta{width:100%} de ≤600px. */
+     réduit pour l'étaler + bouton élargi. ⚠️ padding/width en !important pour battre
+     `.lp-cta { width:auto; padding:16px 32px } !important` (mobile, livra-landing ~3847). */
   [lang="ar"] .s5 .lp-cta {
-    padding: 20px 8px;
+    padding: 20px 8px !important;
     line-height: 1.5;
-    width: 343px;
+    width: 343px !important;
     max-width: none;
   }
   [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-20px); }
