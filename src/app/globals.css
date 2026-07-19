@@ -308,34 +308,43 @@ body {
   [lang="ar"] .pql-eyebrow { font-size: 19px; }
   /* pql : respiration latérale tablette. */
   [lang="ar"] .pql { margin-left: 5px; margin-right: 5px; }
-  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical */
-  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  /* Captions tablette (single-column → déjà sous le mockup) : petit offset vertical.
+     s1 caption/CTA déplacés en 561-1080 (pas mobile — cf. bloc dédié plus bas). */
   [lang="ar"] .s5-caption { transform: translateY(-25px); }
   [lang="ar"] .s6-caption { transform: translateY(-20px); }
-  /* CTA (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
-  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
-  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
-  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
-  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
+  /* CTA s5/s6 (lp-cta/lp-cta-wrap partagés → scopés par section) + s9 */
   [lang="ar"] .s5 .lp-cta { padding-left: 52px; padding-right: 52px; }
   [lang="ar"] .s5 .lp-cta-wrap { transform: translateY(-15px); }
   [lang="ar"] .s6 .lp-cta { padding-left: 62px; padding-right: 62px; }
   [lang="ar"] .s9-cta { padding-left: 61px; padding-right: 61px; transform: translateY(60px); }
-  /* + d'air en bas des sections (base tablette 72). */
+}
+
+/* Réglages s1/s4 (captions, CTA, air en bas) : TABLETTE UNIQUEMENT (561-1080).
+   En MOBILE (≤560), s1/s4 héritent du CSS de base (= FR) — zéro règle AR. */
+@media (min-width: 561px) and (max-width: 1080px) {
+  [lang="ar"] .section1__caption { transform: translateY(-15px); }
+  [lang="ar"] .section1 .lp-cta { padding-left: 80px; padding-right: 80px; }
+  [lang="ar"] .section1 .lp-cta-wrap { transform: translateY(20px); }
+  [lang="ar"] .section4 .lp-cta { padding-left: 52px; padding-right: 52px; }
+  [lang="ar"] .section4 .lp-cta-wrap { transform: translateY(20px); }
   [lang="ar"] .section1 { padding-bottom: 102px; }
   [lang="ar"] .section4 { padding-bottom: 97px; }
 }
 
-/* Géométrie mockups au ≤720px. Stages s5/s6 élargis (décrop). Écartement des
-   latéraux gaté au re-gate 18 juil. */
-@media (max-width: 720px) {
-  [lang="ar"] .s5-stage,
-  [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
+/* ── SUPPRIMÉ (mesuré device iPhone 15 Pro vw393) : reliquat du re-gate 18 juil
+   qui forçait, AR uniquement, un translateX(±60px) sur les latéraux s5/s6 + un
+   stage 570px. Spécificité [lang="ar"] .s6-phone-l (0,2,0) !important → écrasait
+   la règle propre .s6-phone-l ±90 (0,1,0) de livra-landing → latéraux AR décalés
+   de ~46px vers l'extérieur = débordement 17px/côté à 393px. Le central étant
+   identique AR/FR (le cadre mockups est déjà le même), il suffit de retirer cet
+   override : AR hérite alors du ±90 FR (bloc 14.6). Même logique que le clean
+   slate s1/s4. Le 570px « décrop » n'a plus lieu d'être depuis l'homogénéisation
+   ×0.9 (marge latérale ~18px à 393). */
 
-  /* ⚠️ PIÈGE 3D (piège #1 Lamine) : le translateX d'écartement DOIT venir AVANT le
-     translate/scale existant — sinon il s'applique dans l'espace déjà transformé →
-     mockup brisé. Le bloc de base (~ligne 3789) pose ces transforms en !important
-     pour section1/s5/s6 → on remet !important pour l'emporter. s4 aligné idem. */
+/* s1/s4 latéraux écartés : TABLETTE UNIQUEMENT (561-720). PAS en mobile (≤560) — le
+   spread poussait les latéraux hors du stage étroit = crop/fond noir. Au mobile, s1/s4
+   gardent la position de base (= FR). */
+@media (min-width: 561px) and (max-width: 720px) {
   [lang="ar"] .section1__phone--left {
     transform: translateX(-30px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
   }
@@ -347,14 +356,6 @@ body {
   }
   [lang="ar"] .s4-phone-r {
     transform: translateX(40px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
-  }
-  [lang="ar"] .s5-phone-l,
-  [lang="ar"] .s6-phone-l {
-    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
-  }
-  [lang="ar"] .s5-phone-r,
-  [lang="ar"] .s6-phone-r {
-    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
   }
 }
 
@@ -389,3 +390,10 @@ body {
      sous-titre انضمّ إلى…, on utilise margin-top (58 = base 38 + 20), PAS translateY. */
   [lang="ar"] .s9-cta { transform: none; margin-top: 58px; }
 }
+
+/* ── MOBILE ≤560 : AUCUNE règle AR sur les mockups/stages de s1 & s4. ──
+   Le FR est nickel sur iPhone/ZTE/iPad avec le CSS de base ; nos règles AR mobile
+   étaient la cause du crop/fond noir/push. On les a toutes SUPPRIMÉES → au mobile,
+   /ar hérite exactement du CSS de /fr pour s1/s4. Le RTL natif (dir=rtl) suffit pour
+   le texte ; les mockups sont identiques dans les 2 langues (LTR via .section1__stage
+   direction:ltr, tous breakpoints). */

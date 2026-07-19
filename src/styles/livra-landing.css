@@ -3802,6 +3802,21 @@ body {
 @media (max-width: 360px)                        { .section1__stage,.s5-stage,.s6-stage{ --mob-m: 0.78; } }
 /* ── fin EXPORT 13.M4 ── */
 
+/* ── FOND NOIR MOBILE — ombre portée des phones (FR + AR, PAS de scope [lang]) ──
+   Cause mesurée sur device (Lamine, iPhone 393 + ZTE) : le drop shadow
+   `0 50px 90px -40px rgba(0,0,0,0.85)` des mockups. En desktop il est diffus
+   sous un grand phone. En mobile (≤560, --mob-m < 1) les phones sont scalés ET
+   resserrés (latéraux ±80) → les 3 ombres se poolent = masse noire sous les
+   sections. Présent en FR comme en AR (donc pas bidi). On adoucit le drop au
+   mobile ; on GARDE l'inset blanc (le liseré des coques). */
+@media (max-width: 560px) {
+  .section1__phone, .s4-phone, .s5-phone, .s6-phone {
+    box-shadow:
+      0 2px 2px rgba(255,255,255,0.06) inset,
+      0 14px 34px -30px rgba(0,0,0,0.35) !important;
+  }
+}
+
 
 /* ═════════════════════════════════════════════════════════════════════
    EXPORT 13.M5 — REVUE MOBILE CD (20 juin) : air voix + swarm 4 ghosts + s4/s5/cta
@@ -3981,6 +3996,33 @@ body {
 /* ── 14.3 — DESKTOP ≥1081 : phones s5/s6 centraux conformés au gabarit s1/s4 (760→692 → rendu 711) */
 @media (min-width: 1081px) {
   .s5-phone-c, .s6-phone-c { height: 692px !important; }
+}
+/* ── 14.4 — MOCKUP s1 homogène ≤720 (aligné sur s5/s6, technique --mob-m ×0.9)
+   s1/s4 n'avaient PAS le scale compensatoire ×0.9 de s5/s6 → mockups plus gros,
+   latéraux au ras du viewport → crop à 393px (OK à 390 par 3px de marge).
+   On les aligne sur la référence validée s5/s6. Mêmes valeurs, même stage. */
+@media (max-width: 720px) {
+  .section1__stage   { height: calc(700px * var(--mob-m, 0.82) * 0.9) !important; }
+  .section1__mockups { transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important; }
+}
+/* ── 14.5 — MOCKUP s4 homogène ≤720 (aligné sur s5/s6, technique --s4m ×0.9) */
+@media (max-width: 720px) {
+  .s4-stage { min-height: 0 !important; height: calc(700px * var(--s4m, 0.82) * 0.9) !important; }
+  .s4-tri   { transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important; }
+}
+/* ── 14.6 — LES 4 sections : latéraux (arrière) écartés de +10px vers l'extérieur
+   (mobile ≤720). ±80 → ±90 sur s1, s4, s5 ET s6 → contenu des latéraux visible,
+   4 sections identiques et aérées. Le central ne bouge pas.
+   translateX AVANT scale (ne pas casser la matrice 3D des phones latéraux).
+   Marge à 393px (le plus serré) : scale mockups 0.86×0.9=0.774 → latéral externe
+   à ~18px du bord (26 − 10×0.774). Aéré, pas de re-crop. FR + AR, pas de [lang]. */
+@media (max-width: 720px) {
+  .section1__phone--left,  .s4-phone-l, .s5-phone-l, .s6-phone-l {
+    left: 50%; transform: translate(calc(-50% - 90px), -50%) scale(0.97) !important;
+  }
+  .section1__phone--right, .s4-phone-r, .s5-phone-r, .s6-phone-r {
+    left: 50%; transform: translate(calc(-50% + 90px), -50%) scale(0.97) !important;
+  }
 }
 /* ── fin EXPORT 14 ──────────────────────────────────────────────────────── */
 
