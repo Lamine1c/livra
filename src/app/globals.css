@@ -331,22 +331,15 @@ body {
   [lang="ar"] .section4 { padding-bottom: 97px; }
 }
 
-/* Géométrie mockups au ≤720px. Stages s5/s6 élargis (décrop). Écartement des
-   latéraux gaté au re-gate 18 juil. */
-@media (max-width: 720px) {
-  [lang="ar"] .s5-stage,
-  [lang="ar"] .s6-stage { width: 570px; max-width: 570px; }
-
-  /* s5/s6 latéraux écartés (OK au mobile). */
-  [lang="ar"] .s5-phone-l,
-  [lang="ar"] .s6-phone-l {
-    transform: translateX(-60px) translate(calc(-50% - 80px), -50%) scale(0.97) !important;
-  }
-  [lang="ar"] .s5-phone-r,
-  [lang="ar"] .s6-phone-r {
-    transform: translateX(60px) translate(calc(-50% + 80px), -50%) scale(0.97) !important;
-  }
-}
+/* ── SUPPRIMÉ (mesuré device iPhone 15 Pro vw393) : reliquat du re-gate 18 juil
+   qui forçait, AR uniquement, un translateX(±60px) sur les latéraux s5/s6 + un
+   stage 570px. Spécificité [lang="ar"] .s6-phone-l (0,2,0) !important → écrasait
+   la règle propre .s6-phone-l ±90 (0,1,0) de livra-landing → latéraux AR décalés
+   de ~46px vers l'extérieur = débordement 17px/côté à 393px. Le central étant
+   identique AR/FR (le cadre mockups est déjà le même), il suffit de retirer cet
+   override : AR hérite alors du ±90 FR (bloc 14.6). Même logique que le clean
+   slate s1/s4. Le 570px « décrop » n'a plus lieu d'être depuis l'homogénéisation
+   ×0.9 (marge latérale ~18px à 393). */
 
 /* s1/s4 latéraux écartés : TABLETTE UNIQUEMENT (561-720). PAS en mobile (≤560) — le
    spread poussait les latéraux hors du stage étroit = crop/fond noir. Au mobile, s1/s4
