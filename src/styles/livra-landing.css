@@ -3997,6 +3997,19 @@ body {
 @media (min-width: 1081px) {
   .s5-phone-c, .s6-phone-c { height: 692px !important; }
 }
+/* ── 14.4 — MOCKUP s1 homogène ≤720 (aligné sur s5/s6, technique --mob-m ×0.9)
+   s1/s4 n'avaient PAS le scale compensatoire ×0.9 de s5/s6 → mockups plus gros,
+   latéraux au ras du viewport → crop à 393px (OK à 390 par 3px de marge).
+   On les aligne sur la référence validée s5/s6. Mêmes valeurs, même stage. */
+@media (max-width: 720px) {
+  .section1__stage   { height: calc(700px * var(--mob-m, 0.82) * 0.9) !important; }
+  .section1__mockups { transform: translateX(-50%) scale(calc(var(--mob-m, 0.82) * 0.9)) !important; }
+}
+/* ── 14.5 — MOCKUP s4 homogène ≤720 (aligné sur s5/s6, technique --s4m ×0.9) */
+@media (max-width: 720px) {
+  .s4-stage { min-height: 0 !important; height: calc(700px * var(--s4m, 0.82) * 0.9) !important; }
+  .s4-tri   { transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important; }
+}
 /* ── fin EXPORT 14 ──────────────────────────────────────────────────────── */
 
 /* ════════════════════════════════════════════════════════════════════════
