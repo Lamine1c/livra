@@ -4010,6 +4010,16 @@ body {
   .s4-stage { min-height: 0 !important; height: calc(700px * var(--s4m, 0.82) * 0.9) !important; }
   .s4-tri   { transform: translateX(-50%) scale(calc(var(--s4m, 0.82) * 0.9)) !important; }
 }
+/* ── 14.6 — s1/s4 : latéraux écartés de +10px vers l'extérieur (mobile ≤720)
+   Demande device Lamine : ±80 → ±90. s5/s6 restent à ±80.
+   translateX AVANT scale (ne pas casser la matrice 3D des phones latéraux).
+   Marge à 393px : 26px − 10×scale(0.774) ≈ 18px de chaque côté, pas de re-crop. */
+@media (max-width: 720px) {
+  .section1__phone--left  { left: 50%; transform: translate(calc(-50% - 90px), -50%) scale(0.97) !important; }
+  .section1__phone--right { left: 50%; transform: translate(calc(-50% + 90px), -50%) scale(0.97) !important; }
+  .s4-phone-l { left: 50%; transform: translate(calc(-50% - 90px), -50%) scale(0.97) !important; }
+  .s4-phone-r { left: 50%; transform: translate(calc(-50% + 90px), -50%) scale(0.97) !important; }
+}
 /* ── fin EXPORT 14 ──────────────────────────────────────────────────────── */
 
 /* ════════════════════════════════════════════════════════════════════════
