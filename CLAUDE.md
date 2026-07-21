@@ -3,6 +3,24 @@
 Lu par Claude Code à chaque session. Règles forgées par l'expérience et
 les erreurs passées. À respecter SANS exception.
 
+## 🔴 RITUEL DE DÉMARRAGE DE SESSION (à faire AVANT tout le reste)
+
+À chaque **nouvelle session**, lis dans cet ordre avant de coder :
+
+1. **`~/livra/CC_RAPPORT.md`** — ton dernier rendu : l'état exact du
+   chantier, ce qui est mergé, ce qui reste, les décisions prises.
+2. **`~/livra-mobile/HANDOFF.md`** — la Colonne de lancement + l'état
+   vivant du projet (briques, bugs ouverts, doctrine).
+3. **Ce fichier `CLAUDE.md`** — les règles du repo.
+
+Puis **dis où on en est et ce qui reste** — avant d'écrire la moindre
+ligne de code.
+
+⚠️ **À LA FIN DE CHAQUE RENDU** : mets `~/livra/CC_RAPPORT.md` à jour
+(écrasé à chaque fois, Markdown, miroir du chat). C'est le mécanisme de
+mémoire entre sessions — si le contexte se compacte ou plante, tout ce
+qui compte doit être dans ce fichier.
+
 ## AVANT D'AGIR (lecture obligatoire)
 
 Avant TOUTE modification de code, lis attentivement et intégralement :
