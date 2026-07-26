@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendExpoPush } from "@/lib/expo-push";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { driverCancelledDelivery, refusalReasonLabel } from "@/lib/push-messages";
 
 // Motifs valides pour une ANNULATION (livraison en cours). Contrat avec le mobile
 // (delivery.cancelReasons). Slug hors liste → 'other' (l'action reste enregistrée).
 const CANCEL_REASONS = new Set([
-  "client_absent", "no_answer", "client_refused", "driver_issue", "vendor_cancelled",
+  "accident_panne", "no_answer", "client_refused", "other",
 ]);
 
 export async function POST(req: NextRequest) {
@@ -79,9 +80,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to cancel delivery" }, { status: 500 });
   }
 
+  // ── Le MOTIF décide le statut de la commande (gate tour 2, point 2) ──
+  const reason = typeof body.reason === "string" && CANCEL_REASONS.has(body.reason)
+    ? body.reason
+    : "other";
+  // client_refused → le colis revient au vendeur : 'returned' (visible « retournée »
+  // dans le suivi). Les autres motifs (accident/panne, ne répond pas, autre) →
+  // 'confirmed' : la commande redevient assignable à un autre livreur.
+  const newStatus = reason === "client_refused" ? "returned" : "confirmed";
+
   const { error: ordErr } = await supabase
     .from("orders")
-    .update({ status: "confirmed" })
+    .update({ status: newStatus })
     .eq("id", orderId);
 
   if (ordErr) {
@@ -92,15 +102,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── Journalise le motif + notifie le vendeur (best-effort, non bloquant) ──
-  const reason = typeof body.reason === "string" && CANCEL_REASONS.has(body.reason)
-    ? body.reason
-    : "other";
-
-  // Commande (référence + vendeur + wilaya dénormalisée) et prénom livreur.
+  // Commande (référence + vendeur + wilaya dénorm + contact acheteur) et prénom livreur.
   const { data: order } = await supabase
     .from("orders")
-    .select("reference, user_id, client:clients(wilaya)")
+    .select("reference, user_id, client:clients(wilaya, phone, full_name)")
     .eq("id", orderId)
     .single();
   const client = order?.client
@@ -139,6 +144,20 @@ export async function POST(req: NextRequest) {
       if (!pushResult.success) {
         console.error("[cancel-delivery] expo push failed:", pushResult.error);
       }
+    }
+  }
+
+  // WhatsApp acheteur : sa commande était en route, elle est annulée → il DOIT le
+  // savoir. Best-effort (fenêtre 24h Meta ; échec silencieux si fermée). Bilingue
+  // FR/AR — la locale acheteur n'est pas stockée.
+  if (client?.phone) {
+    const reference = order?.reference ?? orderId.slice(0, 8).toUpperCase();
+    const msg =
+      `Bonjour, votre commande ${reference} a été annulée. La boutique vous recontactera.\n` +
+      `تم إلغاء طلبك ${reference}. سيتواصل معك المتجر قريباً.`;
+    const waRes = await sendWhatsAppNotification(client.phone, msg);
+    if (!waRes.success) {
+      console.error("[cancel-delivery] buyer WhatsApp failed:", waRes.error);
     }
   }
 

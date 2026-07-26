@@ -128,37 +128,28 @@ export function deliveryCancelled(
   };
 }
 
-// ── Motifs de refus/annulation livreur (delivery_refusals) ──
-// Labels localisés pour le corps des push vendeur. Slugs = contrat avec le mobile
-// (~/livra-mobile locales driver.json : course.refuseReasons / delivery.cancelReasons).
-const REFUSAL_REASON_LABELS: Record<PushLocale, Record<string, string>> = {
+// ── Motifs d'annulation livreur (delivery_refusals) ──
+// Labels localisés pour le corps du push vendeur. Slugs = contrat avec le mobile
+// (~/livra-mobile locales driver.json : delivery.cancelReasons). Le refus a été
+// retiré (gate tour 2) → seuls les motifs d'annulation subsistent.
+const CANCEL_REASON_LABELS: Record<PushLocale, Record<string, string>> = {
   fr: {
-    too_far: "Trop loin",
-    already_taken: "Déjà pris une course",
-    shop_unreachable: "Boutique injoignable",
+    accident_panne: "Accident / panne",
+    no_answer: "Client ne répond pas",
+    client_refused: "Client refuse le colis",
     other: "Autre",
-    client_absent: "Client absent",
-    no_answer: "Ne répond pas",
-    client_refused: "Client a refusé",
-    driver_issue: "Empêchement livreur",
-    vendor_cancelled: "Vendeur a annulé",
   },
   ar: {
-    too_far: "بعيد جداً",
-    already_taken: "أخذ توصيلة أخرى",
-    shop_unreachable: "المتجر غير متاح",
+    accident_panne: "حادث / عطب",
+    no_answer: "الزبون لا يرد",
+    client_refused: "الزبون رفض الطرد",
     other: "سبب آخر",
-    client_absent: "الزبون غائب",
-    no_answer: "لا يرد",
-    client_refused: "الزبون رفض",
-    driver_issue: "مانع لدى الموصّل",
-    vendor_cancelled: "المتجر ألغى",
   },
 };
 
 export function refusalReasonLabel(locale: string | null | undefined, slug: string): string {
   const l = normalizePushLocale(locale);
-  return REFUSAL_REASON_LABELS[l][slug] ?? slug;
+  return CANCEL_REASON_LABELS[l][slug] ?? slug;
 }
 
 // ── Vendeur — le LIVREUR annule une livraison en cours (driver/cancel-delivery) ──
