@@ -127,3 +127,56 @@ export function deliveryCancelled(
     body: `Course annulée — ${vars.reference}`,
   };
 }
+
+// ── Motifs de refus/annulation livreur (delivery_refusals) ──
+// Labels localisés pour le corps des push vendeur. Slugs = contrat avec le mobile
+// (~/livra-mobile locales driver.json : course.refuseReasons / delivery.cancelReasons).
+const REFUSAL_REASON_LABELS: Record<PushLocale, Record<string, string>> = {
+  fr: {
+    too_far: "Trop loin",
+    already_taken: "Déjà pris une course",
+    shop_unreachable: "Boutique injoignable",
+    other: "Autre",
+    client_absent: "Client absent",
+    no_answer: "Ne répond pas",
+    client_refused: "Client a refusé",
+    driver_issue: "Empêchement livreur",
+    vendor_cancelled: "Vendeur a annulé",
+  },
+  ar: {
+    too_far: "بعيد جداً",
+    already_taken: "أخذ توصيلة أخرى",
+    shop_unreachable: "المتجر غير متاح",
+    other: "سبب آخر",
+    client_absent: "الزبون غائب",
+    no_answer: "لا يرد",
+    client_refused: "الزبون رفض",
+    driver_issue: "مانع لدى الموصّل",
+    vendor_cancelled: "المتجر ألغى",
+  },
+};
+
+export function refusalReasonLabel(locale: string | null | undefined, slug: string): string {
+  const l = normalizePushLocale(locale);
+  return REFUSAL_REASON_LABELS[l][slug] ?? slug;
+}
+
+// ── Vendeur — le LIVREUR annule une livraison en cours (driver/cancel-delivery) ──
+// Distinct de deliveryCancelled ci-dessus (vendeur → livreur). Ici livreur → vendeur :
+// la commande était en route, elle ne l'est plus → le vendeur DOIT le savoir.
+export function driverCancelledDelivery(
+  locale: string | null | undefined,
+  vars: { driverName: string; reference: string; reasonLabel: string }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return {
+      title: "⚠️ ألغى الموصّل التوصيل",
+      body: `ألغى ${vars.driverName} توصيل الطلب رقم ${vars.reference} — السبب: ${vars.reasonLabel}`,
+    };
+  }
+  return {
+    title: "⚠️ Livreur a annulé",
+    body: `${vars.driverName} a annulé la livraison de #${vars.reference} — motif : ${vars.reasonLabel}`,
+  };
+}
