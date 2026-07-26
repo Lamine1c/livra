@@ -80,18 +80,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to cancel delivery" }, { status: 500 });
   }
 
-  // ── Le MOTIF décide le statut de la commande (gate tour 2, point 2) ──
   const reason = typeof body.reason === "string" && CANCEL_REASONS.has(body.reason)
     ? body.reason
     : "other";
-  // client_refused → le colis revient au vendeur : 'returned' (visible « retournée »
-  // dans le suivi). Les autres motifs (accident/panne, ne répond pas, autre) →
-  // 'confirmed' : la commande redevient assignable à un autre livreur.
-  const newStatus = reason === "client_refused" ? "returned" : "confirmed";
-
+  // Décision Lamine (gate tour 3) : dans TOUS les cas d'annulation, le livreur a le
+  // colis en main et le ramène à la boutique → la commande est 'returned', jamais
+  // 'confirmed'. (Le choix vendeur « relancer/attendre » pour accident/panne est un
+  // backlog, pas maintenant.) Le motif sert au log + notif, pas au statut.
   const { error: ordErr } = await supabase
     .from("orders")
-    .update({ status: newStatus })
+    .update({ status: "returned" })
     .eq("id", orderId);
 
   if (ordErr) {
