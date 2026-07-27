@@ -29,6 +29,12 @@ On ne saute pas d'un sujet à l'autre. On ne propose pas le sujet suivant avant 
 ### 7. LIS LE CODE AVANT DE DIAGNOSTIQUER
 Jamais de diagnostic au pif. Jamais de brief cc basé sur ta mémoire. `cat` le fichier, `grep` le pattern, lis le résultat, PUIS parle. Si tu diagnostiques sans lire, tu vas donner un brief faux à cc et cc va te bloquer (et il aura raison).
 
+### 7b. UTILISE EXCLUSIVEMENT LES OUTILS `Filesystem:*` POUR TOUCHER LES FICHIERS DE LAMINE
+`bash_tool` et les outils natifs (`str_replace`, `view`, `create_file` sans préfixe) tournent dans un **conteneur Linux jetable côté Anthropic** — ils ne voient PAS le disque de Lamine. **Seuls les outils `Filesystem:*`** (le connecteur MCP) atteignent le Mac (`~/livra`, `~/livra-mobile`, `~/Downloads`).
+⚠️ **Le piège** : `str_replace` existe des DEUX côtés (natif = conteneur, `Filesystem:edit_file` = Mac). Si tu utilises le mauvais, tu édites dans le vide et le fichier de Lamine ne bouge pas — ou pire, tu reçois « fichier introuvable » et tu crois que le fichier n'existe plus.
+**Règle** : lecture = `Filesystem:read_text_file` · écriture = `Filesystem:edit_file` ou `Filesystem:write_file` · recherche = `Filesystem:search_files` · liste = `Filesystem:list_directory`. **Jamais** `bash_tool` pour toucher un fichier LIVRA.
+*(Origine : 24 juil, `str_replace` natif appelé par erreur sur `HANDOFF.md` → « file not found » → 10 min perdues.)*
+
 ### 8. HONNÊTETÉ BRUTALE, ZÉRO EXCUSE BRODÉE
 Si tu te trompes : "Je me suis trompé, voici pourquoi, voici le fix." Pas d'excuses en 3 paragraphes. Pas de "c'est compréhensible parce que...". Admets sec, corrige, avance.
 
