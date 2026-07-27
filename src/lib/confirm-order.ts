@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
-import { orderCancelled } from "@/lib/push-messages";
+import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -25,6 +25,7 @@ type PendingOrder = {
   id: string;
   otp_code: string | null;
   otp_sent_at: string | null;
+  user_id: string;
   client: { phone: string } | { phone: string }[] | null;
 };
 
@@ -79,7 +80,7 @@ export async function confirmOrderByInboundCode(
   // sur le numéro normalisé. L'ensemble est petit (uniquement les commandes en attente d'OTP).
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("id, otp_code, otp_sent_at, client:clients(phone)")
+    .select("id, otp_code, otp_sent_at, user_id, client:clients(phone)")
     .not("otp_code", "is", null)
     .is("otp_verified_at", null)
     .gt("otp_expires_at", nowIso)
@@ -128,6 +129,27 @@ export async function confirmOrderByInboundCode(
   const confirmMsg = renderTemplateText(TEMPLATES.order_confirmed_verified, []);
   const r = await sendWhatsAppNotification(phone, confirmMsg);
   if (!r.success) console.error(`[whatsapp/inbound] from=${masked} accusé confirmation failed:`, r.error);
+
+  // Push VENDEUR — commande confirmée (fix « confirmation muette »). C'est LE moment
+  // où le vendeur doit agir (préparer + expédier) ; jusqu'ici il n'était réveillé que
+  // pour une annulation. Même patron que la branche « changé d'avis ». Best-effort
+  // STRICT : un échec ne doit PAS faire échouer la confirmation déjà persistée ni le
+  // webhook (Meta le rejouerait). type "order_confirmed" → route le refetch mobile.
+  const { data: vendor } = await supabase
+    .from("profiles")
+    .select("expo_push_token, locale")
+    .eq("id", match.user_id)
+    .single();
+  if (vendor?.expo_push_token) {
+    const { title, body: pushBody } = orderConfirmed(vendor.locale, {
+      reference: match.id.slice(0, 8).toUpperCase(),
+    });
+    const pushResult = await sendExpoPush(vendor.expo_push_token, title, pushBody, {
+      orderId: match.id,
+      type: "order_confirmed",
+    });
+    if (!pushResult.success) console.error(`[whatsapp/inbound] from=${masked} push vendeur (confirmed) failed:`, pushResult.error);
+  }
 
   return { matched: true, orderId: match.id };
 }

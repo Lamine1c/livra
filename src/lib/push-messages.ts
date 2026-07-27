@@ -109,6 +109,27 @@ export function orderCancelled(
   };
 }
 
+// ── Vendeur — commande confirmée par le client (confirm-order, OTP WhatsApp) ──
+// LE moment où le vendeur doit agir : préparer le colis + expédier. Jusqu'ici il
+// n'était prévenu QUE d'une annulation, jamais d'une confirmation — asymétrie
+// corrigée (fix « confirmation muette », 27 juil).
+export function orderConfirmed(
+  locale: string | null | undefined,
+  vars: { reference: string }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return {
+      title: "✅ تم تأكيد الطلب",
+      body: `أكّد الزبون الطلب رقم ${vars.reference} — يمكنك إرساله الآن.`,
+    };
+  }
+  return {
+    title: "✅ Commande confirmée",
+    body: `Le client a confirmé la commande #${vars.reference} — vous pouvez l'expédier.`,
+  };
+}
+
 // ── Livreur — course annulée par le vendeur (orders/[id]/cancel-delivery) ──
 // AR aligné sur driver.json : courseCancelledTitle = "تم إلغاء التوصيل".
 export function deliveryCancelled(
