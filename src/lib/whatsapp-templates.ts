@@ -95,6 +95,29 @@ ${SEP}
 Vous êtes maintenant client vérifié LIVRA ✓ — les clients fiables sont servis en priorité.`,
   },
 
+  // ─── Code OTP erroné (réponse best-effort, fenêtre 24 h Meta) ───
+  // Envoyé UNIQUEMENT sur wrong_code : le numéro A une commande en attente mais le
+  // code ne matche pas → un vrai client qui se trompe d'un chiffre. Texte libre (pas
+  // de template Meta) : la fenêtre 24 h est ouverte car l'acheteur vient d'écrire.
+  // Pas de « N essais restants » — aucune limite d'essais n'existe en V1.
+  order_otp_wrong_code: {
+    name: "order_otp_wrong_code",
+    category: "UTILITY",
+    language: "fr",
+    variables: [],
+    body: `message en français suit
+
+⚠️ هاد الكود ماشي صحيح.
+عاود بعثلنا الكود الصحيح باش نأكدو ونطلقو التوصيل.
+راني نستنى الكود تاعك 🙂
+
+${SEP}
+
+⚠️ Ce code ne correspond pas.
+Renvoyez-nous le bon code pour confirmer et lancer la livraison.
+On attend votre code 🙂`,
+  },
+
   // ─── MSG 4 — Pourquoi ? (après NON) ───
   // ⚠️ Boutons bilingues > 20 caractères = limite Meta quick-reply (à raccourcir
   //    avant soumission Meta — copy verbatim conservée ici, décision Lamine).

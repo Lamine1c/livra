@@ -102,6 +102,14 @@ export async function confirmOrderByInboundCode(
   const match = sameNumber.find((o) => o.otp_code === code);
   if (!match) {
     console.log(`[whatsapp/inbound] from=${masked} no-match (code incorrect, ${sameNumber.length} order(s) en attente)`);
+    // Fix « OTP silencieux » : le numéro A une commande en attente → c'est un vrai
+    // client qui se trompe d'un chiffre. On le prévient (best-effort, fenêtre 24 h
+    // Meta) qu'il peut renvoyer le bon code — sinon la commande meurt en silence,
+    // invisible pour le score. UNIQUEMENT sur wrong_code (les autres reason restent
+    // muets). Un échec d'envoi ne doit PAS faire échouer le webhook (Meta rejouerait).
+    const wrongMsg = renderTemplateText(TEMPLATES.order_otp_wrong_code, []);
+    const wr = await sendWhatsAppNotification(phone, wrongMsg);
+    if (!wr.success) console.error(`[whatsapp/inbound] from=${masked} wrong_code reply failed:`, wr.error);
     return { matched: false, reason: "wrong_code" };
   }
 
