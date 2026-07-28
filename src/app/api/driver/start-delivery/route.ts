@@ -31,35 +31,45 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Idempotence: if picked_up_at is already set, the delivery was already started + WA sent
-  const { data: orderCheck } = await supabase
-    .from("orders")
-    .select("picked_up_at")
-    .eq("id", orderId)
-    .single();
-
-  if (orderCheck?.picked_up_at) {
-    const { data: existingDelivery } = await supabase
-      .from("deliveries")
-      .select("id")
-      .eq("order_id", orderId)
-      .maybeSingle();
-    return NextResponse.json({ deliveryId: existingDelivery?.id, alreadyStarted: true });
-  }
-
-  // Check for existing delivery row (conflict or crash recovery)
-  const { data: existing } = await supabase
+  // Idempotence + garde de statut (fix « course fantôme », 27 juil).
+  // On récupère la delivery de la commande et on branche sur son STATUT, au lieu de
+  // court-circuiter sur orders.picked_up_at : ce champ reste rempli après une annulation,
+  // donc il renvoyait une delivery CLOSE (cancelled/completed) comme si elle était vivante
+  // (200 → « course fantôme » : le livreur roule, encaisse, marque livrée, et rien ne
+  // s'écrit). Décision Lamine V1 : on REFUSE une course close, on ne réassigne pas
+  // (la réassignation = feature « relancer » du backlog, qui exige un choix vendeur).
+  //
+  // ⚠️ Tri : il y a AU PLUS une delivery par commande aujourd'hui → limit(1) est
+  // déterministe. On n'utilise PAS maybeSingle(), qui LÈVE une erreur dès qu'il y a >1
+  // ligne (ce sera le cas normal quand « relancer » créera une 2e delivery). On n'ajoute
+  // PAS d'ORDER BY : `deliveries` n'a pas de colonne de date exploitable en prod
+  // (`created_at` absent — migration 006 ne l'ajoute pas dans l'ALTER de rattrapage ;
+  // last_position_at/completed_at sont NULL sur une course active). → colonne/tri à
+  // décider avec Lamine AVANT la feature « relancer » (cf. rendu).
+  const { data: deliveryRows } = await supabase
     .from("deliveries")
-    .select("id, driver_id")
+    .select("id, driver_id, status")
     .eq("order_id", orderId)
-    .maybeSingle();
+    .limit(1);
+  const existing = deliveryRows?.[0];
 
-  let deliveryId: string;
-
-  if (existing?.id) {
+  if (existing) {
+    if (existing.status === "cancelled") {
+      return NextResponse.json(
+        { error: "Delivery cancelled", code: "DELIVERY_CANCELLED" },
+        { status: 409 }
+      );
+    }
+    if (existing.status === "completed") {
+      return NextResponse.json(
+        { error: "Delivery completed", code: "DELIVERY_COMPLETED" },
+        { status: 409 }
+      );
+    }
+    // status === "active" → récupération après crash (comportement légitime existant).
     if (existing.driver_id !== verified.driverId) {
       return NextResponse.json(
-        { error: "Cette commande est déjà prise par un autre motard" },
+        { error: "Cette commande est déjà prise par un autre motard", code: "DELIVERY_TAKEN" },
         { status: 409 }
       );
     }
@@ -67,19 +77,22 @@ export async function POST(req: NextRequest) {
       .from("deliveries")
       .update({ status: "active" })
       .eq("id", existing.id);
-    deliveryId = existing.id;
-  } else {
-    const { data: delivery, error } = await supabase
-      .from("deliveries")
-      .insert({ order_id: orderId, driver_id: verified.driverId })
-      .select("id")
-      .single();
-
-    if (error || !delivery) {
-      return NextResponse.json({ error: error?.message ?? "Insert failed" }, { status: 500 });
-    }
-    deliveryId = delivery.id;
+    // On renvoie la delivery existante SANS renvoyer WhatsApp / push : l'acheteur et le
+    // vendeur ont déjà été notifiés au 1er démarrage (idempotence, ex-garde picked_up_at).
+    return NextResponse.json({ deliveryId: existing.id, alreadyStarted: true });
   }
+
+  // Aucune delivery : chemin normal — création + WhatsApp acheteur + push vendeur.
+  const { data: delivery, error } = await supabase
+    .from("deliveries")
+    .insert({ order_id: orderId, driver_id: verified.driverId })
+    .select("id")
+    .single();
+
+  if (error || !delivery) {
+    return NextResponse.json({ error: error?.message ?? "Insert failed" }, { status: 500 });
+  }
+  const deliveryId: string = delivery.id;
 
   // Fetch driver prenom
   const { data: driver } = await supabase
@@ -133,7 +146,8 @@ export async function POST(req: NextRequest) {
     })
     .eq("id", orderId);
 
-  // Push notif to vendor — delivery started (idempotence already ensured by picked_up_at check above)
+  // Push notif to vendor — delivery started (on n'arrive ici que sur une création réelle :
+  // la récupération d'une course active a déjà return early sans renvoyer de push)
   if (order?.user_id) {
     const { data: vendorPush } = await supabase
       .from("profiles")

@@ -54,6 +54,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Order mismatch" }, { status: 400 });
   }
 
+  // Une course annulée ne peut pas être « complétée » : sinon on écraserait
+  // l'annulation (deliveries=completed + orders=delivered). Garde symétrique à
+  // position et start-delivery (fix « course fantôme », 27 juil).
+  if (delivery.status === "cancelled") {
+    return NextResponse.json(
+      { error: "Delivery cancelled", code: "DELIVERY_CANCELLED" },
+      { status: 409 }
+    );
+  }
+
   // Idempotent: deliveries already completed — repair orders.status if a previous attempt failed
   // between UPDATE deliveries and UPDATE orders
   if (delivery.status === "completed") {
