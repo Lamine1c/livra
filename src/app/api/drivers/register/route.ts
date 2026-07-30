@@ -42,12 +42,14 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // 3. Rate limit : OTP envoyé il y a moins de 1 minute
+  // 3. Rate limit : OTP envoyé il y a moins de 1 minute.
+  // expires_at = created + 10min. « créé il y a < 1min » ⟺ expires_at > now + 9min.
+  // (L'ancien « now - 9min » restait vrai 19min : 10 de vie + 9 de marge → blocage 19min.)
   const { data: recent } = await supabase
     .from("driver_otps")
     .select("created_at")
     .eq("whatsapp", normalizedPhone)
-    .gt("expires_at", new Date(Date.now() - 9 * 60 * 1000).toISOString())
+    .gt("expires_at", new Date(Date.now() + 9 * 60 * 1000).toISOString())
     .maybeSingle();
 
   if (recent) {

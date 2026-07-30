@@ -42,11 +42,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Rate limit : OTP envoyé il y a moins de 1 minute (même règle que register).
+  // « créé il y a < 1min » ⟺ expires_at > now + 9min (expires_at = created + 10min).
   const { data: recent } = await supabase
     .from("driver_otps")
     .select("created_at")
     .eq("whatsapp", driver.whatsapp)
-    .gt("expires_at", new Date(Date.now() - 9 * 60 * 1000).toISOString())
+    .gt("expires_at", new Date(Date.now() + 9 * 60 * 1000).toISOString())
     .maybeSingle();
 
   if (recent) {
