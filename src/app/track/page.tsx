@@ -1,6 +1,7 @@
 import { verifyBuyerToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import TrackClient from "./track-client";
+import PreparingView from "./preparing-view";
 
 export default async function TrackPage({
   searchParams,
@@ -24,8 +25,17 @@ export default async function TrackPage({
     .eq("id", result.orderId)
     .single();
 
-  if (orderError || !order || !order.delivery_mode) {
+  // Vraie erreur : commande introuvable (ou lecture DB en échec).
+  if (orderError || !order) {
     return <ErrorView reason="invalid" />;
+  }
+
+  // P2 — delivery_mode null = le vendeur n'a pas (re)choisi de mode (ex. régé du QR :
+  // DELETE generate-qr met delivery_mode=null). Le token buyer est valide et
+  // indépendant du qr_token → PAS un lien mort mais un état TRANSITOIRE. On affiche
+  // « en préparation » + auto-refresh au lieu de tuer le lien de l'acheteur.
+  if (!order.delivery_mode) {
+    return <PreparingView reference={(order.reference as string) ?? ""} />;
   }
 
   const { data: vendor } = await supabase
