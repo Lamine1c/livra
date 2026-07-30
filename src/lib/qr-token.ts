@@ -2,7 +2,11 @@ import crypto from "crypto";
 
 const EXPIRY_MS = 24 * 60 * 60 * 1000;
 const BUYER_EXPIRY_MS = 48 * 60 * 60 * 1000;
-const DRIVER_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
+// TTL 30 j (décision Lamine, 30 juil) : à 24 h un livreur inactif >1 jour était
+// déconnecté chaque jour, et le refresh (deviceId) ne le sauvait qu'en ligne. 30 j
+// couvre pauses/week-ends sans re-login ; le device reste révocable (device_id en base)
+// et le refresh reste le filet. Cf. résilience hub P3 côté mobile.
+const DRIVER_TOKEN_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
 
 function secret(): string {
   const s = process.env.QR_SIGNING_SECRET;
