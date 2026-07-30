@@ -45,13 +45,21 @@ export async function POST(req: NextRequest) {
   // « créé il y a < 1min » ⟺ expires_at > now + 9min (expires_at = created + 10min).
   const { data: recent } = await supabase
     .from("driver_otps")
-    .select("created_at")
+    .select("expires_at")
     .eq("whatsapp", driver.whatsapp)
     .gt("expires_at", new Date(Date.now() + 9 * 60 * 1000).toISOString())
     .maybeSingle();
 
   if (recent) {
-    return NextResponse.json({ error: "Attends 1 minute avant de renvoyer." }, { status: 429 });
+    // P2 — temps réel restant (cf. register). expires_at (frais), pas created_at (figé).
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((new Date(recent.expires_at as string).getTime() - 9 * 60 * 1000 - Date.now()) / 1000)
+    );
+    return NextResponse.json(
+      { error: `Attends ${retryAfter} s avant de renvoyer.`, code: "OTP_RATE_LIMIT", retryAfter },
+      { status: 429 }
+    );
   }
 
   const otp = generateOTP();
