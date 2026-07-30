@@ -62,11 +62,17 @@ export default async function TrackPage({
       .maybeSingle();
 
     if (deliveryRow) {
+      const dStatus = deliveryRow.status as string;
+      // P5 — suivi terminé (livré/returned/cancelled) : on ne pré-charge PAS la
+      // dernière position (pas d'exposition au 1er rendu, même avant le poll).
+      const ended =
+        order.status === "delivered" || order.status === "returned" || order.status === "cancelled" ||
+        dStatus === "completed" || dStatus === "cancelled";
       delivery = {
         id: deliveryRow.id as string,
-        lastLat: deliveryRow.last_lat as number | null,
-        lastLng: deliveryRow.last_lng as number | null,
-        deliveryStatus: deliveryRow.status as string,
+        lastLat: ended ? null : (deliveryRow.last_lat as number | null),
+        lastLng: ended ? null : (deliveryRow.last_lng as number | null),
+        deliveryStatus: dStatus,
       };
     }
   }

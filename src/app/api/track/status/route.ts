@@ -29,14 +29,23 @@ export async function GET(req: NextRequest) {
     .eq("order_id", result.orderId)
     .maybeSingle();
 
+  // P5 — une commande/delivery terminée (livrée, returned, cancelled) ne doit PLUS
+  // exposer la position du livreur (pas qu'un défaut d'affichage). On coupe lastLat/lng
+  // côté serveur ; le statut reste renvoyé pour l'état de fin côté acheteur.
+  const orderStatus = order.status as string;
+  const deliveryStatus = (delivery?.status as string | null) ?? null;
+  const ended =
+    orderStatus === "delivered" || orderStatus === "returned" || orderStatus === "cancelled" ||
+    deliveryStatus === "completed" || deliveryStatus === "cancelled";
+
   return NextResponse.json({
-    orderStatus: order.status as string,
+    orderStatus,
     deliveredAt: (order.delivered_at as string | null) ?? null,
     delivery: delivery
       ? {
-          lastLat: delivery.last_lat as number | null,
-          lastLng: delivery.last_lng as number | null,
-          deliveryStatus: delivery.status as string,
+          lastLat: ended ? null : (delivery.last_lat as number | null),
+          lastLng: ended ? null : (delivery.last_lng as number | null),
+          deliveryStatus,
         }
       : null,
   });

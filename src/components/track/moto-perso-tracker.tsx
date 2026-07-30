@@ -26,6 +26,11 @@ const DEFAULT_CENTER: [number, number] = [3.042048, 36.737221];
 
 function resolveStatusLabel(orderStatus: string, deliveryStatus: string | null): string {
   if (orderStatus === "delivered" || deliveryStatus === "completed") return "Livré";
+  // P5 — annulation livreur (tour 3) : commande → returned, delivery → cancelled.
+  // Aucun n'était reconnu → le suivi continuait. Fin de suivi lisible.
+  if (orderStatus === "returned" || orderStatus === "cancelled" || deliveryStatus === "cancelled") {
+    return "Livraison annulée";
+  }
   if (deliveryStatus === "active") return "En route vers vous";
   return "En attente";
 }
@@ -52,6 +57,10 @@ export default function MotoPersoTracker({
   const [deliveredAt, setDeliveredAt] = useState<string | null>(null);
 
   const isDelivered = liveOrderStatus === "delivered" || deliveryStatus === "completed";
+  // P5 — état de fin « annulé » : commande returned/cancelled OU delivery cancelled.
+  const isCancelled =
+    liveOrderStatus === "returned" || liveOrderStatus === "cancelled" || deliveryStatus === "cancelled";
+  const isEnded = isDelivered || isCancelled;
   const statusLabel = resolveStatusLabel(liveOrderStatus, deliveryStatus);
 
   // Initialise Mapbox once on mount
@@ -73,8 +82,9 @@ export default function MotoPersoTracker({
     });
     mapRef.current = map;
 
-    // Driver marker (emerald dot)
-    if (hasInitPos) {
+    // Driver marker (emerald dot). P5 — pas de marqueur si le suivi est déjà terminé
+    // (livré/annulé) : on n'expose pas la dernière position d'un livreur.
+    if (hasInitPos && !isEnded) {
       const el = createMarkerElement();
       markerRef.current = new mapboxgl.Marker(el)
         .setLngLat([initLng, initLat])
@@ -90,7 +100,7 @@ export default function MotoPersoTracker({
 
   // Poll every 5s — Realtime is blocked by RLS for anon buyer client
   useEffect(() => {
-    if (isDelivered) return;
+    if (isEnded) return; // P5 — plus de polling une fois livré OU annulé
 
     const startedAt = Date.now();
     const MAX_DURATION_MS = 60 * 60 * 1000; // 1h absolute timeout
@@ -133,7 +143,14 @@ export default function MotoPersoTracker({
           }
         }
 
-        if (data.orderStatus === "delivered" || data.orderStatus === "cancelled") {
+        // P5 — couper le polling sur toute fin : livré, annulé (cancelled) ET returned
+        // (annulation livreur, tour 3) — ce dernier n'était pas géré.
+        if (
+          data.orderStatus === "delivered" ||
+          data.orderStatus === "cancelled" ||
+          data.orderStatus === "returned" ||
+          data.delivery?.deliveryStatus === "cancelled"
+        ) {
           clearInterval(interval);
         }
       } catch (e) {
@@ -142,7 +159,7 @@ export default function MotoPersoTracker({
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [token, isDelivered]);
+  }, [token, isEnded]);
 
   return (
     <div
@@ -200,8 +217,49 @@ export default function MotoPersoTracker({
           </div>
         )}
 
+        {/* P5 — overlay de fin « annulé » (couvre la carte → position masquée) */}
+        {isCancelled && !isDelivered && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "#1e2028",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10,
+            }}
+          >
+            <span style={{ fontSize: 56 }}>🚫</span>
+            <p
+              style={{
+                color: "#F5F0E8",
+                fontSize: 22,
+                fontWeight: 700,
+                marginTop: 16,
+                textAlign: "center",
+                padding: "0 32px",
+              }}
+            >
+              Livraison annulée
+            </p>
+            <p
+              style={{
+                color: "rgba(245, 240, 232, 0.7)",
+                fontSize: 15,
+                marginTop: 8,
+                textAlign: "center",
+                padding: "0 32px",
+              }}
+            >
+              Cette livraison n&apos;est plus en cours. Contactez le vendeur si besoin.
+            </p>
+          </div>
+        )}
+
         {/* No position banner */}
-        {!hasPosition && !isDelivered && (
+        {!hasPosition && !isEnded && (
           <div
             style={{
               position: "absolute",
