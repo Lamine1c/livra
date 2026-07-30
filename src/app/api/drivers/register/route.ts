@@ -42,17 +42,27 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // 3. Rate limit : OTP envoyé il y a moins de 1 minute
+  // 3. Rate limit : OTP envoyé il y a moins de 1 minute.
+  // expires_at = created + 10min. « créé il y a < 1min » ⟺ expires_at > now + 9min.
+  // (L'ancien « now - 9min » restait vrai 19min : 10 de vie + 9 de marge → blocage 19min.)
   const { data: recent } = await supabase
     .from("driver_otps")
-    .select("created_at")
+    .select("expires_at")
     .eq("whatsapp", normalizedPhone)
-    .gt("expires_at", new Date(Date.now() - 9 * 60 * 1000).toISOString())
+    .gt("expires_at", new Date(Date.now() + 9 * 60 * 1000).toISOString())
     .maybeSingle();
 
   if (recent) {
+    // P2 — message = temps RÉEL restant, pas un « 1 minute » fixe. Fenêtre de renvoi =
+    // dernier envoi + 60 s = expires_at - 9 min (expires_at = dernier envoi + 10 min).
+    // On lit expires_at (mis à jour à chaque upsert), pas created_at (figé au 1er insert
+    // par onConflict → serait faux sur un renvoi). code + retryAfter pour i18n mobile.
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((new Date(recent.expires_at as string).getTime() - 9 * 60 * 1000 - Date.now()) / 1000)
+    );
     return NextResponse.json(
-      { error: "Attends 1 minute avant de renvoyer." },
+      { error: `Attends ${retryAfter} s avant de renvoyer.`, code: "OTP_RATE_LIMIT", retryAfter },
       { status: 429 }
     );
   }
