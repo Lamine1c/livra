@@ -1,6 +1,7 @@
 import { verifyBuyerToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import TrackClient from "./track-client";
+import PreparingView from "./preparing-view";
 
 export default async function TrackPage({
   searchParams,
@@ -24,8 +25,17 @@ export default async function TrackPage({
     .eq("id", result.orderId)
     .single();
 
-  if (orderError || !order || !order.delivery_mode) {
+  // Vraie erreur : commande introuvable (ou lecture DB en échec).
+  if (orderError || !order) {
     return <ErrorView reason="invalid" />;
+  }
+
+  // P2 — delivery_mode null = le vendeur n'a pas (re)choisi de mode (ex. régé du QR :
+  // DELETE generate-qr met delivery_mode=null). Le token buyer est valide et
+  // indépendant du qr_token → PAS un lien mort mais un état TRANSITOIRE. On affiche
+  // « en préparation » + auto-refresh au lieu de tuer le lien de l'acheteur.
+  if (!order.delivery_mode) {
+    return <PreparingView reference={(order.reference as string) ?? ""} />;
   }
 
   const { data: vendor } = await supabase
@@ -52,11 +62,17 @@ export default async function TrackPage({
       .maybeSingle();
 
     if (deliveryRow) {
+      const dStatus = deliveryRow.status as string;
+      // P5 — suivi terminé (livré/returned/cancelled) : on ne pré-charge PAS la
+      // dernière position (pas d'exposition au 1er rendu, même avant le poll).
+      const ended =
+        order.status === "delivered" || order.status === "returned" || order.status === "cancelled" ||
+        dStatus === "completed" || dStatus === "cancelled";
       delivery = {
         id: deliveryRow.id as string,
-        lastLat: deliveryRow.last_lat as number | null,
-        lastLng: deliveryRow.last_lng as number | null,
-        deliveryStatus: deliveryRow.status as string,
+        lastLat: ended ? null : (deliveryRow.last_lat as number | null),
+        lastLng: ended ? null : (deliveryRow.last_lng as number | null),
+        deliveryStatus: dStatus,
       };
     }
   }
