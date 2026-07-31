@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyQrToken, generateDriverToken } from "@/lib/qr-token";
 
@@ -63,8 +63,14 @@ export async function GET(req: NextRequest) {
       .eq("device_id", deviceId)
       .maybeSingle();
     if (driver?.id) {
-      void supabase.from("drivers").update({ last_scan_at: new Date().toISOString() }).eq("id", driver.id);
-      deviceToken = generateDriverToken(driver.id as string);
+      // [LOT1][A4] after() protège l'update après la réponse (un `void` pouvait être
+      // tué par Vercel → last_scan_at jamais mis à jour). Erreur lue et loguée.
+      const driverId = driver.id as string;
+      after(async () => {
+        const { error } = await supabase.from("drivers").update({ last_scan_at: new Date().toISOString() }).eq("id", driverId);
+        if (error) console.error("[LOT1][A4] scan update drivers.last_scan_at:", error.message);
+      });
+      deviceToken = generateDriverToken(driverId);
     }
   }
 

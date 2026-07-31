@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 
@@ -61,13 +61,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 
-  // Fire-and-forget history insert — non-blocking
-  void supabase.from("delivery_positions").insert({
-    delivery_id: deliveryId,
-    lat,
-    lng,
-    accuracy_m: typeof accuracy === "number" ? accuracy : null,
-    speed_mps: typeof speed === "number" ? speed : null,
+  // History insert non-bloquant. [LOT1][A4] after() garde la fonction serverless
+  // vivante après la réponse 200 : un `void` pouvait être tué par Vercel → l'historique
+  // GPS disparaissait en silence. L'erreur d'insert est désormais lue et loguée.
+  after(async () => {
+    const { error } = await supabase.from("delivery_positions").insert({
+      delivery_id: deliveryId,
+      lat,
+      lng,
+      accuracy_m: typeof accuracy === "number" ? accuracy : null,
+      speed_mps: typeof speed === "number" ? speed : null,
+    });
+    if (error) console.error("[LOT1][A4] driver/position insert delivery_positions:", error.message);
   });
 
   return NextResponse.json({ ok: true });

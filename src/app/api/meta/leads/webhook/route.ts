@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyWebhookSignature, getLeadData } from "@/lib/meta";
 import { sendExpoPush } from "@/lib/expo-push";
@@ -134,12 +134,15 @@ export async function POST(req: NextRequest) {
           const { title, body } = metaLead(profile.locale, {
             clientName: lead.name ?? "Nouveau client",
           });
-          void sendExpoPush(
-            profile.expo_push_token,
-            title,
-            body,
-            { orderId: order.id, type: "meta_lead" }
-          );
+          // [LOT1][A4] after() par itération (boucle leads) : sans lui, un `void`
+          // pouvait être tué par Vercel après la réponse 200 → le vendeur ne recevait
+          // JAMAIS la notif de son lead Facebook. sendExpoPush renvoie { success, error }.
+          const pushToken = profile.expo_push_token;
+          const orderId = order.id;
+          after(async () => {
+            const r = await sendExpoPush(pushToken, title, body, { orderId, type: "meta_lead" });
+            if (!r.success) console.error("[LOT1][A4] meta/leads/webhook sendExpoPush:", r.error);
+          });
         }
 
         // Mark log as order created
