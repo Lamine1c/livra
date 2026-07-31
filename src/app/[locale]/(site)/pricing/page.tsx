@@ -260,7 +260,7 @@ export default function PricingPage() {
                 </span>
 
                 <div className="pv-price">
-                  <span className="pv-strike">1 999</span>
+                  <span className="pv-strike">999</span>
                   <span className="pv-amt">499</span>
                   <span className="pv-per">{t("perMois")}</span>
                 </div>
