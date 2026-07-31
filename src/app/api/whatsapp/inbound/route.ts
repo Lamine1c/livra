@@ -171,7 +171,22 @@ export async function POST(req: NextRequest) {
             continue;
           }
         }
-        await handleInboundReply(m.from, m.body);
+        const res = await handleInboundReply(m.from, m.body);
+        // [LOT1][A3bis] handleInboundReply ne JETTE presque jamais : un échec DB de la
+        // confirmation est RETOURNÉ (reason "db_error"), pas lancé → le catch A3 ne le
+        // voit pas. Sans libération, le wamid reste consommé alors que l'UPDATE de
+        // confirmation a échoué → retry Meta dédupliqué → code de l'acheteur perdu.
+        // On libère sur db_error UNIQUEMENT (wrong_code / no_pending = traitements
+        // RÉUSSIS : leur dédup doit tenir, sinon on renverrait le message en boucle).
+        if (
+          m.wamid &&
+          res.action === "code" &&
+          res.result.matched === false &&
+          res.result.reason === "db_error"
+        ) {
+          const { error: relErr } = await releaseInboundWamid(m.wamid);
+          if (relErr) console.error("[LOT1][A3bis] release wamid (db_error) échoué (message perdu):", m.wamid, relErr.message);
+        }
       } catch (err) {
         // Pas de catch muet : on logge. [LOT1][A3] Le claim est POSÉ avant le
         // traitement (protège du double envoi d'OTP concurrent) → on le LIBÈRE ici
