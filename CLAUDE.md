@@ -11,7 +11,12 @@ les erreurs passées. À respecter SANS exception.
    chantier, ce qui est mergé, ce qui reste, les décisions prises.
 2. **`~/livra-mobile/HANDOFF.md`** — la Colonne de lancement + l'état
    vivant du projet (briques, bugs ouverts, doctrine).
-3. **Ce fichier `CLAUDE.md`** — les règles du repo.
+3. **`~/livra-mobile/BACKLOG.md`** — tout ce qui est parké (chemin absolu,
+   c'est l'autre repo). ⚠️ **Presque tout le parké WEB vit ICI** : page
+   `/livreur/rejoindre` (404), `/api/settings/yalidine/test`, trou du flow
+   refus client, slice web (webhook Meta + replay + `paid_until`),
+   enforcement abonnement. Un cc web qui saute ce fichier ne les voit jamais.
+4. **Ce fichier `CLAUDE.md`** — les règles du repo.
 
 Puis **dis où on en est et ce qui reste** — avant d'écrire la moindre
 ligne de code.
@@ -187,9 +192,13 @@ répondre `succeeded` alors que le push HTTP/2 hang.
 
 ## SOURCES DE VÉRITÉ
 
+- `~/livra-mobile/BACKLOG.md` + `~/livra-mobile/HANDOFF.md` — **état vivant
+  et parké : la vérité en premier** (ce qui est fait, ce qui reste, décisions).
 - `LIVRA_BIBLE.md` — architecture produit
-- `LIVRA_ROADMAP.md` — priorités V1/V1.5/V2
 - `CLAUDE.md` (ce fichier) — règles permanentes
+- `LIVRA_ROADMAP.md` — ⚠️ **historique horodaté SEULEMENT** : le projet le
+  déclare périmé (couches contradictoires, refonte au backlog). Ne pas s'en
+  servir comme priorités actuelles — c'est BACKLOG/HANDOFF qui tranchent.
 - `src/styles/livra-landing.css` — single source LP CSS
 - `src/app/globals.css` — design tokens
 - `public/brand/` — SVG sources brand kit (Bouclier + Wordmark +
