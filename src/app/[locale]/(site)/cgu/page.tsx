@@ -148,7 +148,7 @@ export default function CguPage() {
             <p style={bodyText}>{"6.1. Période d'essai. Tout nouveau Vendeur bénéficie d'une période d'essai de sept (7) jours gratuite, sans engagement et sans carte bancaire requise."}</p>
             <p style={bodyText}>{"6.2. Plans disponibles à la date de la présente version :"}</p>
             <ul style={subList}>
-              <li style={listItem}>{"(a) Plan Fondateur : 499 DA par mois, à vie tant que l'abonnement reste actif sans interruption, dans la limite des 100 premières inscriptions ;"}</li>
+              <li style={listItem}>{"(a) Plan Fondateur : 499 DA par mois, à vie tant que l'abonnement reste actif sans interruption, dans la limite des 50 premières inscriptions ;"}</li>
               <li style={listItem}>{"(b) Plan Standard : 999 DA par mois."}</li>
             </ul>
             <p style={bodyText}>{"6.3. Plan Fondateur — clause de gel tarifaire. Le tarif Fondateur de 499 DA est garanti à vie pour le Vendeur tant que son abonnement reste actif sans interruption de paiement. Ce tarif couvre les fonctionnalités du Plan Fondateur telles qu'elles existent à la date de souscription, ainsi que leurs corrections et améliorations. Les nouvelles fonctionnalités majeures introduites ultérieurement par LIVRA (notamment dans des plans supérieurs type Pro, Business ou Enterprise) ne sont PAS automatiquement incluses dans le Plan Fondateur et peuvent faire l'objet d'options payantes distinctes. En cas d'annulation ou de suspension pour défaut de paiement, le Vendeur perd définitivement le bénéfice du tarif Fondateur et devra souscrire au tarif Standard en vigueur s'il souhaite revenir."}</p>
