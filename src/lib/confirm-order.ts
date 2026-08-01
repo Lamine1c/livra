@@ -232,7 +232,16 @@ export async function handleInboundReply(
       return { action: "no_pending" };
     }
     const msg = renderTemplateText(TEMPLATES.order_otp_code, [order.otp_code]);
-    await sendWhatsAppNotification(phone, msg);
+    // [LOT1][A2] MSG 2 = le code OTP. Seul message du tunnel dont l'absence tue la
+    // commande → on lit .success ET on réessaie UNE fois (1,5 s) avant d'abandonner.
+    // On ne change NI le flux NI la valeur de retour : le webhook répond toujours 200.
+    let r = await sendWhatsAppNotification(phone, msg);
+    if (!r.success) {
+      console.error(`[LOT1][A2] from=${masked} MSG2 (code) échec 1/2:`, r.error);
+      await new Promise((s) => setTimeout(s, 1500));
+      r = await sendWhatsAppNotification(phone, msg);
+    }
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG2 (code) ÉCHEC DÉFINITIF order=${order.id}:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} OUI → MSG 2 (code) envoyé pour order ${order.id}`);
     return { action: "code_sent", orderId: order.id };
   }
@@ -240,7 +249,8 @@ export async function handleInboundReply(
   // ── NON → envoyer MSG 4 (raisons), aucun changement DB ──
   if (NO_RE.test(bodyTrim)) {
     const msg = renderTemplateText(TEMPLATES.order_cancel_reasons, []);
-    await sendWhatsAppNotification(phone, msg);
+    const r = await sendWhatsAppNotification(phone, msg);
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG4 (raisons) failed:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (raisons) envoyé`);
     return { action: "declined" };
   }
@@ -254,7 +264,8 @@ export async function handleInboundReply(
       return { action: "no_pending" };
     }
     const msg = renderTemplateText(TEMPLATES.order_reschedule_request, []);
-    await sendWhatsAppNotification(phone, msg);
+    const r = await sendWhatsAppNotification(phone, msg);
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG5 (reschedule) failed:`, r.error);
 
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
@@ -291,7 +302,8 @@ export async function handleInboundReply(
     const prenom = (enrichedClient(order)?.full_name ?? "").split(" ")[0] ?? "";
 
     const msg = renderTemplateText(TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
-    await sendWhatsAppNotification(phone, msg);
+    const r = await sendWhatsAppNotification(phone, msg);
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG6 (annulation) failed:`, r.error);
 
     const { error: updErr } = await supabase
       .from("orders")
@@ -328,7 +340,8 @@ export async function handleInboundReply(
       return { action: "no_pending" };
     }
     const msg = renderTemplateText(TEMPLATES.order_objection_cheaper, []);
-    await sendWhatsAppNotification(phone, msg);
+    const r = await sendWhatsAppNotification(phone, msg);
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG7 (objection prix) failed:`, r.error);
 
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();

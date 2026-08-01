@@ -20,6 +20,18 @@ async function claimInboundWamid(wamid: string): Promise<boolean> {
   }
 }
 
+// [LOT1][A3] Libère un wamid claim : si handleInboundReply jette APRÈS le claim, on
+// retire la marque de dédup pour que le RETRY Meta puisse retraiter le message. Sans
+// ça, un hoquet DB de 2 s pendant un « OUI » = commande morte, invisible. L'erreur du
+// DELETE est renvoyée pour être lue et loguée par l'appelant. (claimInboundWamid peut
+// renvoyer true sans avoir inséré quand la dédup est indisponible → le DELETE ne
+// supprime alors rien, sans conséquence.)
+async function releaseInboundWamid(wamid: string) {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("whatsapp_inbound_events").delete().eq("wamid", wamid);
+  return { error };
+}
+
 // Webhook WhatsApp ENTRANT (réponses des clients) — WhatsApp Cloud API, Meta direct.
 // Transport 100 % Meta : l'authenticité repose sur la signature HMAC
 // X-Hub-Signature-256 (SHA256 du corps BRUT avec META_APP_SECRET).
@@ -159,10 +171,31 @@ export async function POST(req: NextRequest) {
             continue;
           }
         }
-        await handleInboundReply(m.from, m.body);
+        const res = await handleInboundReply(m.from, m.body);
+        // [LOT1][A3bis] handleInboundReply ne JETTE presque jamais : un échec DB de la
+        // confirmation est RETOURNÉ (reason "db_error"), pas lancé → le catch A3 ne le
+        // voit pas. Sans libération, le wamid reste consommé alors que l'UPDATE de
+        // confirmation a échoué → retry Meta dédupliqué → code de l'acheteur perdu.
+        // On libère sur db_error UNIQUEMENT (wrong_code / no_pending = traitements
+        // RÉUSSIS : leur dédup doit tenir, sinon on renverrait le message en boucle).
+        if (
+          m.wamid &&
+          res.action === "code" &&
+          res.result.matched === false &&
+          res.result.reason === "db_error"
+        ) {
+          const { error: relErr } = await releaseInboundWamid(m.wamid);
+          if (relErr) console.error("[LOT1][A3bis] release wamid (db_error) échoué (message perdu):", m.wamid, relErr.message);
+        }
       } catch (err) {
-        // Pas de catch muet : on logge, et on continue les autres messages.
-        console.error("[whatsapp/inbound] erreur traitement message:", err);
+        // Pas de catch muet : on logge. [LOT1][A3] Le claim est POSÉ avant le
+        // traitement (protège du double envoi d'OTP concurrent) → on le LIBÈRE ici
+        // pour que le retry Meta repasse le message au lieu de le perdre à jamais.
+        console.error("[LOT1][A3] erreur traitement message:", err);
+        if (m.wamid) {
+          const { error: relErr } = await releaseInboundWamid(m.wamid);
+          if (relErr) console.error("[LOT1][A3] release wamid échoué (message perdu):", m.wamid, relErr.message);
+        }
       }
     }
   });
