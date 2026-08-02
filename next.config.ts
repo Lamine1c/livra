@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -30,4 +31,14 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
 };
 
-export default withNextIntl(nextConfig);
+// Sentry enveloppe le config next-intl (redirects/rewrites conservés). L'upload des
+// sourcemaps n'a lieu QUE si SENTRY_AUTH_TOKEN est présent (Vercel uniquement) ; en
+// local il est absent → upload sauté, build normal.
+// ⚠️ Org en région EU : si le build Vercel échoue « organization not found », ajouter
+// `sentryUrl: "https://de.sentry.io/"` ici (à ne pas anticiper).
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: "go-livra",
+  project: "livra-web",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+});
