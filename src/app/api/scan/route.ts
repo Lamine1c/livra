@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     // (scan.tsx:103). Routage propre vers /rejoindre = LOT 7.
     // (Un livreur NON inscrit n'arrive jamais ici : le mobile l'a déjà routé vers
     // /rejoindre en amont — absence de deviceId scan.tsx:86, unregistered scan.tsx:93.)
+    console.error("[LOT1][C6] scan refusé UNREGISTERED — deviceId inconnu"); // marqueur alerte LOT 2 (captureConsole) — zéro PII, réponse inchangée
     return NextResponse.json({ error: "UNREGISTERED" }, { status: 401 });
   }
 
