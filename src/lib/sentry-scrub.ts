@@ -1,5 +1,11 @@
 import type { Breadcrumb, Event } from "@sentry/nextjs";
 
+// [PII] Allowlist STRICTE des request headers conservés (JAMAIS une denylist : elle
+// raterait le prochain header sensible que Vercel ajoutera). Tout le reste est supprimé.
+// Fuite trouvée au gate : X-Vercel-Ip-Latitude/Longitude/City/Postal (géoloc du requêteur)
+// + X-Vercel-Oidc-Token (credential) partaient chez Sentry via request.headers.
+const HEADER_ALLOWLIST = new Set(["content-type", "content-length", "x-vercel-id"]);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SCRUB PII — retire TOUTE query string de TOUTE URL avant envoi à Sentry (tiers).
 // Les tokens du produit circulent en query string (`?t=<qr_token>&d=<deviceId>`,
@@ -57,10 +63,24 @@ export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
  *   - breadcrumbs embarqués + spans (http.client porte l'URL complète)
  */
 export function scrubEvent<T extends Event>(event: T): T {
+  // [PII] request : allowlist stricte des headers + suppression du corps, des cookies,
+  // de la query_string, ET de l'objet user (Sentry y colle une géo dérivée des mêmes
+  // headers Vercel X-Vercel-Ip-* → ville/lat/long du requêteur — livreur OU acheteur).
   if (event.request) {
-    if (typeof event.request.url === "string") event.request.url = stripQuery(event.request.url);
-    delete event.request.query_string;
+    const r = event.request;
+    if (typeof r.url === "string") r.url = stripQuery(r.url);
+    delete r.query_string;
+    delete r.data;
+    delete r.cookies;
+    if (r.headers) {
+      const filtered: Record<string, string> = {};
+      for (const k of Object.keys(r.headers)) {
+        if (HEADER_ALLOWLIST.has(k.toLowerCase())) filtered[k] = r.headers[k];
+      }
+      r.headers = filtered;
+    }
   }
+  delete event.user;
   if (typeof event.transaction === "string") event.transaction = stripQuery(event.transaction);
   if (typeof event.message === "string") event.message = stripQueryInText(event.message);
   if (event.logentry && typeof event.logentry.message === "string") {
