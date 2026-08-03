@@ -21,8 +21,19 @@ function stripQueryInText(text: string): string {
   return text.replace(URL_WITH_QUERY, "$1");
 }
 
-/** Breadcrumb réseau (fetch/xhr → data.url) ou navigation (data.from/to). */
+// Retire les query strings dans un tableau d'arguments console (mutation en place).
+function scrubArgs(args: unknown): void {
+  if (!Array.isArray(args)) return;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (typeof a === "string") args[i] = stripQueryInText(a);
+  }
+}
+
+/** Breadcrumb réseau (fetch/xhr → data.url + http.query séparée), navigation (data.from/to),
+ *  ou console (message + data.arguments bruts via captureConsole). */
 export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
+  if (typeof breadcrumb.message === "string") breadcrumb.message = stripQueryInText(breadcrumb.message);
   const d = breadcrumb.data;
   if (d) {
     const url = d.url;
@@ -31,6 +42,9 @@ export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
     if (typeof from === "string") d.from = stripQuery(from);
     const to = d.to;
     if (typeof to === "string") d.to = stripQuery(to);
+    // Sentry range la query dans un champ DÉDIÉ (http.query = "?…"), pas dans data.url → on la retire.
+    delete d["http.query"];
+    scrubArgs(d.arguments); // args bruts d'un breadcrumb console
   }
   return breadcrumb;
 }
@@ -55,6 +69,8 @@ export function scrubEvent<T extends Event>(event: T): T {
   event.exception?.values?.forEach((ex) => {
     if (typeof ex.value === "string") ex.value = stripQueryInText(ex.value);
   });
+  // extra.arguments = args bruts d'un console.error capturé (captureConsole).
+  if (event.extra) scrubArgs(event.extra.arguments);
   event.breadcrumbs?.forEach(scrubBreadcrumb);
   event.spans?.forEach((span) => {
     if (typeof span.description === "string") span.description = stripQuery(span.description);
