@@ -45,8 +45,7 @@ while true; do
 
     claude -p "Lis tasks/COMMANDE.md en entier. Exécute UNIQUEMENT les commandes dont l'ID n'est pas déjà présent dans tasks/RAPPORT.md. Respecte les 6 règles du protocole en tête de COMMANDE.md et le protocole en tête de CLAUDE.md. Quand tu t'arrêtes — pour QUELQUE raison que ce soit : fini, question, doute, blocage, découverte — tu écris tasks/RAPPORT.md AVANT de rendre la main, le plus récent en haut. C'est le seul canal : ce qui n'est pas dans le rapport n'existe pas." \
       $SUITE \
-      --permission-mode dontAsk \
-      --autocompact auto \
+      --permission-mode acceptEdits \
       --allowedTools "Read,Edit,Write,Glob,Grep,Task,TodoWrite,WebFetch,WebSearch,Bash(git add *),Bash(git commit *),Bash(git checkout *),Bash(git branch *),Bash(git tag *),Bash(git status*),Bash(git log*),Bash(git diff*),Bash(git show*),Bash(git stash*),Bash(npx tsc *),Bash(npm run *),Bash(npx expo *),Bash(node *),Bash(grep *),Bash(rg *),Bash(cat *),Bash(ls *),Bash(head *),Bash(tail *),Bash(wc *),Bash(find *),Bash(python3 *)" \
       2>&1 | tee -a "$LOG"
 
