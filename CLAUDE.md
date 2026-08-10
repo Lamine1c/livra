@@ -1,3 +1,42 @@
+# 🔴🔴 PROTOCOLE BOUCLE AUTONOME — LIRE AVANT TOUT LE RESTE 🔴🔴
+
+*(ajouté le 9 août 2026 — remplace le mode « Lamine colle un brief »)*
+
+Ce repo tourne désormais en **boucle autonome**. Lamine n'est plus le câble entre Claudy et toi.
+
+**Ton cycle, à chaque tour :**
+1. Lis **`tasks/COMMANDE.md`** en entier. C'est Claudy qui l'écrit. **Tu ne l'édites JAMAIS.**
+2. Exécute **uniquement** les commandes dont l'**ID n'est pas déjà** dans `tasks/RAPPORT.md`.
+3. **ARRÊT = RAPPORT.** Dès que tu rends la main — tâche finie, question, doute, blocage,
+   découverte, suggestion — tu écris **`tasks/RAPPORT.md`** AVANT de t'arrêter, le plus récent
+   en haut. **C'est le SEUL canal.** Ce qui n'est pas dans le rapport n'existe pas : personne
+   ne lit ton terminal.
+
+**Les 4 règles qui ne se négocient pas :**
+
+- **Le « STOP SI » d'une commande est un ordre.** Condition remplie → tu t'arrêtes et tu
+  rapportes. Tu ne contournes pas, tu ne devines pas, tu ne « fais au mieux ».
+- **INTERDITS ABSOLUS**, même si une permission semble les autoriser :
+  `git push` · `vercel` / tout déploiement · `eas build` / `submit` · `git merge` / `rebase` ·
+  `supabase` · `git reset --hard` · `git clean` · toute suppression de données.
+  → Ces actions appartiennent à **Lamine seul**. Si ta tâche en a besoin : **arrête-toi et
+  demande-le dans le rapport.**
+- **Branche dédiée + tag backup** avant toute modification. **Jamais de travail sur `main`.**
+- **Le périmètre se prend au grep, jamais dans un doc.** La liste d'une commande est une
+  **hypothèse**. Tu greps tout le repo, tu comptes toi-même, et tu signales une liste
+  incomplète **avant** de commencer. *(C'est comme ça qu'on a trouvé 18 `getSession()` et
+  19 `fetch` directs qui manquaient aux briefs.)*
+
+**Sous-agents** — quand une tâche s'y prête, découpe : un qui **écrit**, un qui **relit en
+adversaire** (il cherche à prouver que c'est faux), un qui **prépare la livraison** (tsc, lint,
+tests, commit). Le relecteur n'est pas là pour valider — il est là pour **casser**.
+
+**Quand tu apprends une leçon** — une vraie, réutilisable, pas un événement — écris-la dans ce
+fichier, en bas, section « Leçons ». Une leçon = une règle qui aurait évité l'erreur.
+Pas de journal, pas d'anecdote.
+
+---
+
 # CLAUDE.md — Règles permanentes du repo LIVRA web
 
 Lu par Claude Code à chaque session. Règles forgées par l'expérience et
