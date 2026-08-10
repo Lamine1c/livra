@@ -19,7 +19,43 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [RETENTION-LEADS-W4] — FAIT (reprise de W3, 3 arbitrages appliqués) — 10 août 2026
+
+**Livré** sur `feat/retention-leads-90j` (tag `backup/pre-retention-w4-20260810`), commit `2b53d3a`.
+`tsc --noEmit` + `npm run build` **verts**. Aucune migration appliquée, aucune prod appelée (règle 4).
+1. `supabase/migrations/030_lead_insights.sql` : table **`lead_insights`** (anonyme, `outcome` ∈
+   converted/not_converted/never_created, wilaya/page_id/form_id/ad_id nullable) + RLS service_role +
+   fonction SQL **`purge_expired_leads(p_dry)`**. Choix clé : la mutation est **une transaction SQL
+   atomique** (verrous `FOR UPDATE`, `now()` DB) car `lead_insights` n'a **aucune clé de dédup** →
+   l'exactly-once est impossible en JS. Passe **unique par lead**, log=pivot, ordre FK imposé
+   insight→delete log→delete order→delete client (si aucun autre order, re-vérifié dans le WHERE).
+2. `src/app/api/cron/purge-leads/route.ts` : auth `Bearer CRON_SECRET`, `?dry=1` délègue le flag à la
+   fonction (logique unique, zéro duplication). 3. `vercel.json` : cron `0 3 * * *`.
+
+**Ce que le dry-run purgerait aujourd'hui** : **0** (projection). Le webhook est posé récemment, aucun
+lead n'a 90 j → toutes les branches renvoient des compteurs nuls. À **confirmer au gate** par Lamine
+(`GET /api/cron/purge-leads?dry=1` avec le header CRON_SECRET) — non exécutable depuis ce repo (règle 4).
+
+**Verdict adversaire** (sous-agent, il attaquait) : race/FK/**idempotence**/fuseau = **SÛRS**.
+- **Idempotence : SÛRE.** Fonction = 1 transaction plpgsql sans `EXCEPTION` → tout-ou-rien ; relancée
+  le même jour, les logs déjà supprimés ne sont plus trouvés → **zéro doublon d'insight**.
+- **Risque doublon order webhook (évalué, NON corrigé — hors périmètre, comme demandé)** : si Meta
+  ré-émet un `leadgen_id` d'un lead **not_converted** déjà purgé, l'idempotence webhook
+  (`route.ts:52-59`) ne trouve plus le log ET `orders.meta_lead_id` est libéré → un 2e order peut
+  naître. **Probabilité faible** (Meta ne ré-émet pas un lead de +90 j). Pour un lead **converti**,
+  l'order est gardé → `meta_lead_id` UNIQUE bloque le doublon.
+- Deux nits non bloquants signalés : (a) `?dry=1` pose quand même les `FOR UPDATE` (locks brefs,
+  crons à heures disjointes → OK) ; (b) `meta_lead_logs` n'a pas de `UNIQUE(lead_id)` (défaut
+  pré-existant de 013/webhook, hors périmètre) → au pire 2 insights pour un même lead en cas de
+  double-log, jamais un crash.
+
+**Ce dont j'ai besoin (décision/gate Lamine)** : appliquer la migration 030 (SQL Editor), lancer le
+dry-run pour confirmer le 0, puis décider d'activer le cron réel. Rien d'autre ne bloque.
+
+---
+
 ## [RETENTION-LEADS-W3] — BLOQUÉ (STOP SI déclenché) — 10 août 2026
+> **Résolu par W4 ci-dessus** (les 3 arbitrages demandés ont été tranchés par Claudy).
 
 **Rien n'a été écrit ni commité.** Je me suis arrêté AVANT toute modif : deux STOP SI de la commande
 sont remplis (schéma FK rend la suppression risquée/ambiguë + une instruction contredit le code réel).
