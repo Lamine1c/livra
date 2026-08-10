@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { recordCarrierInsight } from "@/lib/delivery-insight";
 import {
   fetchParcelStatus,
   YALIDINE_STATUS_MAP,
@@ -151,6 +152,22 @@ export async function GET(req: NextRequest) {
         }
 
         result.newStatus = livraStatus;
+
+        // ─── Insight D9 (best-effort) : clôture transporteur ──
+        // Le poll ne récupère que les orders status='shipped' (filtre ci-dessus) et la
+        // garde de non-régression de rang empêche un re-write. Une fois passé à
+        // delivered/returned, l'order sort du scope du poll → exactly-once par order.
+        if (livraStatus === "delivered" || livraStatus === "returned") {
+          const finalStatus = livraStatus;
+          const carrierLast = status.last_status;
+          after(() =>
+            recordCarrierInsight(supabase, {
+              orderId: order.id,
+              statutFinal: finalStatus,
+              motif: carrierLast,
+            })
+          );
+        }
 
         // ─── 4. Notifications WhatsApp ────────────────────────
         const { data: client } = await supabase

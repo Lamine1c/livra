@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendExpoPush } from "@/lib/expo-push";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { driverCancelledDelivery, refusalReasonLabel } from "@/lib/push-messages";
+import { recordMotoInsight } from "@/lib/delivery-insight";
 
 // Motifs valides pour une ANNULATION (livraison en cours). Contrat avec le mobile
 // (delivery.cancelReasons). Slug hors liste → 'other' (l'action reste enregistrée).
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Insight D9 (best-effort, post-réponse) : la course moto se clôt en returned.
+  // Idempotent via l'early-return `delivery.status === "cancelled"` plus haut.
+  // `reason` (motif d'annulation) est déjà résolu ci-dessus.
+  after(() => recordMotoInsight(supabase, { deliveryId, orderId, statutFinal: "returned", motif: reason }));
 
   // Commande (référence + vendeur + wilaya dénorm + contact acheteur) et prénom livreur.
   const { data: order } = await supabase
