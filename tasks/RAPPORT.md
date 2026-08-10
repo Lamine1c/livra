@@ -19,6 +19,38 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [AGREGAT-LIVRAISON-W5] — BLOQUÉ (STOP SI : chemins de clôture multiples) — 10 août 2026
+
+**Rien codé, aucune branche/tag créés (arrêt avant modif, comme W3).** La commande ordonne le STOP SI
+« plusieurs chemins de clôture existent ET le choix du point d'accroche change le sens des données →
+rapporte la carte AVANT de coder ». C'est le cas : **3 systèmes de clôture distincts**, et selon
+l'accroche `delivery_insights` veut dire deux choses différentes (table gardée à vie → je ne devine pas).
+
+**Carte des clôtures (vérifiée au grep + lecture, file:line)** :
+- **Système 1 — moto_perso** (a une ligne `deliveries` + GPS `delivery_positions`) :
+  · livrée → `complete-delivery/route.ts:91-107` (deliveries=completed, orders=delivered) ;
+  · échec/retour → `cancel-delivery/route.ts:71-93` (+ motif dans `delivery_refusals` via `reason`, wilaya `:119`).
+  Les DEUX ont déjà un **verrou d'idempotence naturel** (early-return si status déjà completed/cancelled,
+  `complete:60-89` / `cancel:63-69`) → écrire l'insight après le flip = une seule ligne par livraison.
+- **Système 2 — transporteur Yalidine/Ecotrack** : clôture par le **cron** `yalidine-poll/route.ts:139-145`
+  (orders→delivered/returned). **Aucune ligne `deliveries`, aucun GPS** → distance/geohash impossibles.
+- **Système 3 — refus client WhatsApp** : `confirm-order.ts:308-314` (orders→cancelled). Pas de livraison physique.
+
+**Le fork sémantique** : la table est **GPS-centrée** (geohash, `distance_m` via `delivery_positions`,
+`duree_s`) et W6 (le but affiché) purgera `delivery_positions` — or **seul le Système 1 en possède**.
+→ **Ma recommandation : `delivery_insights` = clôtures moto_perso uniquement** (accroche sur
+complete-delivery + cancel-delivery). Les Systèmes 2/3 n'ont ni GPS ni `deliveries` à purger : leur y
+mettre une ligne (distance NULL, geohash NULL) diluerait la table et ne sert aucune rétention.
+
+**Décision demandée (1 seule)** : `delivery_insights` couvre-t-il **(A) moto_perso seul** *(ma reco,
+je livre immédiatement : migration 031 + accroche sur les 2 routes + idempotence par le verrou existant)*,
+**ou (B) aussi** les clôtures transporteur (cron) et refus WhatsApp *(alors statut_final sans GPS,
+distance/geohash NULL pour eux — dis-le et je code B)* ?
+Points que je traiterai au codage une fois (A/B) tranché : `delivered_on` en **UTC+1 (DZ)** documenté ;
+**geohash dégradé à ~20 km en wilaya peu peuplée** si l'adversaire juge 5 chars ré-identifiants.
+
+---
+
 ## [RETENTION-LEADS-W4] — FAIT (reprise de W3, 3 arbitrages appliqués) — 10 août 2026
 
 **Livré** sur `feat/retention-leads-90j` (tag `backup/pre-retention-w4-20260810`), commit `2b53d3a`.
