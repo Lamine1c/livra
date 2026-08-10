@@ -19,6 +19,47 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [AGREGAT-LIVRAISON-W6] — FAIT (décision B, les 3 modes) — 10 août 2026
+
+**Livré** sur `feat/agregat-livraison` (branche depuis `main`, tag `backup/pre-agregat-w6-20260810`),
+commit `1bcf881`. `tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4).
+- `supabase/migrations/031_delivery_insights.sql` : table anonyme `delivery_insights` (`mode` ∈
+  moto_perso/transporteur/refus_client, wilaya, commune, geohash, distance_m, duree_totale_s,
+  duree_course_s, statut_final, motif_echec, delivered_on) — **aucun** id/order/client/driver. RLS service_role.
+- `src/lib/delivery-insight.ts` : helper best-effort (ne throw jamais) — geohash, distance GPS (haversine),
+  durées, `delivered_on` en **UTC+1 DZ**.
+- **4 accroches** : `complete-delivery` (moto delivered, + chemin repair), `cancel-delivery` (moto returned,
+  motif=reason), `yalidine-poll:153+` (transporteur, **uniquement transition→delivered/returned**),
+  `confirm-order` Branche B (refus_client, garde `.neq("status","cancelled").select()`).
+
+**Idempotence prouvée par mode** : moto = early-return status completed/cancelled ; transporteur = poll
+ne fetch que `status='shipped'` + garde de rang → sort du scope après transition ; refus = garde `.neq`
+(car `findPendingForPhone` ne filtre pas le status). Le refus utilise `after()` → zéro latence webhook.
+
+**Choix geohash = 4** (moi + adversaire) : 4 (~760 km²) est **plus grossier qu'une commune rurale DZ
+(10-50 km², déjà stockée)** → n'ajoute aucune précision sub-commune ; 5 approcherait la maille commune,
+3 serait plus grossier qu'une wilaya (inutile). **Verdict adversaire** : race/fuseau/NULL-GPS/refus = SÛRS.
+Résidu signalé : `distance_m`+`duree_course_s`+commune+date+motif rare peuvent fingerprinter une course —
+**borné** car table service_role uniquement (pas d'expo publique) ; à bucketiser si dashboard public un jour.
+Double-insert moto en race **parallèle** (double-tap) non dédup-able (anonymat interdit `delivery_id`) →
+le re-pass **séquentiel** (cas demandé) est couvert ; parallèle = risque résiduel documenté.
+
+**Ce dont j'ai besoin** : rien pour livrer ; au gate, Lamine applique 031 (SQL Editor). W7 (purge
+`delivery_positions`) reste une commande future — **aucune purge codée ici** (respecté).
+
+---
+
+## [AGREGAT-LIVRAISON-W5] — BLOQUÉ→RÉSOLU par W6 — 10 août 2026
+> Carte des 3 chemins de clôture livrée (commit `028c0db` sur `feat/retention-leads-90j`). Décision B
+> prise par Claudy → traitée en W6 ci-dessus.
+
+## [RETENTION-LEADS-W4] — FAIT — 10 août 2026
+> Purge leads 90j + `lead_insights` : migration 030 + `/api/cron/purge-leads` + cron `vercel.json`,
+> commit `2b53d3a` sur `feat/retention-leads-90j` (rapport détaillé `143f077` sur cette branche).
+> `tsc`+build verts, dry-run projeté 0, non appliquée (gate Lamine).
+
+---
+
 ## [RETENTION-LEADS-W3] — BLOQUÉ (STOP SI déclenché) — 10 août 2026
 
 **Rien n'a été écrit ni commité.** Je me suis arrêté AVANT toute modif : deux STOP SI de la commande
