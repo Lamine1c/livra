@@ -19,6 +19,29 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [ADVERSAIRE-032-W8] — FAIT (agent frais, NON interrompu) — 11 août 2026
+
+**Sous-agent adversaire indépendant relancé — cette fois il a tourné jusqu'au bout (pas d'interruption).**
+Aucune modification de code (aucun défaut certain trouvé). Branche `feat/agregat-livraison`, rien commité en code.
+
+**Attaques tentées → résultat** (chacune vérifiée par l'agent, file:line) :
+1. WHERE purge protège courses actives/récentes (`status IN(...) AND completed_at IS NOT NULL AND < now-30j`) → **TENU** (032:33-35).
+2. Chemin de clôture posant un statut final SANS completed_at (re-grep) → **TENU** : les 3 chemins posent tous completed_at (complete-delivery:100, driver/cancel-delivery:76, orders/[id]/cancel-delivery:63). Aucun 4e chemin.
+3. Réouverture completed/cancelled → active → **TENU** : `start-delivery:63-68` n'autorise que active→active ; statut final immuable.
+4. Autres statuts finaux ? → **TENU** : CHECK 006:17/008:20 = {active, completed, cancelled} exhaustif.
+5. Side-effects hors delivery_positions (trigger/cascade/Realtime/RLS) → **TENU** : cascade FK dans l'autre sens, aucun trigger, DELETE Realtime isolé par RLS service_role (020).
+6. `?dry=1` mute quelque chose → **TENU** : branche p_dry = `SELECT COUNT` seul.
+7. Idempotence + race clôture-pendant-purge → **TENU** : cutoff figé, 30j d'écart rend la collision impossible.
+8. **Couple 031+032 — perte d'insight** → **DOUTE (non bloquant)** : si `recordMotoInsight` (after(), best-effort, pas de retry) échoue à la clôture, l'insight manque ET les positions sont purgées 30j après → distance perdue. **Ce n'est PAS un bug de 032** ; c'est une limite de résilience de **031**. Corriger = retry/fallback sur 031 = refonte → STOP SI respecté, je ne touche pas.
+9. Ordre temporel insight-avant-purge → **TENU** : insight à T0, purge à T0+30j.
+10. `recordMotoInsight` lit les positions à la clôture (pas 30j après) → **TENU** : la purge ne prive jamais l'insight de sa distance.
+
+**LIGNE FINALE : la 032 est SÛRE à appliquer en production.** Seule dette de vérification / surveillance
+(pas un correctif ce tour) : monitorer les logs `[delivery-insight] insert failed` ; si taux > ~0.1 %,
+envisager (lot ultérieur) un retry/fallback sur 031 + backfill. **À trancher par Claudy** — pas fait ici (STOP SI refonte 031).
+
+---
+
 ## [PURGE-GPS-W7] — FAIT (complément de W6, même branche) — 11 août 2026
 
 **Livré** sur `feat/agregat-livraison` (par-dessus W6, tag `backup/pre-purge-gps-w7`), commit `2a7fb9b`.
