@@ -19,6 +19,44 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [LOT12-SCORE-W9] — BLOQUÉ (2 STOP SI : appelant mobile + pas d'order_id à la création) — 11 août 2026
+
+**Rien codé, aucune branche/tag créés (arrêt avant modif). Le trou reste ouvert — à traiter, mais le
+design « input = order_id » ne tient pas tel quel.** Grep exhaustif fait (sous-agent + moi).
+
+**STOP SI n°1 — un appelant mobile EXISTE** (règle : « ne casse pas le mobile en silence ») :
+- Aucun appelant web (grep `buyer-score` sur `src/**` = 0 hors la route elle-même).
+- Mobile confirmé : `CC_RAPPORT.md:691-694` pilote un libellé par `buyerScore.level` ; composant
+  `BuyerScoreBadge` (jauge 3 segments) `CC_RAPPORT.md:707`. Changer `whatsapp→order_id` **casse le mobile** en prod.
+
+**STOP SI n°2 — pas d'`order_id` au moment du check** (le cas que la commande dit de rapporter) :
+- Le badge score vit sur l'**écran 5 = création de commande** (`CC_RAPPORT.md:682-694`, `newOrder`, formulaire).
+  Le vendeur tape le numéro de l'acheteur et voit le score **pendant la saisie, avant que la commande/le
+  client existent** → **aucun `order_id` (ni `client_id`) disponible**. Le socle « order_id du vendeur »
+  est donc incompatible avec l'usage n°1. Je n'invente pas d'exception (la commande l'interdit).
+
+**Couche 1 (verdict seul)** : l'UI chiffrée `delivered/declined/total` n'existe **pas dans ce repo** (front
+vendeur = mobile). Le mobile lit au moins `.level` ; s'il affiche aussi les 3 chiffres, c'est côté mobile
+(non vérifiable ici). Retirer ces champs = risque mobile → à coordonner, pas fait.
+
+**Couche 2 (log 033)** : non écrite — couplée au contrat order_id non tranché (loguer un order_id qui n'existe
+pas encore n'a pas de sens). Je la livrerai avec le contrat final.
+
+**Autres surfaces d'énumération repérées (listées, NON corrigées ce tour)** :
+- `buyer-score/route.ts:31-34` (clients par phone_normalized) + `:48-51` (orders par client_id) = LE trou.
+- `confirm-order.ts:83-89` et `:177-183` : lecture cross-vendeur de tous les orders en attente OTP (filtre
+  téléphone fait en JS après coup). **Gated par la signature HMAC Meta** du webhook → non exploitable par un
+  vendeur, risque moindre, mais surface transversale réelle à durcir plus tard.
+
+**Décision demandée (Claudy/Lamine) avant que je code** : comment scorer sans `order_id` à la création ?
+Options, sans que j'en invente une : **(a)** le mobile crée d'abord un **brouillon de commande** (order/client
+draft) puis score par `order_id` — nécessite un changement mobile coordonné ; **(b)** clé = `client_id`
+possédé par le vendeur (ne couvre pas un tout nouveau numéro) ; **(c)** garder le numéro en entrée mais tuer
+l'énumération autrement (canary + rate-limit + log — la commande l'a écarté « on supprime l'input », mais le
+cas création le remet sur la table). Dès (a/b/c) tranché **et** le changement mobile planifié, je livre web+033.
+
+---
+
 ## [ADVERSAIRE-032-W8] — FAIT (agent frais, NON interrompu) — 11 août 2026
 
 **Sous-agent adversaire indépendant relancé — cette fois il a tourné jusqu'au bout (pas d'interruption).**
