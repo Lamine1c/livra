@@ -19,6 +19,35 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [PURGE-GPS-W7] — FAIT (complément de W6, même branche) — 11 août 2026
+
+**Livré** sur `feat/agregat-livraison` (par-dessus W6, tag `backup/pre-purge-gps-w7`), commit `2a7fb9b`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4).
+- `supabase/migrations/032_purge_delivery_positions.sql` : fonction SQL atomique
+  `purge_expired_positions(p_dry)` — supprime `delivery_positions` des livraisons clôturées
+  (`deliveries.status IN ('completed','cancelled')`) dont la clôture date de **> 30 j**.
+- `src/app/api/cron/purge-positions/route.ts` (auth `Bearer CRON_SECRET`, `?dry=1`) + `vercel.json` **3h30**.
+
+**Colonne de clôture retenue** : `deliveries.completed_at` (schéma `006_deliveries_tracking.sql:15`),
+posée par TOUS les chemins : `driver/complete-delivery:100`, `driver/cancel-delivery:76`,
+`orders/[id]/cancel-delivery:63`. Jamais NULL sur une course clôturée → pas d'approximation (garde
+`completed_at IS NOT NULL`). Pas de STOP SI.
+
+**Ce que le dry-run purgerait aujourd'hui** : non exécutable depuis le repo (règle 4). Projection : les
+positions des courses de **test clôturées avant W6** (> 30 j) — à confirmer au gate via
+`GET /api/cron/purge-positions?dry=1`. Backfill d'insights probablement inutile (données de test).
+
+**Verdict adverse (fait par moi — sous-agent adversaire interrompu 2×)** : (1) clôture concurrente
+impossible à toucher (`completed_at < now-30j` exclut toute course fraîche) ; (2) `DELETE … USING` ne
+touche QUE `delivery_positions` (la cascade FK est dans l'autre sens, table feuille, aucun trigger) ;
+(3) idempotent ; (4) `?dry=1` = COUNT seul, aucun verrou ; (5) legacy `completed_at NULL` protégé.
+Seul nit : `deliveries.completed_at` non indexé → seq-scan possible à gros volume (OK V1 ; index non
+ajouté car périmètre = `delivery_positions` uniquement).
+
+**Ce dont j'ai besoin** : au gate, Lamine applique 032 + lance le dry-run. Rien d'autre ne bloque.
+
+---
+
 ## [AGREGAT-LIVRAISON-W6] — FAIT (décision B, les 3 modes) — 10 août 2026
 
 **Livré** sur `feat/agregat-livraison` (branche depuis `main`, tag `backup/pre-agregat-w6-20260810`),
