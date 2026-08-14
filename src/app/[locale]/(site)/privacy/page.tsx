@@ -118,6 +118,7 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Signaux observés par le Service (confirmations OTP, livraisons réussies/refusées, comportements suspects)"}</li>
               <li style={listItem}>{"Logs d'authentification et logs techniques"}</li>
               <li style={listItem}>{"Données de diagnostic en cas d'erreur de l'application (via Sentry, hébergement Union Européenne) : caractéristiques techniques de l'appareil (marque, modèle, système, mémoire, batterie, permissions), identifiant d'installation pseudonyme et pays — sans coordonnées GPS et sans adresse IP conservée dans nos rapports d'erreur"}</li>
+              <li style={listItem}>{"Événements techniques d'usage du Service (par exemple : création d'une expédition, vérification d'un code de livraison), associés à l'identifiant interne du Vendeur"}</li>
             </ul>
             <p style={bodyText}>{"2.7. Données d'acceptation contractuelle :"}</p>
             <ul style={subList}>
@@ -127,7 +128,7 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Versions des documents acceptés"}</li>
             </ul>
             <p style={bodyText}>{"Ces données sont conservées 5 ans après résiliation du compte à titre de preuve légale opposable au Vendeur."}</p>
-            <p style={bodyText}>{"2.8. Stockage local — L'application et le site conservent sur l'appareil de l'utilisateur les éléments techniques strictement nécessaires au fonctionnement (session d'authentification, préférences). Aucun traceur publicitaire tiers n'est utilisé."}</p>
+            <p style={bodyText}>{"2.8. Stockage local — L'application et le site conservent sur l'appareil de l'utilisateur les éléments techniques strictement nécessaires au fonctionnement (session d'authentification, préférences). LIVRA n'affiche aucune publicité, ne pratique aucun ciblage publicitaire et n'utilise aucun traceur publicitaire tiers. Une mesure d'audience technique, décrite à l'article 4, permet de comprendre l'usage du Service et d'en améliorer la fiabilité."}</p>
           </div>
 
           <hr style={hr} />
@@ -162,6 +163,8 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Chargily (paiement des abonnements Vendeur) — données de facturation"}</li>
               <li style={listItem}>{"Sentry (diagnostic technique, hébergement Union Européenne) — rapports d'erreur décrits à l'article 2.6"}</li>
               <li style={listItem}>{"Resend (envoi d'emails transactionnels) — adresses email transmises exclusivement pour l'envoi"}</li>
+              <li style={listItem}>{"Expo (service de notifications push, hébergement aux États-Unis) — jeton de notification et identifiant technique de l'appareil, transmis pour l'acheminement des notifications"}</li>
+              <li style={listItem}>{"PostHog (mesure d'audience technique, requêtes acheminées via golivra.app) — événements d'usage du Service associés à l'identifiant interne du Vendeur (par exemple : création d'une expédition, vérification d'un code de livraison). Aucune donnée d'identification d'Acheteur n'y est transmise."}</li>
             </ul>
             <p style={bodyText}>{"LIVRA ne vend, ne loue ni ne partage les données personnelles avec des tiers à des fins commerciales ou publicitaires."}</p>
           </div>
