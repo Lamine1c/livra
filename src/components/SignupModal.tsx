@@ -669,8 +669,8 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   et la{" "}
                   <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "2px" }}>
                     Politique de confidentialité
-                  </a>{" "}
-                  de LIVRA.
+                  </a>
+                  {", et que les signaux de mes commandes (livraisons réussies, refus) alimentent le score anti-fraude partagé entre vendeurs LIVRA."}
                 </span>
               </label>
 

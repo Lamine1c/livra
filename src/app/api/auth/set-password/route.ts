@@ -21,7 +21,7 @@ const bodySchema = z.object({
 });
 
 const TERMS_VERSION = "v2-2026-06-17";
-const PRIVACY_VERSION = "v2-2026-06-17";
+const PRIVACY_VERSION = "v3-2026-08-14";
 
 export async function POST(req: NextRequest) {
   console.log("[set-password] Received request");
