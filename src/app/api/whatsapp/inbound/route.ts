@@ -35,7 +35,7 @@ async function releaseInboundWamid(wamid: string) {
 // Webhook WhatsApp ENTRANT (réponses des clients) — WhatsApp Cloud API, Meta direct.
 // Transport 100 % Meta : l'authenticité repose sur la signature HMAC
 // X-Hub-Signature-256 (SHA256 du corps BRUT avec META_APP_SECRET).
-// Retiré : bypass Twilio sandbox (dette signalée à l'audit du 8 juil) + piste
+// Retiré : bypass de test sandbox (dette signalée à l'audit du 8 juil) + piste
 // 360dialog spéculative (Meta direct est le provider retenu).
 
 // ─── GET : handshake de vérification du webhook ───────────────

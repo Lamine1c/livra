@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   // 7. Envoyer l'OTP via WhatsApp
   const result = await sendOtpWhatsApp(normalizedPhone, prenom.trim(), otp);
 
-  // 8. Twilio / Meta en erreur → supprimer le record et retourner 500
+  // 8. Envoi WhatsApp (Meta) en erreur → supprimer le record et retourner 500
   if (!result.success) {
     await supabase
       .from("driver_otps")

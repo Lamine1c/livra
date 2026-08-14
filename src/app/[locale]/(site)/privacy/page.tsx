@@ -118,7 +118,6 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Signaux observés par le Service (confirmations OTP, livraisons réussies/refusées, comportements suspects)"}</li>
               <li style={listItem}>{"Logs d'authentification et logs techniques"}</li>
               <li style={listItem}>{"Données de diagnostic en cas d'erreur de l'application (via Sentry, hébergement Union Européenne) : caractéristiques techniques de l'appareil (marque, modèle, système, mémoire, batterie, permissions), identifiant d'installation pseudonyme et pays — sans coordonnées GPS et sans adresse IP conservée dans nos rapports d'erreur"}</li>
-              <li style={listItem}>{"Événements techniques d'usage du Service (par exemple : création d'une expédition, vérification d'un code de livraison), associés à l'identifiant interne du Vendeur"}</li>
             </ul>
             <p style={bodyText}>{"2.7. Données d'acceptation contractuelle :"}</p>
             <ul style={subList}>
@@ -164,7 +163,6 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Sentry (diagnostic technique, hébergement Union Européenne) — rapports d'erreur décrits à l'article 2.6"}</li>
               <li style={listItem}>{"Resend (envoi d'emails transactionnels) — adresses email transmises exclusivement pour l'envoi"}</li>
               <li style={listItem}>{"Expo (service de notifications push, hébergement aux États-Unis) — jeton de notification et identifiant technique de l'appareil, transmis pour l'acheminement des notifications"}</li>
-              <li style={listItem}>{"PostHog (mesure d'audience technique, requêtes acheminées via golivra.app) — événements d'usage du Service associés à l'identifiant interne du Vendeur (par exemple : création d'une expédition, vérification d'un code de livraison). Aucune donnée d'identification d'Acheteur n'y est transmise."}</li>
               <li style={listItem}>{"Mapbox (fonds de carte et affichage cartographique, hébergement aux États-Unis) — coordonnées de localisation affichées lors du suivi d'une livraison en temps réel"}</li>
             </ul>
             <p style={bodyText}>{"LIVRA ne vend, ne loue ni ne partage les données personnelles avec des tiers à des fins commerciales ou publicitaires."}</p>

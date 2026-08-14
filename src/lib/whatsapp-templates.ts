@@ -308,8 +308,8 @@ Contactez {{1}} pour reprogrammer votre livraison.`,
 } satisfies Record<string, WhatsAppTemplate>;
 
 // ─── BUILD META CLOUD API PAYLOAD ─────────────────────────────
-// Construit le payload "template" Meta Cloud API (Twilio Content API + Meta +
-// 360dialog partagent ce format). `variables` = valeurs dans l'ordre {{1}}…{{n}}.
+// Construit le payload "template" Meta Cloud API (Meta + 360dialog partagent ce
+// format). `variables` = valeurs dans l'ordre {{1}}…{{n}}.
 export function buildTemplatePayload(
   to: string,
   template: WhatsAppTemplate,
@@ -345,7 +345,7 @@ export function buildTemplatePayload(
   };
 }
 
-// ─── RENDU TEXTE (Twilio sandbox / Meta text fallback) ────────
+// ─── RENDU TEXTE (fallback texte Meta) ───────────────────────
 // Le sender runtime (whatsapp.ts → sendWhatsAppNotification) envoie une string :
 // on interpole {{1}}…{{n}} dans le corps. Les boutons quick-reply ne s'appliquent
 // qu'au format template Meta (cf. buildTemplatePayload), pas au texte libre.
@@ -360,7 +360,7 @@ export function renderTemplateText(
   return body;
 }
 
-// ─── INTERNAL — Vendor notifs (Twilio sandbox, pas Meta) ──────
+// ─── INTERNAL — Vendor notifs (texte libre, pas template Meta) ──────
 // Notifications côté VENDEUR (pas d'équivalent template acheteur). Conservé V1 :
 // texte libre FR envoyé via sendWhatsAppNotification depuis le cron yalidine-poll.
 export function vendorMessage(
