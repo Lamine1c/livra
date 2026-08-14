@@ -19,6 +19,26 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [POLITIQUE-V3-W13] — FAIT ✅ POLITIQUE PUBLIABLE — 14 août 2026
+
+**➡️ politique v3-2026-08-14 publiable — 11 sous-traitants déclarés, 0 affirmation invérifiée.**
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w13`), commit `b55d9b6`. `tsc` + `npm run build` **verts**.
+Ajout de la seule ligne restante au §4 : « Mapbox (fonds de carte et affichage cartographique, hébergement aux
+États-Unis) — coordonnées de localisation affichées lors du suivi d'une livraison en temps réel » (`privacy/page.tsx:168`).
+Rien d'autre touché.
+
+**Relecture finale (moi-même, sans sous-agent)** : `grep -c "Mapbox|Expo|PostHog|Twilio"` = **3** → Mapbox 1 · Expo 1 ·
+PostHog 1 · **Twilio 0** ✅. §4 = **10 puces (`:159-168`) couvrant les 11 services** de l'inventaire W12 — Yalidine
+**et** Ecotrack partagent une puce (`:162`, texte dicté en W11, non modifié). Donc **les 11 destinations réseau sont
+toutes déclarées, aucune absente** → pas de STOP SI. Les 3 passes adversaires (W11+W12+relecture W13) sont soldées.
+
+**Récapitulatif publication** : les 10 affirmations vérifiées vraies (purge leads 90 j, purge GPS 30 j, OTP haché
+10 min, IP scrubbée Sentry, bcrypt, webhooks HMAC, PostHog sans donnée acheteur, Twilio/MFA retirés) + §4 exhaustif.
+**Publication + deploy = Lamine** (interdits règle 4). La branche `feat/politique-v3` porte W11+W12+W13, prête à merger.
+
+---
+
 ## [POLITIQUE-V3-W12] — 3 corrections FAITES mais 🔴 ENCORE NON PUBLIABLE (STOP SI : Mapbox) — 14 août 2026
 
 **Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w12`), commit `b431272`. `tsc` + `npm run build` **verts**.
