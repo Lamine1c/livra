@@ -19,7 +19,253 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [ÉTAT-MERGE] — cc EN PAUSE, `git merge` de Lamine EN COURS — 11 août 2026
+> ⚠️ Note hors-conflit (zone commune) — Lamine peut la supprimer en résolvant. cc n'a **rien** commité ce tour.
+
+- **Aucune commande à exécuter** : le `tasks/COMMANDE.md` actuel (version committée de `release/aout`) ne
+  contient que **W2 + W3**, déjà FAIT/rapportés → règle 2, je ne réexécute pas. La dernière commande vue au
+  tour précédent (W10) a disparu du working tree suite au checkout `release/aout` de Lamine — **COMMANDE.md est stale**.
+- **Repo en conflit de merge sur `release/aout`** (`feat/agregat-livraison` → W6/W7 : 031, 032,
+  `delivery-insight.ts`, `purge-positions` stagés **proprement**). **`git merge` = interdit absolu (règle 4)** →
+  je n'ai NI poursuivi, NI `--abort`, NI résolu les conflits, NI écrasé ce RAPPORT.md en conflit.
+- **Résolution `vercel.json`** (2 crons ajoutés au même index) : garder **les 4** →
+  `yalidine-poll` (0 9), `billing-reminders` (0 8), `purge-leads` (0 3), `purge-positions` (30 3).
+- **Résolution `tasks/RAPPORT.md`** : prendre le côté **`feat/agregat-livraison`** (superset : W9→W1) ;
+  le côté HEAD (`release/aout` : W5/W4…) y est déjà contenu.
+- **Reste à merger APRÈS** : `feat/lot12-observation` (W10 : observation buyer-score + migration **033** +
+  `src/lib/buyer-score-audit.ts`) — **pas inclus** dans ce merge. Puis `.env.example` (2 env vars buyer-score) est
+  une modif non stagée présente dans le working tree.
+- Branches de travail + tags backup **intacts** : `audit/leads-meta`, `feat/retention-leads-90j`,
+  `feat/agregat-livraison`, `feat/lot12-observation`.
+
+## [AGREGAT-LIVRAISON-W5] — BLOQUÉ (STOP SI : chemins de clôture multiples) — 10 août 2026
+
+**Rien codé, aucune branche/tag créés (arrêt avant modif, comme W3).** La commande ordonne le STOP SI
+« plusieurs chemins de clôture existent ET le choix du point d'accroche change le sens des données →
+rapporte la carte AVANT de coder ». C'est le cas : **3 systèmes de clôture distincts**, et selon
+l'accroche `delivery_insights` veut dire deux choses différentes (table gardée à vie → je ne devine pas).
+
+**Carte des clôtures (vérifiée au grep + lecture, file:line)** :
+- **Système 1 — moto_perso** (a une ligne `deliveries` + GPS `delivery_positions`) :
+  · livrée → `complete-delivery/route.ts:91-107` (deliveries=completed, orders=delivered) ;
+  · échec/retour → `cancel-delivery/route.ts:71-93` (+ motif dans `delivery_refusals` via `reason`, wilaya `:119`).
+  Les DEUX ont déjà un **verrou d'idempotence naturel** (early-return si status déjà completed/cancelled,
+  `complete:60-89` / `cancel:63-69`) → écrire l'insight après le flip = une seule ligne par livraison.
+- **Système 2 — transporteur Yalidine/Ecotrack** : clôture par le **cron** `yalidine-poll/route.ts:139-145`
+  (orders→delivered/returned). **Aucune ligne `deliveries`, aucun GPS** → distance/geohash impossibles.
+- **Système 3 — refus client WhatsApp** : `confirm-order.ts:308-314` (orders→cancelled). Pas de livraison physique.
+
+**Le fork sémantique** : la table est **GPS-centrée** (geohash, `distance_m` via `delivery_positions`,
+`duree_s`) et W6 (le but affiché) purgera `delivery_positions` — or **seul le Système 1 en possède**.
+→ **Ma recommandation : `delivery_insights` = clôtures moto_perso uniquement** (accroche sur
+complete-delivery + cancel-delivery). Les Systèmes 2/3 n'ont ni GPS ni `deliveries` à purger : leur y
+mettre une ligne (distance NULL, geohash NULL) diluerait la table et ne sert aucune rétention.
+
+**Décision demandée (1 seule)** : `delivery_insights` couvre-t-il **(A) moto_perso seul** *(ma reco,
+je livre immédiatement : migration 031 + accroche sur les 2 routes + idempotence par le verrou existant)*,
+**ou (B) aussi** les clôtures transporteur (cron) et refus WhatsApp *(alors statut_final sans GPS,
+distance/geohash NULL pour eux — dis-le et je code B)* ?
+Points que je traiterai au codage une fois (A/B) tranché : `delivered_on` en **UTC+1 (DZ)** documenté ;
+**geohash dégradé à ~20 km en wilaya peu peuplée** si l'adversaire juge 5 chars ré-identifiants.
+
+---
+
+## [RETENTION-LEADS-W4] — FAIT (reprise de W3, 3 arbitrages appliqués) — 10 août 2026
+
+**Livré** sur `feat/retention-leads-90j` (tag `backup/pre-retention-w4-20260810`), commit `2b53d3a`.
+`tsc --noEmit` + `npm run build` **verts**. Aucune migration appliquée, aucune prod appelée (règle 4).
+1. `supabase/migrations/030_lead_insights.sql` : table **`lead_insights`** (anonyme, `outcome` ∈
+   converted/not_converted/never_created, wilaya/page_id/form_id/ad_id nullable) + RLS service_role +
+   fonction SQL **`purge_expired_leads(p_dry)`**. Choix clé : la mutation est **une transaction SQL
+   atomique** (verrous `FOR UPDATE`, `now()` DB) car `lead_insights` n'a **aucune clé de dédup** →
+   l'exactly-once est impossible en JS. Passe **unique par lead**, log=pivot, ordre FK imposé
+   insight→delete log→delete order→delete client (si aucun autre order, re-vérifié dans le WHERE).
+2. `src/app/api/cron/purge-leads/route.ts` : auth `Bearer CRON_SECRET`, `?dry=1` délègue le flag à la
+   fonction (logique unique, zéro duplication). 3. `vercel.json` : cron `0 3 * * *`.
+
+**Ce que le dry-run purgerait aujourd'hui** : **0** (projection). Le webhook est posé récemment, aucun
+lead n'a 90 j → toutes les branches renvoient des compteurs nuls. À **confirmer au gate** par Lamine
+(`GET /api/cron/purge-leads?dry=1` avec le header CRON_SECRET) — non exécutable depuis ce repo (règle 4).
+
+**Verdict adversaire** (sous-agent, il attaquait) : race/FK/**idempotence**/fuseau = **SÛRS**.
+- **Idempotence : SÛRE.** Fonction = 1 transaction plpgsql sans `EXCEPTION` → tout-ou-rien ; relancée
+  le même jour, les logs déjà supprimés ne sont plus trouvés → **zéro doublon d'insight**.
+- **Risque doublon order webhook (évalué, NON corrigé — hors périmètre, comme demandé)** : si Meta
+  ré-émet un `leadgen_id` d'un lead **not_converted** déjà purgé, l'idempotence webhook
+  (`route.ts:52-59`) ne trouve plus le log ET `orders.meta_lead_id` est libéré → un 2e order peut
+  naître. **Probabilité faible** (Meta ne ré-émet pas un lead de +90 j). Pour un lead **converti**,
+  l'order est gardé → `meta_lead_id` UNIQUE bloque le doublon.
+- Deux nits non bloquants signalés : (a) `?dry=1` pose quand même les `FOR UPDATE` (locks brefs,
+  crons à heures disjointes → OK) ; (b) `meta_lead_logs` n'a pas de `UNIQUE(lead_id)` (défaut
+  pré-existant de 013/webhook, hors périmètre) → au pire 2 insights pour un même lead en cas de
+  double-log, jamais un crash.
+
+**Ce dont j'ai besoin (décision/gate Lamine)** : appliquer la migration 030 (SQL Editor), lancer le
+dry-run pour confirmer le 0, puis décider d'activer le cron réel. Rien d'autre ne bloque.
+## [LOT12-SCORE-W9] — BLOQUÉ (2 STOP SI : appelant mobile + pas d'order_id à la création) — 11 août 2026
+
+**Rien codé, aucune branche/tag créés (arrêt avant modif). Le trou reste ouvert — à traiter, mais le
+design « input = order_id » ne tient pas tel quel.** Grep exhaustif fait (sous-agent + moi).
+
+**STOP SI n°1 — un appelant mobile EXISTE** (règle : « ne casse pas le mobile en silence ») :
+- Aucun appelant web (grep `buyer-score` sur `src/**` = 0 hors la route elle-même).
+- Mobile confirmé : `CC_RAPPORT.md:691-694` pilote un libellé par `buyerScore.level` ; composant
+  `BuyerScoreBadge` (jauge 3 segments) `CC_RAPPORT.md:707`. Changer `whatsapp→order_id` **casse le mobile** en prod.
+
+**STOP SI n°2 — pas d'`order_id` au moment du check** (le cas que la commande dit de rapporter) :
+- Le badge score vit sur l'**écran 5 = création de commande** (`CC_RAPPORT.md:682-694`, `newOrder`, formulaire).
+  Le vendeur tape le numéro de l'acheteur et voit le score **pendant la saisie, avant que la commande/le
+  client existent** → **aucun `order_id` (ni `client_id`) disponible**. Le socle « order_id du vendeur »
+  est donc incompatible avec l'usage n°1. Je n'invente pas d'exception (la commande l'interdit).
+
+**Couche 1 (verdict seul)** : l'UI chiffrée `delivered/declined/total` n'existe **pas dans ce repo** (front
+vendeur = mobile). Le mobile lit au moins `.level` ; s'il affiche aussi les 3 chiffres, c'est côté mobile
+(non vérifiable ici). Retirer ces champs = risque mobile → à coordonner, pas fait.
+
+**Couche 2 (log 033)** : non écrite — couplée au contrat order_id non tranché (loguer un order_id qui n'existe
+pas encore n'a pas de sens). Je la livrerai avec le contrat final.
+
+**Autres surfaces d'énumération repérées (listées, NON corrigées ce tour)** :
+- `buyer-score/route.ts:31-34` (clients par phone_normalized) + `:48-51` (orders par client_id) = LE trou.
+- `confirm-order.ts:83-89` et `:177-183` : lecture cross-vendeur de tous les orders en attente OTP (filtre
+  téléphone fait en JS après coup). **Gated par la signature HMAC Meta** du webhook → non exploitable par un
+  vendeur, risque moindre, mais surface transversale réelle à durcir plus tard.
+
+**Décision demandée (Claudy/Lamine) avant que je code** : comment scorer sans `order_id` à la création ?
+Options, sans que j'en invente une : **(a)** le mobile crée d'abord un **brouillon de commande** (order/client
+draft) puis score par `order_id` — nécessite un changement mobile coordonné ; **(b)** clé = `client_id`
+possédé par le vendeur (ne couvre pas un tout nouveau numéro) ; **(c)** garder le numéro en entrée mais tuer
+l'énumération autrement (canary + rate-limit + log — la commande l'a écarté « on supprime l'input », mais le
+cas création le remet sur la table). Dès (a/b/c) tranché **et** le changement mobile planifié, je livre web+033.
+
+---
+
+## [ADVERSAIRE-032-W8] — FAIT (agent frais, NON interrompu) — 11 août 2026
+
+**Sous-agent adversaire indépendant relancé — cette fois il a tourné jusqu'au bout (pas d'interruption).**
+Aucune modification de code (aucun défaut certain trouvé). Branche `feat/agregat-livraison`, rien commité en code.
+
+**Attaques tentées → résultat** (chacune vérifiée par l'agent, file:line) :
+1. WHERE purge protège courses actives/récentes (`status IN(...) AND completed_at IS NOT NULL AND < now-30j`) → **TENU** (032:33-35).
+2. Chemin de clôture posant un statut final SANS completed_at (re-grep) → **TENU** : les 3 chemins posent tous completed_at (complete-delivery:100, driver/cancel-delivery:76, orders/[id]/cancel-delivery:63). Aucun 4e chemin.
+3. Réouverture completed/cancelled → active → **TENU** : `start-delivery:63-68` n'autorise que active→active ; statut final immuable.
+4. Autres statuts finaux ? → **TENU** : CHECK 006:17/008:20 = {active, completed, cancelled} exhaustif.
+5. Side-effects hors delivery_positions (trigger/cascade/Realtime/RLS) → **TENU** : cascade FK dans l'autre sens, aucun trigger, DELETE Realtime isolé par RLS service_role (020).
+6. `?dry=1` mute quelque chose → **TENU** : branche p_dry = `SELECT COUNT` seul.
+7. Idempotence + race clôture-pendant-purge → **TENU** : cutoff figé, 30j d'écart rend la collision impossible.
+8. **Couple 031+032 — perte d'insight** → **DOUTE (non bloquant)** : si `recordMotoInsight` (after(), best-effort, pas de retry) échoue à la clôture, l'insight manque ET les positions sont purgées 30j après → distance perdue. **Ce n'est PAS un bug de 032** ; c'est une limite de résilience de **031**. Corriger = retry/fallback sur 031 = refonte → STOP SI respecté, je ne touche pas.
+9. Ordre temporel insight-avant-purge → **TENU** : insight à T0, purge à T0+30j.
+10. `recordMotoInsight` lit les positions à la clôture (pas 30j après) → **TENU** : la purge ne prive jamais l'insight de sa distance.
+
+**LIGNE FINALE : la 032 est SÛRE à appliquer en production.** Seule dette de vérification / surveillance
+(pas un correctif ce tour) : monitorer les logs `[delivery-insight] insert failed` ; si taux > ~0.1 %,
+envisager (lot ultérieur) un retry/fallback sur 031 + backfill. **À trancher par Claudy** — pas fait ici (STOP SI refonte 031).
+
+---
+
+## [PURGE-GPS-W7] — FAIT (complément de W6, même branche) — 11 août 2026
+
+**Livré** sur `feat/agregat-livraison` (par-dessus W6, tag `backup/pre-purge-gps-w7`), commit `2a7fb9b`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4).
+- `supabase/migrations/032_purge_delivery_positions.sql` : fonction SQL atomique
+  `purge_expired_positions(p_dry)` — supprime `delivery_positions` des livraisons clôturées
+  (`deliveries.status IN ('completed','cancelled')`) dont la clôture date de **> 30 j**.
+- `src/app/api/cron/purge-positions/route.ts` (auth `Bearer CRON_SECRET`, `?dry=1`) + `vercel.json` **3h30**.
+
+**Colonne de clôture retenue** : `deliveries.completed_at` (schéma `006_deliveries_tracking.sql:15`),
+posée par TOUS les chemins : `driver/complete-delivery:100`, `driver/cancel-delivery:76`,
+`orders/[id]/cancel-delivery:63`. Jamais NULL sur une course clôturée → pas d'approximation (garde
+`completed_at IS NOT NULL`). Pas de STOP SI.
+
+**Ce que le dry-run purgerait aujourd'hui** : non exécutable depuis le repo (règle 4). Projection : les
+positions des courses de **test clôturées avant W6** (> 30 j) — à confirmer au gate via
+`GET /api/cron/purge-positions?dry=1`. Backfill d'insights probablement inutile (données de test).
+
+**Verdict adverse (fait par moi — sous-agent adversaire interrompu 2×)** : (1) clôture concurrente
+impossible à toucher (`completed_at < now-30j` exclut toute course fraîche) ; (2) `DELETE … USING` ne
+touche QUE `delivery_positions` (la cascade FK est dans l'autre sens, table feuille, aucun trigger) ;
+(3) idempotent ; (4) `?dry=1` = COUNT seul, aucun verrou ; (5) legacy `completed_at NULL` protégé.
+Seul nit : `deliveries.completed_at` non indexé → seq-scan possible à gros volume (OK V1 ; index non
+ajouté car périmètre = `delivery_positions` uniquement).
+
+**Ce dont j'ai besoin** : au gate, Lamine applique 032 + lance le dry-run. Rien d'autre ne bloque.
+
+---
+
+## [AGREGAT-LIVRAISON-W6] — FAIT (décision B, les 3 modes) — 10 août 2026
+
+**Livré** sur `feat/agregat-livraison` (branche depuis `main`, tag `backup/pre-agregat-w6-20260810`),
+commit `1bcf881`. `tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4).
+- `supabase/migrations/031_delivery_insights.sql` : table anonyme `delivery_insights` (`mode` ∈
+  moto_perso/transporteur/refus_client, wilaya, commune, geohash, distance_m, duree_totale_s,
+  duree_course_s, statut_final, motif_echec, delivered_on) — **aucun** id/order/client/driver. RLS service_role.
+- `src/lib/delivery-insight.ts` : helper best-effort (ne throw jamais) — geohash, distance GPS (haversine),
+  durées, `delivered_on` en **UTC+1 DZ**.
+- **4 accroches** : `complete-delivery` (moto delivered, + chemin repair), `cancel-delivery` (moto returned,
+  motif=reason), `yalidine-poll:153+` (transporteur, **uniquement transition→delivered/returned**),
+  `confirm-order` Branche B (refus_client, garde `.neq("status","cancelled").select()`).
+
+**Idempotence prouvée par mode** : moto = early-return status completed/cancelled ; transporteur = poll
+ne fetch que `status='shipped'` + garde de rang → sort du scope après transition ; refus = garde `.neq`
+(car `findPendingForPhone` ne filtre pas le status). Le refus utilise `after()` → zéro latence webhook.
+
+**Choix geohash = 4** (moi + adversaire) : 4 (~760 km²) est **plus grossier qu'une commune rurale DZ
+(10-50 km², déjà stockée)** → n'ajoute aucune précision sub-commune ; 5 approcherait la maille commune,
+3 serait plus grossier qu'une wilaya (inutile). **Verdict adversaire** : race/fuseau/NULL-GPS/refus = SÛRS.
+Résidu signalé : `distance_m`+`duree_course_s`+commune+date+motif rare peuvent fingerprinter une course —
+**borné** car table service_role uniquement (pas d'expo publique) ; à bucketiser si dashboard public un jour.
+Double-insert moto en race **parallèle** (double-tap) non dédup-able (anonymat interdit `delivery_id`) →
+le re-pass **séquentiel** (cas demandé) est couvert ; parallèle = risque résiduel documenté.
+
+**Ce dont j'ai besoin** : rien pour livrer ; au gate, Lamine applique 031 (SQL Editor). W7 (purge
+`delivery_positions`) reste une commande future — **aucune purge codée ici** (respecté).
+
+---
+
+## [AGREGAT-LIVRAISON-W5] — BLOQUÉ→RÉSOLU par W6 — 10 août 2026
+> Carte des 3 chemins de clôture livrée (commit `028c0db` sur `feat/retention-leads-90j`). Décision B
+> prise par Claudy → traitée en W6 ci-dessus.
+
+## [RETENTION-LEADS-W4] — FAIT — 10 août 2026
+> Purge leads 90j + `lead_insights` : migration 030 + `/api/cron/purge-leads` + cron `vercel.json`,
+> commit `2b53d3a` sur `feat/retention-leads-90j` (rapport détaillé `143f077` sur cette branche).
+> `tsc`+build verts, dry-run projeté 0, non appliquée (gate Lamine).
+## [LOT12-OBSERVATION-W10] — FAIT (option c, phase 1 = observer) — 11 août 2026
+
+**Livré** sur `feat/lot12-observation` (depuis `main`, tag `backup/pre-lot12-obs-w10`), commit `a3e9364`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4). **Contrat API inchangé → zéro
+changement mobile** (résout le blocage W9). Aucune sanction (c'est la phase 2).
+- `033_buyer_score_audit.sql` : `buyer_score_lookups` (id, user_id, **phone_hash**, level, created_at ;
+  index (user_id,created_at)) + `buyer_score_canaries` (phone_normalized PK, note, created_at ; **vide**,
+  Lamine sème au gate). RLS service_role.
+- `src/lib/buyer-score-audit.ts` + accroche `after()` dans `buyer-score/route.ts` (2 sorties) : log best-effort,
+  canari→`Sentry` niveau error **silencieux** (réponse `nouveau` identique, détection hors chemin critique),
+  alerte volume `BUYER_SCORE_ALERT_THRESHOLD` (défaut 150/24 h glissantes), une par vendeur/jour (fingerprint).
+- Env : `BUYER_SCORE_HASH_SALT` (secret HMAC, `.env.example`, jamais commité) + `BUYER_SCORE_ALERT_THRESHOLD`.
+
+**STOP SI vérifiés** : latence → tout en `after()` (chemin critique intact) ; sel → env var (absent ⇒ log
+ignoré, jamais de numéro en clair) ; **buyer-score n'est appelé par aucun flux serveur auto** (grep : 0
+appelant hors la route ; appelant = mobile, contrat non touché). Autres surfaces d'énum (confirm-order,
+gated HMAC Meta) : déjà listées W9, non touchées.
+
+**Verdict adversaire — hash SOLIDE** : HMAC-SHA256 avec clé secrète env protège la petite plage DZ (~10⁸)
+contre le brute-force/pré-calcul **tant que le sel ne fuit pas** ; sans le sel, non ré-inversible. Pas de
+fuite de numéro en clair (hash avant tout insert, aucun `console.log` du numéro). RLS service_role → un
+vendeur ne peut pas lire les canaris. **2 durcissements appliqués suite à son passage** : gate sur insert OK
+(anti-spam Sentry si DB down) + dédup en fenêtre `[seuil..seuil+5)` / canari `[1..3]` (robuste à la
+concurrence, ne rate pas le franchissement). Reste : le hash n'est aussi bon que le secret du sel (gate Lamine).
+
+**Ma reco chiffrée phase 2** (à recalibrer sur la data réelle — c'est le but de l'observation) : d'après le
+code, un vendeur honnête score **1 numéro à la fois** au fil de ses commandes → ordre de grandeur **5-100/j**,
+actif **~150/j**. Hypothèses de départ à remplacer par le p99 observé sur 2-4 semaines : **alerte 150**,
+**dégradation douce > ~250/24 h**, **cap dur ~500/24 h** — jamais en dessous du p99 des vrais vendeurs.
+
+**Ce dont j'ai besoin (gate Lamine)** : appliquer 033, poser `BUYER_SCORE_HASH_SALT`, semer les canaris.
+
+---
+
 ## [RETENTION-LEADS-W3] — BLOQUÉ (STOP SI déclenché) — 10 août 2026
+> **Résolu par W4 ci-dessus** (les 3 arbitrages demandés ont été tranchés par Claudy).
 
 **Rien n'a été écrit ni commité.** Je me suis arrêté AVANT toute modif : deux STOP SI de la commande
 sont remplis (schéma FK rend la suppression risquée/ambiguë + une instruction contredit le code réel).
