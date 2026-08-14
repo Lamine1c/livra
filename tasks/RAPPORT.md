@@ -19,6 +19,35 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [CONSENTEMENT-LIVREUR-W17] — FAIT (design A) — 14 août 2026
+
+**Livré** sur `feat/consentement-livreur` (tag `backup/pre-consentement-livreur-w17`), commit `5b0a4b2`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4). Aucun STOP SI (résolution d'identité
+inchangée — juste une colonne lue en plus ; colonnes nullables — aucune acceptation rétroactive fabriquée).
+- `034_drivers_terms.sql` : `drivers` +`terms_accepted_at`/`terms_version`/`privacy_version` (nullables) ;
+  `driver_otps` +`terms_version`/`privacy_version` (le staging transporte, pas de `terms_accepted_at` ici). Pas d'IP/UA.
+- `register` : 2 champs **optionnels** `terms_version`/`privacy_version`, écrits dans l'upsert `driver_otps`.
+- `verify-otp` : recopie les 2 versions du staging dans `drivers` + `terms_accepted_at = now()` **serveur**.
+
+**Protection de l'acceptation existante à l'UPDATE** : je lis `drivers.terms_accepted_at` de l'existant (ajouté
+au SELECT d'identité, sans changer la logique whatsapp→device_id) et n'ajoute `consentFields` à l'UPDATE que si
+**`existingTermsAcceptedAt === null`**. Un ré-enrôlement (nouveau tel/re-scan) ne réécrit JAMAIS une 1re signature ;
+un livreur existant sans acceptation (NULL) qui accepte enfin, lui, l'obtient. À l'INSERT, consentFields est toujours posé.
+
+**Validation des versions** (elles viennent du client) : `string`, `≤ 32`, regex `^v\d+-\d{4}-\d{2}-\d{2}$`. Format
+invalide/mauvais type/trop long → **ignoré silencieusement** (pas de 400, pas de blocage). **Les DEUX** doivent être
+valides pour écrire une acceptation (pas de demi-preuve) ; sinon `consent = {}` → clés omises → l'upsert ne clobbe rien.
+Champs absents (app pas à jour) → comportement **strictement inchangé**. On stocke ce que **l'app a affiché**, pas une constante web.
+
+**Verdict adversaire** (sous-agent, 8 attaques) : **inscription non régressée, acceptation robuste — zéro cassage.**
+App ancienne OK (spread `{}` inerte, aucun `undefined` dans insert), versions bidon toutes rejetées, ré-enrôlement
+préserve la signature, `hasConsent` exige les 2 versions, colonnes nullables, écritures en service_role, aucun trigger.
+
+**Reste (Lamine)** : appliquer 034 (SQL Editor). Le texte + les liens côté **mobile** (l'app doit envoyer les 2
+versions) = tour mobile dédié, une fois la politique v3 en ligne. Rien d'autre ne bloque le serveur.
+
+---
+
 ## [CONSENTEMENT-LIVREUR-W16] — BLOQUÉ (STOP SI : le stockage force à toucher le tunnel OTP) — 14 août 2026
 
 **Prémisse de la commande cassée (vérifié à la main).** Rien codé (branche `feat/consentement-livreur` +
