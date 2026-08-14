@@ -19,7 +19,75 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [AGREGAT-LIVRAISON-W5] — BLOQUÉ (STOP SI : chemins de clôture multiples) — 10 août 2026
+
+**Rien codé, aucune branche/tag créés (arrêt avant modif, comme W3).** La commande ordonne le STOP SI
+« plusieurs chemins de clôture existent ET le choix du point d'accroche change le sens des données →
+rapporte la carte AVANT de coder ». C'est le cas : **3 systèmes de clôture distincts**, et selon
+l'accroche `delivery_insights` veut dire deux choses différentes (table gardée à vie → je ne devine pas).
+
+**Carte des clôtures (vérifiée au grep + lecture, file:line)** :
+- **Système 1 — moto_perso** (a une ligne `deliveries` + GPS `delivery_positions`) :
+  · livrée → `complete-delivery/route.ts:91-107` (deliveries=completed, orders=delivered) ;
+  · échec/retour → `cancel-delivery/route.ts:71-93` (+ motif dans `delivery_refusals` via `reason`, wilaya `:119`).
+  Les DEUX ont déjà un **verrou d'idempotence naturel** (early-return si status déjà completed/cancelled,
+  `complete:60-89` / `cancel:63-69`) → écrire l'insight après le flip = une seule ligne par livraison.
+- **Système 2 — transporteur Yalidine/Ecotrack** : clôture par le **cron** `yalidine-poll/route.ts:139-145`
+  (orders→delivered/returned). **Aucune ligne `deliveries`, aucun GPS** → distance/geohash impossibles.
+- **Système 3 — refus client WhatsApp** : `confirm-order.ts:308-314` (orders→cancelled). Pas de livraison physique.
+
+**Le fork sémantique** : la table est **GPS-centrée** (geohash, `distance_m` via `delivery_positions`,
+`duree_s`) et W6 (le but affiché) purgera `delivery_positions` — or **seul le Système 1 en possède**.
+→ **Ma recommandation : `delivery_insights` = clôtures moto_perso uniquement** (accroche sur
+complete-delivery + cancel-delivery). Les Systèmes 2/3 n'ont ni GPS ni `deliveries` à purger : leur y
+mettre une ligne (distance NULL, geohash NULL) diluerait la table et ne sert aucune rétention.
+
+**Décision demandée (1 seule)** : `delivery_insights` couvre-t-il **(A) moto_perso seul** *(ma reco,
+je livre immédiatement : migration 031 + accroche sur les 2 routes + idempotence par le verrou existant)*,
+**ou (B) aussi** les clôtures transporteur (cron) et refus WhatsApp *(alors statut_final sans GPS,
+distance/geohash NULL pour eux — dis-le et je code B)* ?
+Points que je traiterai au codage une fois (A/B) tranché : `delivered_on` en **UTC+1 (DZ)** documenté ;
+**geohash dégradé à ~20 km en wilaya peu peuplée** si l'adversaire juge 5 chars ré-identifiants.
+
+---
+
+## [RETENTION-LEADS-W4] — FAIT (reprise de W3, 3 arbitrages appliqués) — 10 août 2026
+
+**Livré** sur `feat/retention-leads-90j` (tag `backup/pre-retention-w4-20260810`), commit `2b53d3a`.
+`tsc --noEmit` + `npm run build` **verts**. Aucune migration appliquée, aucune prod appelée (règle 4).
+1. `supabase/migrations/030_lead_insights.sql` : table **`lead_insights`** (anonyme, `outcome` ∈
+   converted/not_converted/never_created, wilaya/page_id/form_id/ad_id nullable) + RLS service_role +
+   fonction SQL **`purge_expired_leads(p_dry)`**. Choix clé : la mutation est **une transaction SQL
+   atomique** (verrous `FOR UPDATE`, `now()` DB) car `lead_insights` n'a **aucune clé de dédup** →
+   l'exactly-once est impossible en JS. Passe **unique par lead**, log=pivot, ordre FK imposé
+   insight→delete log→delete order→delete client (si aucun autre order, re-vérifié dans le WHERE).
+2. `src/app/api/cron/purge-leads/route.ts` : auth `Bearer CRON_SECRET`, `?dry=1` délègue le flag à la
+   fonction (logique unique, zéro duplication). 3. `vercel.json` : cron `0 3 * * *`.
+
+**Ce que le dry-run purgerait aujourd'hui** : **0** (projection). Le webhook est posé récemment, aucun
+lead n'a 90 j → toutes les branches renvoient des compteurs nuls. À **confirmer au gate** par Lamine
+(`GET /api/cron/purge-leads?dry=1` avec le header CRON_SECRET) — non exécutable depuis ce repo (règle 4).
+
+**Verdict adversaire** (sous-agent, il attaquait) : race/FK/**idempotence**/fuseau = **SÛRS**.
+- **Idempotence : SÛRE.** Fonction = 1 transaction plpgsql sans `EXCEPTION` → tout-ou-rien ; relancée
+  le même jour, les logs déjà supprimés ne sont plus trouvés → **zéro doublon d'insight**.
+- **Risque doublon order webhook (évalué, NON corrigé — hors périmètre, comme demandé)** : si Meta
+  ré-émet un `leadgen_id` d'un lead **not_converted** déjà purgé, l'idempotence webhook
+  (`route.ts:52-59`) ne trouve plus le log ET `orders.meta_lead_id` est libéré → un 2e order peut
+  naître. **Probabilité faible** (Meta ne ré-émet pas un lead de +90 j). Pour un lead **converti**,
+  l'order est gardé → `meta_lead_id` UNIQUE bloque le doublon.
+- Deux nits non bloquants signalés : (a) `?dry=1` pose quand même les `FOR UPDATE` (locks brefs,
+  crons à heures disjointes → OK) ; (b) `meta_lead_logs` n'a pas de `UNIQUE(lead_id)` (défaut
+  pré-existant de 013/webhook, hors périmètre) → au pire 2 insights pour un même lead en cas de
+  double-log, jamais un crash.
+
+**Ce dont j'ai besoin (décision/gate Lamine)** : appliquer la migration 030 (SQL Editor), lancer le
+dry-run pour confirmer le 0, puis décider d'activer le cron réel. Rien d'autre ne bloque.
+
+---
+
 ## [RETENTION-LEADS-W3] — BLOQUÉ (STOP SI déclenché) — 10 août 2026
+> **Résolu par W4 ci-dessus** (les 3 arbitrages demandés ont été tranchés par Claudy).
 
 **Rien n'a été écrit ni commité.** Je me suis arrêté AVANT toute modif : deux STOP SI de la commande
 sont remplis (schéma FK rend la suppression risquée/ambiguë + une instruction contredit le code réel).
