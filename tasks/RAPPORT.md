@@ -19,6 +19,45 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [POLITIQUE-V3-W12] — 3 corrections FAITES mais 🔴 ENCORE NON PUBLIABLE (STOP SI : Mapbox) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w12`), commit `b431272`. `tsc` + `npm run build` **verts**.
+Les 3 corrections dictées sont appliquées **mot à mot** dans `privacy/page.tsx` : §4 +Expo +PostHog · §2.8 reformulée
+(publicité niée, analytics déclaré) · §2.6 +puce événements d'usage. Je n'ai PAS touché le texte au-delà du dicté.
+
+**🔴 2ᵉ passe adversaire — un sous-traitant de PLUS manque : STOP SI.** Comme en W11, la liste §4 n'est
+**toujours pas exhaustive** → publication **bloquée**. Je ne bricole pas le texte moi-même (ordre de la commande).
+
+**Liste EXHAUSTIVE des destinations réseau tierces (grep de tout `src/**` + `next.config.ts`)** :
+| # | Service | Preuve file:line | §4 |
+|---|---------|------------------|----|
+| 1 | Supabase | `lib/supabase/service.ts:4`, `admin.ts` | ✅ |
+| 2 | Vercel (hébergement) | déploiement | ✅ |
+| 3 | Meta WhatsApp Cloud API + Lead Ads | `lib/meta.ts:3` (`graph.facebook.com`) | ✅ |
+| 4 | Yalidine | `lib/yalidine.ts` (`api.yalidine.app`) | ✅ |
+| 5 | Ecotrack (DHD/Anderson) | `lib/ecotrack.ts:10-11` | ✅ |
+| 6 | Chargily | `lib/chargily.ts:7` (`pay.chargily.net`) | ✅ |
+| 7 | Resend | `api/contact/route.ts:61`, `billing-reminders:52` | ✅ |
+| 8 | Sentry | `sentry.server.config.ts:6` | ✅ |
+| 9 | Expo (push) | `lib/expo-push.ts:54` (`exp.host`) | ✅ (ajouté W12) |
+| 10 | PostHog | `lib/posthog-server.ts` + `next.config.ts:19-27` | ✅ (ajouté W12) |
+| 11 | **Mapbox** | `components/track/moto-perso-tracker.tsx:6,74` + `app/locate/locate-map.tsx:4,38` (`NEXT_PUBLIC_MAPBOX_TOKEN`) | **❌ MANQUANT** |
+
+Non-tiers écartés : `golivra.app` (soi), `schema.org`/`w3.org` (métadonnées/SVG), liens sociaux Insta/FB (JSON-LD, aucune
+donnée envoyée), URLs en commentaire (doc). **Twilio** = env vars présentes mais **aucun appel réseau** (mort) → pas sous-traitant.
+**360dialog** = `D360_WEBHOOK_SECRET` **entrant seulement** ; l'envoi WhatsApp part vers Meta (`graph.facebook.com`) → couvert par Meta.
+
+**PostHog — affirmation « aucune donnée d'Acheteur » : TENUE** (vérifié par moi + adversaire, propriété par propriété) :
+`verify-otp:75` `{order_id}` · `yalidine:72` `{order_id, tracking_number, total_amount}` · `ecotrack:83`
+`{order_id, carrier, tracking_number, total_amount}` — `distinctId = user.id` (**vendeur**), zéro nom/téléphone/adresse acheteur.
+
+**Ce dont j'ai besoin (Claudy, avant deploy)** : ajouter **Mapbox** au §4 (reçoit la zone GPS de livraison affichée
+sur `/track` et `/locate`). Reco de formulation (à valider, je ne l'écris pas) : « Mapbox (fonds de carte et
+géolocalisation, hébergement États-Unis) — coordonnées GPS affichées lors du suivi de livraison en temps réel ».
+Dès cette 4ᵉ ligne ajoutée, la politique est publiable (les 10 autres sont vérifiées vraies).
+
+---
+
 ## [POLITIQUE-V3-W11] — FAIT mais 🔴 NE PAS PUBLIER (STOP SI adversaire) — 14 août 2026
 
 **Livré** sur `feat/politique-v3` (depuis `main`, tag `backup/pre-politique-v3-w11`), commit `04b9b15`.
