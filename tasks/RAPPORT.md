@@ -19,6 +19,44 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [NETTOYAGE-MORTS-W14] — nettoyage FAIT, mais 🔴 §2.8 devient faux (STOP SI) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-nettoyage-w14`), commit `163284e`. `tsc` + `npm run build` **verts**.
+
+**🔴 PRIORITÉ 1 — `posthog-node` throw sur clé absente ? → NON. AUCUN bug prod.** Le constructeur de base
+détecte la clé manquante, **logge une erreur et désactive le client** (`node_modules/@posthog/core/src/posthog-core-stateless.ts:167`
+`missingApiKey`, `:171` log, `:194` `disabled`), et `capture()`/`shutdown()` deviennent des no-op via `wrap()`
+(`:215-227`). `posthog-node/src/client.ts:53-55` normalise `undefined`→`''` sans throw. Donc les 3 routes
+renvoyaient bien **200** en prod malgré la clé absente — pas de faux négatif. (Rien à vérifier dans Sentry.)
+
+**Fait — PostHog** : `src/lib/posthog-server.ts` supprimé · 3 captures + imports retirés (verify-otp/yalidine/
+ecotrack) · `next.config.ts` rewrites `/ingest`→posthog retirés · commentaire `instrumentation-client.ts`
+(Sentry intact) · dep `posthog-node` retirée de `package.json` · puces §4 + §2.6 de la politique retirées.
+**Twilio** : section `.env.example` retirée · 6 commentaires morts reformulés (`whatsapp.ts:4`, `inbound:38`,
+`register:108`, `whatsapp-templates.ts:311/348/363`) — **aucun code vivant touché** (STOP SI non déclenché : c'était mort).
+
+**🔴 VERDICT ADVERSAIRE — code propre MAIS la politique casse** : import orphelin 0, variables inutilisées 0,
+`next.config` OK (aucun client n'appelle `/ingest`), Sentry client intact, tests 0 réf. **MAIS §2.8 devient FAUX** :
+sa dernière phrase « Une mesure d'audience technique, **décrite à l'article 4**, permet de comprendre l'usage »
+(`privacy/page.tsx` §2.8) renvoie à un §4 qui ne contient **plus** de mesure d'audience (PostHog retiré).
+La commande disait « §2.8 reste tel quel » — mais combiné au retrait PostHog, ça produit une affirmation fausse.
+**Je ne bricole pas le texte moi-même (ordre du W-arc).** → **décision Claudy** : retirer/reformuler cette dernière
+phrase de §2.8 (le reste — « aucune publicité, aucun ciblage » — reste vrai). **Publication bloquée** jusque-là.
+
+**Variables à supprimer côté Vercel (Lamine — interdit pour moi)** : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+`TWILIO_WHATSAPP_FROM` (+ `TWILIO_SANDBOX_MODE` s'il existe encore — vu dans un vieux brief) · côté PostHog :
+`NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (Lamine a confirmé absent) + `NEXT_PUBLIC_POSTHOG_HOST` si présent.
+
+**Contrôle final `grep -ri "twilio|posthog"`** : **zéro** dans `src/**`, config, `.env.example`, `package.json`, politique.
+Résidus (hors périmètre du nettoyage code) : (1) `package-lock.json` → **lockfile à régénérer par `npm install` (Lamine)**,
+non fait (règle) ; (2) `tasks/*` → exclus par le contrôle ; (3) **5 docs racine historiques** (`AUDIT_WEB.md`,
+`LIVRA_MARKETING.md`, `CLAUDY_ANTIDOTE.md`, `CLAUDY_FLOW.md`, `SESSION_HANDOFF.md`) qui citent Twilio/PostHog comme
+**contexte passé** (ex. « 360dialog choisi pour éviter Twilio sandbox »). **Je ne les ai PAS réécrits** : effacer
+une décision historique d'un doc de référence (dont les `CLAUDY_*.md`, analogues à `CC_RAPPORT.md` exclu) est
+destructif et probablement un oubli de la liste d'exclusion. **À trancher par Claudy** : scrubber l'historique, ou les exclure.
+
+---
+
 ## [POLITIQUE-V3-W13] — FAIT ✅ POLITIQUE PUBLIABLE — 14 août 2026
 
 **➡️ politique v3-2026-08-14 publiable — 11 sous-traitants déclarés, 0 affirmation invérifiée.**
