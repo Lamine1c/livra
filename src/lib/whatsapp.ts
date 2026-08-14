@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { buildTemplatePayload, type WhatsAppTemplate } from "./whatsapp-templates";
 
-// Transport WhatsApp = Meta Cloud API (Twilio retiré — Meta Step 2 terminé).
+// Transport WhatsApp = Meta Cloud API (Meta Step 2 terminé).
 // Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
 // WHATSAPP_PHONE_NUMBER_ID, source UNIQUE : pas de fallback hardcodé (un id figé
 // a déjà bité — id périmé). Absent/vide → on ne construit pas d'URL et l'envoi

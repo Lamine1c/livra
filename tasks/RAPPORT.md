@@ -19,6 +19,158 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [POLITIQUE-V3-W15] — FAIT ✅ — 14 août 2026
+
+**➡️ politique v3-2026-08-14 publiable — 10 sous-traitants, 0 affirmation invérifiée, 0 référence orpheline.**
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w15`), commit `2fb4198`. `tsc` + `npm run build` **verts**.
+Retiré la dernière phrase de §2.8 (« Une mesure d'audience technique, décrite à l'article 4… ») → le paragraphe
+se termine sur « …aucun traceur publicitaire tiers » (vrai sans nuance, PostHog n'existe plus).
+
+**Contrôle références croisées orphelines** (grep `audience|analytics|mesure|article 4|§4|événements|PostHog` sur
+`privacy/page.tsx`) : **0 orpheline**. Seul match = « **mesures** techniques » au §9 sécurité (`:235`), sans aucun
+rapport avec une mesure d'audience. §2.6 (puce usage retirée en W14) et §4 (PostHog retiré en W14) sont cohérents.
+§4 compte désormais **10 sous-traitants** (9 puces, Yalidine/Ecotrack partagent la leur).
+
+**Décision Claudy notée** : docs historiques (`AUDIT_WEB`, `LIVRA_MARKETING`, `CLAUDY_ANTIDOTE`, `CLAUDY_FLOW`,
+`SESSION_HANDOFF`) **exclus définitivement** du nettoyage — le passé reste dans les docs de travail. Ma question W14 est tranchée.
+
+**Branche `feat/politique-v3` (W11→W15) prête à merger.** Rappels pour Lamine (interdits règle 4) : merge + deploy ;
+`npm install` pour régénérer le lockfile (posthog-node retiré) ; supprimer côté Vercel `TWILIO_ACCOUNT_SID`,
+`TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` (+ `TWILIO_SANDBOX_MODE`/`NEXT_PUBLIC_POSTHOG_*` si présents). Plus rien ne bloque le texte.
+
+---
+
+## [NETTOYAGE-MORTS-W14] — nettoyage FAIT, mais 🔴 §2.8 devient faux (STOP SI) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-nettoyage-w14`), commit `163284e`. `tsc` + `npm run build` **verts**.
+
+**🔴 PRIORITÉ 1 — `posthog-node` throw sur clé absente ? → NON. AUCUN bug prod.** Le constructeur de base
+détecte la clé manquante, **logge une erreur et désactive le client** (`node_modules/@posthog/core/src/posthog-core-stateless.ts:167`
+`missingApiKey`, `:171` log, `:194` `disabled`), et `capture()`/`shutdown()` deviennent des no-op via `wrap()`
+(`:215-227`). `posthog-node/src/client.ts:53-55` normalise `undefined`→`''` sans throw. Donc les 3 routes
+renvoyaient bien **200** en prod malgré la clé absente — pas de faux négatif. (Rien à vérifier dans Sentry.)
+
+**Fait — PostHog** : `src/lib/posthog-server.ts` supprimé · 3 captures + imports retirés (verify-otp/yalidine/
+ecotrack) · `next.config.ts` rewrites `/ingest`→posthog retirés · commentaire `instrumentation-client.ts`
+(Sentry intact) · dep `posthog-node` retirée de `package.json` · puces §4 + §2.6 de la politique retirées.
+**Twilio** : section `.env.example` retirée · 6 commentaires morts reformulés (`whatsapp.ts:4`, `inbound:38`,
+`register:108`, `whatsapp-templates.ts:311/348/363`) — **aucun code vivant touché** (STOP SI non déclenché : c'était mort).
+
+**🔴 VERDICT ADVERSAIRE — code propre MAIS la politique casse** : import orphelin 0, variables inutilisées 0,
+`next.config` OK (aucun client n'appelle `/ingest`), Sentry client intact, tests 0 réf. **MAIS §2.8 devient FAUX** :
+sa dernière phrase « Une mesure d'audience technique, **décrite à l'article 4**, permet de comprendre l'usage »
+(`privacy/page.tsx` §2.8) renvoie à un §4 qui ne contient **plus** de mesure d'audience (PostHog retiré).
+La commande disait « §2.8 reste tel quel » — mais combiné au retrait PostHog, ça produit une affirmation fausse.
+**Je ne bricole pas le texte moi-même (ordre du W-arc).** → **décision Claudy** : retirer/reformuler cette dernière
+phrase de §2.8 (le reste — « aucune publicité, aucun ciblage » — reste vrai). **Publication bloquée** jusque-là.
+
+**Variables à supprimer côté Vercel (Lamine — interdit pour moi)** : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+`TWILIO_WHATSAPP_FROM` (+ `TWILIO_SANDBOX_MODE` s'il existe encore — vu dans un vieux brief) · côté PostHog :
+`NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (Lamine a confirmé absent) + `NEXT_PUBLIC_POSTHOG_HOST` si présent.
+
+**Contrôle final `grep -ri "twilio|posthog"`** : **zéro** dans `src/**`, config, `.env.example`, `package.json`, politique.
+Résidus (hors périmètre du nettoyage code) : (1) `package-lock.json` → **lockfile à régénérer par `npm install` (Lamine)**,
+non fait (règle) ; (2) `tasks/*` → exclus par le contrôle ; (3) **5 docs racine historiques** (`AUDIT_WEB.md`,
+`LIVRA_MARKETING.md`, `CLAUDY_ANTIDOTE.md`, `CLAUDY_FLOW.md`, `SESSION_HANDOFF.md`) qui citent Twilio/PostHog comme
+**contexte passé** (ex. « 360dialog choisi pour éviter Twilio sandbox »). **Je ne les ai PAS réécrits** : effacer
+une décision historique d'un doc de référence (dont les `CLAUDY_*.md`, analogues à `CC_RAPPORT.md` exclu) est
+destructif et probablement un oubli de la liste d'exclusion. **À trancher par Claudy** : scrubber l'historique, ou les exclure.
+
+---
+
+## [POLITIQUE-V3-W13] — FAIT ✅ POLITIQUE PUBLIABLE — 14 août 2026
+
+**➡️ politique v3-2026-08-14 publiable — 11 sous-traitants déclarés, 0 affirmation invérifiée.**
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w13`), commit `b55d9b6`. `tsc` + `npm run build` **verts**.
+Ajout de la seule ligne restante au §4 : « Mapbox (fonds de carte et affichage cartographique, hébergement aux
+États-Unis) — coordonnées de localisation affichées lors du suivi d'une livraison en temps réel » (`privacy/page.tsx:168`).
+Rien d'autre touché.
+
+**Relecture finale (moi-même, sans sous-agent)** : `grep -c "Mapbox|Expo|PostHog|Twilio"` = **3** → Mapbox 1 · Expo 1 ·
+PostHog 1 · **Twilio 0** ✅. §4 = **10 puces (`:159-168`) couvrant les 11 services** de l'inventaire W12 — Yalidine
+**et** Ecotrack partagent une puce (`:162`, texte dicté en W11, non modifié). Donc **les 11 destinations réseau sont
+toutes déclarées, aucune absente** → pas de STOP SI. Les 3 passes adversaires (W11+W12+relecture W13) sont soldées.
+
+**Récapitulatif publication** : les 10 affirmations vérifiées vraies (purge leads 90 j, purge GPS 30 j, OTP haché
+10 min, IP scrubbée Sentry, bcrypt, webhooks HMAC, PostHog sans donnée acheteur, Twilio/MFA retirés) + §4 exhaustif.
+**Publication + deploy = Lamine** (interdits règle 4). La branche `feat/politique-v3` porte W11+W12+W13, prête à merger.
+
+---
+
+## [POLITIQUE-V3-W12] — 3 corrections FAITES mais 🔴 ENCORE NON PUBLIABLE (STOP SI : Mapbox) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w12`), commit `b431272`. `tsc` + `npm run build` **verts**.
+Les 3 corrections dictées sont appliquées **mot à mot** dans `privacy/page.tsx` : §4 +Expo +PostHog · §2.8 reformulée
+(publicité niée, analytics déclaré) · §2.6 +puce événements d'usage. Je n'ai PAS touché le texte au-delà du dicté.
+
+**🔴 2ᵉ passe adversaire — un sous-traitant de PLUS manque : STOP SI.** Comme en W11, la liste §4 n'est
+**toujours pas exhaustive** → publication **bloquée**. Je ne bricole pas le texte moi-même (ordre de la commande).
+
+**Liste EXHAUSTIVE des destinations réseau tierces (grep de tout `src/**` + `next.config.ts`)** :
+| # | Service | Preuve file:line | §4 |
+|---|---------|------------------|----|
+| 1 | Supabase | `lib/supabase/service.ts:4`, `admin.ts` | ✅ |
+| 2 | Vercel (hébergement) | déploiement | ✅ |
+| 3 | Meta WhatsApp Cloud API + Lead Ads | `lib/meta.ts:3` (`graph.facebook.com`) | ✅ |
+| 4 | Yalidine | `lib/yalidine.ts` (`api.yalidine.app`) | ✅ |
+| 5 | Ecotrack (DHD/Anderson) | `lib/ecotrack.ts:10-11` | ✅ |
+| 6 | Chargily | `lib/chargily.ts:7` (`pay.chargily.net`) | ✅ |
+| 7 | Resend | `api/contact/route.ts:61`, `billing-reminders:52` | ✅ |
+| 8 | Sentry | `sentry.server.config.ts:6` | ✅ |
+| 9 | Expo (push) | `lib/expo-push.ts:54` (`exp.host`) | ✅ (ajouté W12) |
+| 10 | PostHog | `lib/posthog-server.ts` + `next.config.ts:19-27` | ✅ (ajouté W12) |
+| 11 | **Mapbox** | `components/track/moto-perso-tracker.tsx:6,74` + `app/locate/locate-map.tsx:4,38` (`NEXT_PUBLIC_MAPBOX_TOKEN`) | **❌ MANQUANT** |
+
+Non-tiers écartés : `golivra.app` (soi), `schema.org`/`w3.org` (métadonnées/SVG), liens sociaux Insta/FB (JSON-LD, aucune
+donnée envoyée), URLs en commentaire (doc). **Twilio** = env vars présentes mais **aucun appel réseau** (mort) → pas sous-traitant.
+**360dialog** = `D360_WEBHOOK_SECRET` **entrant seulement** ; l'envoi WhatsApp part vers Meta (`graph.facebook.com`) → couvert par Meta.
+
+**PostHog — affirmation « aucune donnée d'Acheteur » : TENUE** (vérifié par moi + adversaire, propriété par propriété) :
+`verify-otp:75` `{order_id}` · `yalidine:72` `{order_id, tracking_number, total_amount}` · `ecotrack:83`
+`{order_id, carrier, tracking_number, total_amount}` — `distinctId = user.id` (**vendeur**), zéro nom/téléphone/adresse acheteur.
+
+**Ce dont j'ai besoin (Claudy, avant deploy)** : ajouter **Mapbox** au §4 (reçoit la zone GPS de livraison affichée
+sur `/track` et `/locate`). Reco de formulation (à valider, je ne l'écris pas) : « Mapbox (fonds de carte et
+géolocalisation, hébergement États-Unis) — coordonnées GPS affichées lors du suivi de livraison en temps réel ».
+Dès cette 4ᵉ ligne ajoutée, la politique est publiable (les 10 autres sont vérifiées vraies).
+
+---
+
+## [POLITIQUE-V3-W11] — FAIT mais 🔴 NE PAS PUBLIER (STOP SI adversaire) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (depuis `main`, tag `backup/pre-politique-v3-w11`), commit `04b9b15`.
+`tsc` + `npm run build` **verts**. Port **mot à mot** du texte dicté, aucune phrase inventée.
+- `privacy/page.tsx` : v3-2026-08-14, §2.4 Meta Lead Ads, §2.5 Livreur (OTP/GPS), §2.6 Sentry, §2.8 stockage local,
+  §3 leads, §4 sous-traitants (Twilio **retiré** — 0 occurrence), §5.2, §6 rétention, §7 responsabilité LIVRA/score,
+  §8.1 prospects, §9 (MFA **retirée**). PRIVACY_VERSION → v3 (`set-password/route.ts:24`, TERMS inchangé).
+  Libellé case SignupModal couvre le score (pas de 2e case, `termsAccepted` intact).
+- ⚠️ **Cross-refs internes réalignés au renumérotage** (non dicté, signalé) : §5.1 « 2.5 »→« 2.6 », §8.4 « 2.6 »→« 2.7 ».
+
+**🔴 VERDICT ADVERSAIRE — 6 VRAIES, 2 FAUSSES (prouvé dans le code, vérifié aussi par moi)** :
+1. Purge leads 90 j — **VRAIE** (`030_lead_insights.sql:52`, non-convertis + logs). 2. Purge GPS 30 j — **VRAIE** (`032:20`).
+3. OTP haché 10 min supprimé après vérif — **VRAIE** (`011_driver_otps.sql`, SHA-256 `resend-otp:66-70`, delete `verify-otp:67`).
+6. « Sans IP dans les rapports d'erreur » — **VRAIE** (`sentry.server.config.ts:11` `sendDefaultPii:false` + `sentry-scrub.ts`).
+7. Mot de passe bcrypt — **VRAIE** (`set-password:65` bcrypt 12). 8. Webhooks vérifiés crypto — **VRAIE** (HMAC `meta.ts:139-141`).
+4. **« Aucun traceur publicitaire tiers » (§2.8) — FAUSSE** : **PostHog** actif (`src/lib/posthog-server.ts`, `.capture()` dans
+   `orders/[id]/yalidine,ecotrack,verify-otp`, proxies `next.config.ts:19-27`).
+5. **Liste sous-traitants §4 NON exhaustive — FAUSSE par omission** : manquent **Expo** (push livreur, `expo-push.ts:54`
+   → `exp.host/--/api/v2/push/send`) **et PostHog** (analytics). Les deux traitent de la PII (tokens device / événements).
+
+**Ce dont j'ai besoin (décision Claudy AVANT tout deploy — STOP SI)** : je n'invente pas de texte légal. Il faut
+que Claudy **(a)** ajoute Expo + PostHog à §4 (proposé : « Expo (notifications push livreur, hébergement USA) — jeton
+de notification et identifiant d'appareil » ; « PostHog (mesure d'audience, proxifié via golivra.app) — événements
+d'usage ») et **(b)** tranche §2.8 (retirer/nuancer « aucun traceur tiers », PostHog étant un traceur analytics).
+Le commit est un **checkpoint fidèle** ; **publication bloquée** tant que §4/§2.8 ne sont pas corrigés.
+
+**Autres réponses demandées** : version **arabe** de la politique = **N'EXISTE PAS** (page FR en dur ; `ar.json` n'a
+que le label de lien footer `"confidentialite"`) → rien à traduire. Page web **`/rejoindre`** = **N'EXISTE PAS**
+(glob `src/app/**/rejoindre/**` vide ; le livreur s'inscrit côté mobile). Page **CGU** ne référence pas la version
+de la politique → non touchée. `TERMS_VERSION` inchangé.
+
+---
+
 ## [ÉTAT-MERGE] — cc EN PAUSE, `git merge` de Lamine EN COURS — 11 août 2026
 > ⚠️ Note hors-conflit (zone commune) — Lamine peut la supprimer en résolvant. cc n'a **rien** commité ce tour.
 

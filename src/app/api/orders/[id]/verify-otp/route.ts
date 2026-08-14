@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPostHogClient } from "@/lib/posthog-server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
 
@@ -70,14 +69,6 @@ export async function POST(
   if (updateError) {
     return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
   }
-
-  const posthog = getPostHogClient();
-  posthog.capture({
-    distinctId: user.id,
-    event: "order_otp_verified",
-    properties: { order_id: id },
-  });
-  await posthog.shutdown();
 
   return NextResponse.json({ success: true });
 }

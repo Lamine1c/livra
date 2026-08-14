@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createEcotrackOrder, ECOTRACK_SLUG_BASE_URL } from "@/lib/ecotrack";
 import { Order } from "@/types";
-import { getPostHogClient } from "@/lib/posthog-server";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
@@ -78,14 +77,6 @@ export async function POST(
   if (updateError) {
     return NextResponse.json({ error: "Tracking créé mais erreur de sauvegarde." }, { status: 500 });
   }
-
-  const posthog = getPostHogClient();
-  posthog.capture({
-    distinctId: user.id,
-    event: "ecotrack_parcel_created",
-    properties: { order_id: id, carrier, tracking_number: tracking, total_amount: order.total_amount },
-  });
-  await posthog.shutdown();
 
   // Notifier l'acheteur avec le lien de tracking (best-effort)
   try {
