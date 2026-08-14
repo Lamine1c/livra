@@ -168,6 +168,65 @@ Le commit est un **checkpoint fidèle** ; **publication bloquée** tant que §4/
 que le label de lien footer `"confidentialite"`) → rien à traduire. Page web **`/rejoindre`** = **N'EXISTE PAS**
 (glob `src/app/**/rejoindre/**` vide ; le livreur s'inscrit côté mobile). Page **CGU** ne référence pas la version
 de la politique → non touchée. `TERMS_VERSION` inchangé.
+## [CONSENTEMENT-LIVREUR-W17] — FAIT (design A) — 14 août 2026
+
+**Livré** sur `feat/consentement-livreur` (tag `backup/pre-consentement-livreur-w17`), commit `5b0a4b2`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4). Aucun STOP SI (résolution d'identité
+inchangée — juste une colonne lue en plus ; colonnes nullables — aucune acceptation rétroactive fabriquée).
+- `034_drivers_terms.sql` : `drivers` +`terms_accepted_at`/`terms_version`/`privacy_version` (nullables) ;
+  `driver_otps` +`terms_version`/`privacy_version` (le staging transporte, pas de `terms_accepted_at` ici). Pas d'IP/UA.
+- `register` : 2 champs **optionnels** `terms_version`/`privacy_version`, écrits dans l'upsert `driver_otps`.
+- `verify-otp` : recopie les 2 versions du staging dans `drivers` + `terms_accepted_at = now()` **serveur**.
+
+**Protection de l'acceptation existante à l'UPDATE** : je lis `drivers.terms_accepted_at` de l'existant (ajouté
+au SELECT d'identité, sans changer la logique whatsapp→device_id) et n'ajoute `consentFields` à l'UPDATE que si
+**`existingTermsAcceptedAt === null`**. Un ré-enrôlement (nouveau tel/re-scan) ne réécrit JAMAIS une 1re signature ;
+un livreur existant sans acceptation (NULL) qui accepte enfin, lui, l'obtient. À l'INSERT, consentFields est toujours posé.
+
+**Validation des versions** (elles viennent du client) : `string`, `≤ 32`, regex `^v\d+-\d{4}-\d{2}-\d{2}$`. Format
+invalide/mauvais type/trop long → **ignoré silencieusement** (pas de 400, pas de blocage). **Les DEUX** doivent être
+valides pour écrire une acceptation (pas de demi-preuve) ; sinon `consent = {}` → clés omises → l'upsert ne clobbe rien.
+Champs absents (app pas à jour) → comportement **strictement inchangé**. On stocke ce que **l'app a affiché**, pas une constante web.
+
+**Verdict adversaire** (sous-agent, 8 attaques) : **inscription non régressée, acceptation robuste — zéro cassage.**
+App ancienne OK (spread `{}` inerte, aucun `undefined` dans insert), versions bidon toutes rejetées, ré-enrôlement
+préserve la signature, `hasConsent` exige les 2 versions, colonnes nullables, écritures en service_role, aucun trigger.
+
+**Reste (Lamine)** : appliquer 034 (SQL Editor). Le texte + les liens côté **mobile** (l'app doit envoyer les 2
+versions) = tour mobile dédié, une fois la politique v3 en ligne. Rien d'autre ne bloque le serveur.
+
+---
+
+## [CONSENTEMENT-LIVREUR-W16] — BLOQUÉ (STOP SI : le stockage force à toucher le tunnel OTP) — 14 août 2026
+
+**Prémisse de la commande cassée (vérifié à la main).** Rien codé (branche `feat/consentement-livreur` +
+tag `backup/pre-consentement-livreur-w16` créés, aucun fichier écrit — arrêt avant modif, comme W3/W5/W9).
+
+**Ce que j'ai vérifié** :
+1. **`drivers` n'a PAS** `terms_accepted_at`/`terms_version`/`privacy_version` : `016_terms_acceptance.sql:6-8`
+   les ajoute à **`vendors_waitlist` seulement**. → migration 034 sur `drivers` **serait** nécessaire.
+2. 🔴 **`POST /api/drivers/register` n'écrit PAS dans `drivers`** : il upsert `driver_otps` (staging,
+   `register/route.ts:82-95`, onConflict `whatsapp`) puis envoie l'OTP. Le body est `Record<string, unknown>`
+   (`:11,:18`) → **pas de schéma strict**, un champ inconnu passerait (ce STOP SI-là n'est PAS déclenché).
+3. **Le row `drivers` est créé/mis à jour dans `verify-otp/route.ts:69-128`** (résolution d'identité manuelle :
+   par `whatsapp` puis `device_id`, UPDATE si existant `:105-116`, INSERT sinon). C'est LÀ que vit le ré-enrôlement.
+
+**Conséquence — STOP SI déclenché** : stocker l'acceptation sur `drivers` **oblige à modifier `verify-otp`**
+(le seul écrivain de `drivers`) = **le tunnel d'inscription**. La commande interdit ça sans feu vert
+(« le stockage de l'acceptation oblige à modifier le flow OTP → rapporte, on ne touche pas au tunnel »).
+La store dans `register` est impossible (le row `drivers` n'existe pas encore) ; la stocker dans `driver_otps`
+la perdrait (le staging est supprimé après vérif, `verify-otp:67`).
+
+**Décision demandée (Claudy)** — 2 designs, tu tranches :
+- **(A)** J'ouvre le tunnel **a minima** : `register` accepte `terms_version`/`privacy_version` (optionnels)
+  → stockés dans `driver_otps` (2 colonnes ajoutées) → `verify-otp` les **recopie** dans `driverFields`
+  (`+ terms_accepted_at = now()` serveur) à l'INSERT **et** préserve une acceptation existante à l'UPDATE
+  (ne jamais écraser un `terms_accepted_at` non-null). Migration 034 sur `drivers` **et** `driver_otps`.
+  Zéro friction (champs optionnels), mais **touche verify-otp** — c'est pour ça que je demande.
+- **(B)** Autre porte d'accroche que tu as en tête (ex. une route post-inscription dédiée).
+Dès (A/B) tranché je livre migration + route(s) + adversaire en un tour. **`PRIVACY_VERSION` v2/v3 selon branche
+= noté, je n'y touche pas.** Note : le design retenu écrira probablement les versions **envoyées par l'app mobile**
+(elle seule sait quel texte elle a affiché), pas une constante web — à confirmer avec (A/B).
 
 ---
 
