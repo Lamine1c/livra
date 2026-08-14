@@ -7,6 +7,16 @@ import {
   sendOtpWhatsApp,
 } from "@/lib/whatsapp";
 
+// Versions légales acceptées par le livreur, ENVOYÉES PAR L'APP (seule elle sait quel
+// texte elle a affiché — une app pas à jour peut montrer la v3 quand le serveur est en
+// v4 ; stocker la constante serveur produirait une preuve fausse). Valeurs client → on
+// VALIDE : chaîne courte (≤ 32) au format vN-AAAA-MM-JJ. Format invalide → ignoré
+// silencieusement (jamais d'erreur, jamais de blocage d'inscription).
+const LEGAL_VERSION_RE = /^v\d+-\d{4}-\d{2}-\d{2}$/;
+function isValidLegalVersion(v: unknown): v is string {
+  return typeof v === "string" && v.length <= 32 && LEGAL_VERSION_RE.test(v);
+}
+
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try {
@@ -15,12 +25,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const { prenom, whatsapp, wilaya, couleur, device_id } = body as {
+  const { prenom, whatsapp, wilaya, couleur, device_id, terms_version, privacy_version } = body as {
     prenom?: string;
     whatsapp?: string;
     wilaya?: string;
     couleur?: string;
     device_id?: string;
+    terms_version?: unknown;
+    privacy_version?: unknown;
   };
 
   // 1. Validation
@@ -78,6 +90,15 @@ export async function POST(req: NextRequest) {
 
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+  // Acceptation (optionnelle) : enregistrée seulement si LES DEUX versions sont
+  // présentes ET valides — une demi-acceptation n'est pas une preuve. Absentes ou
+  // invalides → on n'écrit rien et l'inscription continue exactement comme avant
+  // (les clés omises ne clobbent pas une acceptation déjà en staging à l'onConflict).
+  const consent =
+    isValidLegalVersion(terms_version) && isValidLegalVersion(privacy_version)
+      ? { terms_version, privacy_version }
+      : {};
+
   // 6. Upsert dans driver_otps
   const { error: upsertError } = await supabase
     .from("driver_otps")
@@ -90,6 +111,7 @@ export async function POST(req: NextRequest) {
         device_id: device_id.trim(),
         otp_hash: otpHash,
         expires_at: expiresAt,
+        ...consent,
       },
       { onConflict: "whatsapp" }
     );

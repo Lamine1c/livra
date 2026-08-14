@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   // 3. Chercher le record non expiré
   const { data: record, error: fetchError } = await supabase
     .from("driver_otps")
-    .select("id, prenom, wilaya, couleur_casque, device_id, otp_hash")
+    .select("id, prenom, wilaya, couleur_casque, device_id, otp_hash, terms_version, privacy_version")
     .eq("whatsapp", normalizedPhone)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -83,29 +83,49 @@ export async function POST(req: NextRequest) {
     last_scan_at: now,
   };
 
+  // Acceptation CGU/Politique recopiée du staging (les 2 versions ont été validées à
+  // /register). La PREUVE = terms_accepted_at posé ICI, côté serveur (jamais une date client).
+  const hasConsent = !!record.terms_version && !!record.privacy_version;
+  const consentFields = hasConsent
+    ? {
+        terms_version: record.terms_version,
+        privacy_version: record.privacy_version,
+        terms_accepted_at: now,
+      }
+    : {};
+
   // Chercher un livreur existant : par whatsapp (identité stable) d'abord, sinon par device_id.
+  // On lit aussi terms_accepted_at pour NE JAMAIS écraser une acceptation déjà signée.
   let existingId: string | null = null;
+  let existingTermsAcceptedAt: string | null = null;
   const { data: byPhone } = await supabase
     .from("drivers")
-    .select("id")
+    .select("id, terms_accepted_at")
     .eq("whatsapp", normalizedPhone)
     .maybeSingle();
   if (byPhone?.id) {
     existingId = byPhone.id as string;
+    existingTermsAcceptedAt = (byPhone.terms_accepted_at as string | null) ?? null;
   } else {
     const { data: byDevice } = await supabase
       .from("drivers")
-      .select("id")
+      .select("id, terms_accepted_at")
       .eq("device_id", record.device_id)
       .maybeSingle();
-    if (byDevice?.id) existingId = byDevice.id as string;
+    if (byDevice?.id) {
+      existingId = byDevice.id as string;
+      existingTermsAcceptedAt = (byDevice.terms_accepted_at as string | null) ?? null;
+    }
   }
 
   let driverId: string;
   if (existingId) {
     const { data: updated, error: updateError } = await supabase
       .from("drivers")
-      .update(driverFields)
+      // 🔴 Ne JAMAIS écraser une acceptation déjà signée : on n'ajoute les champs de
+      // consentement QUE si l'existant est NULL. Ré-enrôlement sur un nouveau tel ⇒ la
+      // première signature (date + versions) est préservée intacte.
+      .update({ ...driverFields, ...(existingTermsAcceptedAt === null ? consentFields : {}) })
       .eq("id", existingId)
       .select("id")
       .single();
@@ -117,7 +137,7 @@ export async function POST(req: NextRequest) {
   } else {
     const { data: inserted, error: insertError } = await supabase
       .from("drivers")
-      .insert(driverFields)
+      .insert({ ...driverFields, ...consentFields })
       .select("id")
       .single();
     if (insertError || !inserted) {
