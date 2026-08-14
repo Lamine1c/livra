@@ -165,6 +165,7 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Resend (envoi d'emails transactionnels) — adresses email transmises exclusivement pour l'envoi"}</li>
               <li style={listItem}>{"Expo (service de notifications push, hébergement aux États-Unis) — jeton de notification et identifiant technique de l'appareil, transmis pour l'acheminement des notifications"}</li>
               <li style={listItem}>{"PostHog (mesure d'audience technique, requêtes acheminées via golivra.app) — événements d'usage du Service associés à l'identifiant interne du Vendeur (par exemple : création d'une expédition, vérification d'un code de livraison). Aucune donnée d'identification d'Acheteur n'y est transmise."}</li>
+              <li style={listItem}>{"Mapbox (fonds de carte et affichage cartographique, hébergement aux États-Unis) — coordonnées de localisation affichées lors du suivi d'une livraison en temps réel"}</li>
             </ul>
             <p style={bodyText}>{"LIVRA ne vend, ne loue ni ne partage les données personnelles avec des tiers à des fins commerciales ou publicitaires."}</p>
           </div>
