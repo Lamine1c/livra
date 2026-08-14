@@ -19,6 +19,28 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [POLITIQUE-V3-W15] — FAIT ✅ — 14 août 2026
+
+**➡️ politique v3-2026-08-14 publiable — 10 sous-traitants, 0 affirmation invérifiée, 0 référence orpheline.**
+
+**Livré** sur `feat/politique-v3` (tag `backup/pre-politique-v3-w15`), commit `2fb4198`. `tsc` + `npm run build` **verts**.
+Retiré la dernière phrase de §2.8 (« Une mesure d'audience technique, décrite à l'article 4… ») → le paragraphe
+se termine sur « …aucun traceur publicitaire tiers » (vrai sans nuance, PostHog n'existe plus).
+
+**Contrôle références croisées orphelines** (grep `audience|analytics|mesure|article 4|§4|événements|PostHog` sur
+`privacy/page.tsx`) : **0 orpheline**. Seul match = « **mesures** techniques » au §9 sécurité (`:235`), sans aucun
+rapport avec une mesure d'audience. §2.6 (puce usage retirée en W14) et §4 (PostHog retiré en W14) sont cohérents.
+§4 compte désormais **10 sous-traitants** (9 puces, Yalidine/Ecotrack partagent la leur).
+
+**Décision Claudy notée** : docs historiques (`AUDIT_WEB`, `LIVRA_MARKETING`, `CLAUDY_ANTIDOTE`, `CLAUDY_FLOW`,
+`SESSION_HANDOFF`) **exclus définitivement** du nettoyage — le passé reste dans les docs de travail. Ma question W14 est tranchée.
+
+**Branche `feat/politique-v3` (W11→W15) prête à merger.** Rappels pour Lamine (interdits règle 4) : merge + deploy ;
+`npm install` pour régénérer le lockfile (posthog-node retiré) ; supprimer côté Vercel `TWILIO_ACCOUNT_SID`,
+`TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` (+ `TWILIO_SANDBOX_MODE`/`NEXT_PUBLIC_POSTHOG_*` si présents). Plus rien ne bloque le texte.
+
+---
+
 ## [NETTOYAGE-MORTS-W14] — nettoyage FAIT, mais 🔴 §2.8 devient faux (STOP SI) — 14 août 2026
 
 **Livré** sur `feat/politique-v3` (tag `backup/pre-nettoyage-w14`), commit `163284e`. `tsc` + `npm run build` **verts**.
