@@ -127,7 +127,7 @@ export default function PrivacyPage() {
               <li style={listItem}>{"Versions des documents acceptés"}</li>
             </ul>
             <p style={bodyText}>{"Ces données sont conservées 5 ans après résiliation du compte à titre de preuve légale opposable au Vendeur."}</p>
-            <p style={bodyText}>{"2.8. Stockage local — L'application et le site conservent sur l'appareil de l'utilisateur les éléments techniques strictement nécessaires au fonctionnement (session d'authentification, préférences). LIVRA n'affiche aucune publicité, ne pratique aucun ciblage publicitaire et n'utilise aucun traceur publicitaire tiers. Une mesure d'audience technique, décrite à l'article 4, permet de comprendre l'usage du Service et d'en améliorer la fiabilité."}</p>
+            <p style={bodyText}>{"2.8. Stockage local — L'application et le site conservent sur l'appareil de l'utilisateur les éléments techniques strictement nécessaires au fonctionnement (session d'authentification, préférences). LIVRA n'affiche aucune publicité, ne pratique aucun ciblage publicitaire et n'utilise aucun traceur publicitaire tiers."}</p>
           </div>
 
           <hr style={hr} />
