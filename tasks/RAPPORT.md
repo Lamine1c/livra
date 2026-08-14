@@ -19,6 +19,39 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [POLITIQUE-V3-W11] — FAIT mais 🔴 NE PAS PUBLIER (STOP SI adversaire) — 14 août 2026
+
+**Livré** sur `feat/politique-v3` (depuis `main`, tag `backup/pre-politique-v3-w11`), commit `04b9b15`.
+`tsc` + `npm run build` **verts**. Port **mot à mot** du texte dicté, aucune phrase inventée.
+- `privacy/page.tsx` : v3-2026-08-14, §2.4 Meta Lead Ads, §2.5 Livreur (OTP/GPS), §2.6 Sentry, §2.8 stockage local,
+  §3 leads, §4 sous-traitants (Twilio **retiré** — 0 occurrence), §5.2, §6 rétention, §7 responsabilité LIVRA/score,
+  §8.1 prospects, §9 (MFA **retirée**). PRIVACY_VERSION → v3 (`set-password/route.ts:24`, TERMS inchangé).
+  Libellé case SignupModal couvre le score (pas de 2e case, `termsAccepted` intact).
+- ⚠️ **Cross-refs internes réalignés au renumérotage** (non dicté, signalé) : §5.1 « 2.5 »→« 2.6 », §8.4 « 2.6 »→« 2.7 ».
+
+**🔴 VERDICT ADVERSAIRE — 6 VRAIES, 2 FAUSSES (prouvé dans le code, vérifié aussi par moi)** :
+1. Purge leads 90 j — **VRAIE** (`030_lead_insights.sql:52`, non-convertis + logs). 2. Purge GPS 30 j — **VRAIE** (`032:20`).
+3. OTP haché 10 min supprimé après vérif — **VRAIE** (`011_driver_otps.sql`, SHA-256 `resend-otp:66-70`, delete `verify-otp:67`).
+6. « Sans IP dans les rapports d'erreur » — **VRAIE** (`sentry.server.config.ts:11` `sendDefaultPii:false` + `sentry-scrub.ts`).
+7. Mot de passe bcrypt — **VRAIE** (`set-password:65` bcrypt 12). 8. Webhooks vérifiés crypto — **VRAIE** (HMAC `meta.ts:139-141`).
+4. **« Aucun traceur publicitaire tiers » (§2.8) — FAUSSE** : **PostHog** actif (`src/lib/posthog-server.ts`, `.capture()` dans
+   `orders/[id]/yalidine,ecotrack,verify-otp`, proxies `next.config.ts:19-27`).
+5. **Liste sous-traitants §4 NON exhaustive — FAUSSE par omission** : manquent **Expo** (push livreur, `expo-push.ts:54`
+   → `exp.host/--/api/v2/push/send`) **et PostHog** (analytics). Les deux traitent de la PII (tokens device / événements).
+
+**Ce dont j'ai besoin (décision Claudy AVANT tout deploy — STOP SI)** : je n'invente pas de texte légal. Il faut
+que Claudy **(a)** ajoute Expo + PostHog à §4 (proposé : « Expo (notifications push livreur, hébergement USA) — jeton
+de notification et identifiant d'appareil » ; « PostHog (mesure d'audience, proxifié via golivra.app) — événements
+d'usage ») et **(b)** tranche §2.8 (retirer/nuancer « aucun traceur tiers », PostHog étant un traceur analytics).
+Le commit est un **checkpoint fidèle** ; **publication bloquée** tant que §4/§2.8 ne sont pas corrigés.
+
+**Autres réponses demandées** : version **arabe** de la politique = **N'EXISTE PAS** (page FR en dur ; `ar.json` n'a
+que le label de lien footer `"confidentialite"`) → rien à traduire. Page web **`/rejoindre`** = **N'EXISTE PAS**
+(glob `src/app/**/rejoindre/**` vide ; le livreur s'inscrit côté mobile). Page **CGU** ne référence pas la version
+de la politique → non touchée. `TERMS_VERSION` inchangé.
+
+---
+
 ## [ÉTAT-MERGE] — cc EN PAUSE, `git merge` de Lamine EN COURS — 11 août 2026
 > ⚠️ Note hors-conflit (zone commune) — Lamine peut la supprimer en résolvant. cc n'a **rien** commité ce tour.
 
