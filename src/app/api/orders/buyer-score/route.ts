@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
+import { observeBuyerScoreLookup } from "@/lib/buyer-score-audit";
 
 // Score de fiabilité d'un acheteur, CROSS-VENDEURS (réseau LIVRA entier), pour UN numéro
 // fourni en input. Vie privée : on ne retourne un score que pour le numéro donné (jamais
@@ -40,7 +41,9 @@ export async function POST(req: NextRequest) {
 
   const clientIds = (clientRows ?? []).map((c) => c.id as string);
   if (clientIds.length === 0) {
-    // Aucun historique dans LIVRA → nouveau.
+    // Aucun historique dans LIVRA → nouveau. (Un canari atterrit ici : réponse
+    // identique à tout numéro inconnu, aucun signe visible — l'alarme est côté serveur.)
+    after(() => observeBuyerScoreLookup(supabase, { userId: user.id, normalized, level: "nouveau" }));
     return NextResponse.json({ level: "nouveau", delivered: 0, declined: 0, total: 0 });
   }
 
@@ -72,6 +75,9 @@ export async function POST(req: NextRequest) {
   } else {
     level = "fiable"; // total>0, pas risque → delivered ≥ 1 et taux < 30%.
   }
+
+  // Observation best-effort, hors chemin critique (after()) : log audit + canari + volume.
+  after(() => observeBuyerScoreLookup(supabase, { userId: user.id, normalized, level }));
 
   return NextResponse.json({ level, delivered, declined, total });
 }

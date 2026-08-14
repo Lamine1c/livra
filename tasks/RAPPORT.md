@@ -230,6 +230,37 @@ le re-pass **séquentiel** (cas demandé) est couvert ; parallèle = risque rés
 > Purge leads 90j + `lead_insights` : migration 030 + `/api/cron/purge-leads` + cron `vercel.json`,
 > commit `2b53d3a` sur `feat/retention-leads-90j` (rapport détaillé `143f077` sur cette branche).
 > `tsc`+build verts, dry-run projeté 0, non appliquée (gate Lamine).
+## [LOT12-OBSERVATION-W10] — FAIT (option c, phase 1 = observer) — 11 août 2026
+
+**Livré** sur `feat/lot12-observation` (depuis `main`, tag `backup/pre-lot12-obs-w10`), commit `a3e9364`.
+`tsc` + `npm run build` **verts**. Migration **non appliquée** (règle 4). **Contrat API inchangé → zéro
+changement mobile** (résout le blocage W9). Aucune sanction (c'est la phase 2).
+- `033_buyer_score_audit.sql` : `buyer_score_lookups` (id, user_id, **phone_hash**, level, created_at ;
+  index (user_id,created_at)) + `buyer_score_canaries` (phone_normalized PK, note, created_at ; **vide**,
+  Lamine sème au gate). RLS service_role.
+- `src/lib/buyer-score-audit.ts` + accroche `after()` dans `buyer-score/route.ts` (2 sorties) : log best-effort,
+  canari→`Sentry` niveau error **silencieux** (réponse `nouveau` identique, détection hors chemin critique),
+  alerte volume `BUYER_SCORE_ALERT_THRESHOLD` (défaut 150/24 h glissantes), une par vendeur/jour (fingerprint).
+- Env : `BUYER_SCORE_HASH_SALT` (secret HMAC, `.env.example`, jamais commité) + `BUYER_SCORE_ALERT_THRESHOLD`.
+
+**STOP SI vérifiés** : latence → tout en `after()` (chemin critique intact) ; sel → env var (absent ⇒ log
+ignoré, jamais de numéro en clair) ; **buyer-score n'est appelé par aucun flux serveur auto** (grep : 0
+appelant hors la route ; appelant = mobile, contrat non touché). Autres surfaces d'énum (confirm-order,
+gated HMAC Meta) : déjà listées W9, non touchées.
+
+**Verdict adversaire — hash SOLIDE** : HMAC-SHA256 avec clé secrète env protège la petite plage DZ (~10⁸)
+contre le brute-force/pré-calcul **tant que le sel ne fuit pas** ; sans le sel, non ré-inversible. Pas de
+fuite de numéro en clair (hash avant tout insert, aucun `console.log` du numéro). RLS service_role → un
+vendeur ne peut pas lire les canaris. **2 durcissements appliqués suite à son passage** : gate sur insert OK
+(anti-spam Sentry si DB down) + dédup en fenêtre `[seuil..seuil+5)` / canari `[1..3]` (robuste à la
+concurrence, ne rate pas le franchissement). Reste : le hash n'est aussi bon que le secret du sel (gate Lamine).
+
+**Ma reco chiffrée phase 2** (à recalibrer sur la data réelle — c'est le but de l'observation) : d'après le
+code, un vendeur honnête score **1 numéro à la fois** au fil de ses commandes → ordre de grandeur **5-100/j**,
+actif **~150/j**. Hypothèses de départ à remplacer par le p99 observé sur 2-4 semaines : **alerte 150**,
+**dégradation douce > ~250/24 h**, **cap dur ~500/24 h** — jamais en dessous du p99 des vrais vendeurs.
+
+**Ce dont j'ai besoin (gate Lamine)** : appliquer 033, poser `BUYER_SCORE_HASH_SALT`, semer les canaris.
 
 ---
 
