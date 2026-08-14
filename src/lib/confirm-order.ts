@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordRefusInsight } from "@/lib/delivery-insight";
 import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
@@ -305,12 +307,25 @@ export async function handleInboundReply(
     const r = await sendWhatsAppNotification(phone, msg);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG6 (annulation) failed:`, r.error);
 
-    const { error: updErr } = await supabase
+    const { data: flipped, error: updErr } = await supabase
       .from("orders")
       .update({ status: "cancelled", decline_reason: "changed_mind", updated_at: nowIso })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .neq("status", "cancelled")
+      .select("id");
     if (updErr) {
       console.error(`[whatsapp/inbound] from=${masked} db-error (cancel changed_mind) order=${order.id}:`, updErr.message);
+    }
+
+    // Insight D9 (best-effort) : n'écrire QUE sur la vraie transition vers cancelled.
+    // findPendingForPhone (:175-181) ne filtre PAS sur status → un 2e « changé d'avis »
+    // dans la fenêtre OTP repasserait ici ; le garde .neq("status","cancelled") fait
+    // matcher 0 ligne → pas de doublon d'insight. L'échec de l'insight ne bloque rien.
+    if (!updErr && flipped && flipped.length > 0) {
+      // Best-effort POST-réponse via after() : ne jamais ajouter de latence au webhook
+      // WhatsApp entrant (Meta retimeout ~20s → retry). recordRefusInsight ne throw
+      // jamais (try/catch interne), after() garantit en plus l'exécution hors chemin critique.
+      after(() => recordRefusInsight(supabase, { orderId: order.id, motif: "changed_mind" }));
     }
 
     if (vendor?.expo_push_token) {

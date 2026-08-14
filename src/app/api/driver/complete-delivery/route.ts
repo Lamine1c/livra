@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendWhatsAppTemplate, maskPhoneForLog } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 import { orderDelivered } from "@/lib/push-messages";
+import { recordMotoInsight } from "@/lib/delivery-insight";
 
 export async function POST(req: NextRequest) {
   let body: { deviceToken?: unknown; deliveryId?: unknown; orderId?: unknown };
@@ -84,6 +85,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Repair failed" }, { status: 500 });
       }
       console.log("[complete-delivery] repair OK, orders.status now delivered", orderId);
+      // Insight D9 (best-effort) : cette réparation EST la transition delivered de
+      // cet order (la 1re tentative avait flippé la delivery mais pas l'order, donc
+      // pas d'insight écrit) → on l'écrit ici, exactement une fois.
+      after(() => recordMotoInsight(supabase, { deliveryId, orderId, statutFinal: "delivered" }));
     }
     return NextResponse.json({ ok: true, completedAt: null });
   }
@@ -113,6 +118,11 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Insight D9 (best-effort, post-réponse) : l'order vient de passer à delivered.
+  // Le verrou d'idempotence est l'early-return `delivery.status === "completed"`
+  // plus haut → ce chemin ne s'exécute qu'à la 1re complétion.
+  after(() => recordMotoInsight(supabase, { deliveryId, orderId, statutFinal: "delivered" }));
 
   // Fetch order + client + vendor for WA notification
   const { data: order } = await supabase
