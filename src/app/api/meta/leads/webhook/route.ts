@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             phone: lead.phone ?? "",
             phone_normalized: lead.phone ? normalizePhoneNumber(lead.phone) || null : null,
             wilaya: lead.city ?? "",
-            commune: "",
+            commune: lead.commune ?? "",
             address: "",
             notes: `Lead Meta Ads — form ${formId}`,
           })

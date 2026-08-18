@@ -82,7 +82,13 @@ export async function getUserPages(
 export async function getLeadData(
   leadgenId: string,
   pageAccessToken: string
-): Promise<{ name: string | null; phone: string | null; city: string | null; raw: unknown }> {
+): Promise<{
+  name: string | null;
+  phone: string | null;
+  city: string | null;
+  commune: string | null;
+  raw: unknown;
+}> {
   const res = await graphFetch(leadgenId, {
     fields: "field_data,created_time",
     access_token: pageAccessToken,
@@ -109,7 +115,17 @@ export async function getLeadData(
   return {
     name: fullName,
     phone: find("phone_number", "phone", "telephone", "téléphone", "numéro"),
-    city: find("city", "ville", "wilaya"),
+    // ⚠️ MAPPING DZ — décidé le 18 août 2026, ne pas "corriger" à l'instinct.
+    // Les Instant Forms DZ n'utilisent PAS de questions custom : un dropdown de
+    // 58 wilayas ne se scrolle pas sur mobile, et un vendeur DZ ne s'embête pas
+    // à construire ça. Le marché utilise les Contact Fields natifs de Meta,
+    // préremplis depuis le profil Facebook :
+    //   State (`state`) → WILAYA   (division administrative de niveau 1)
+    //   City  (`city`)  → COMMUNE  (la localité de livraison)
+    // `city` appartient donc à la COMMUNE, surtout pas à la wilaya.
+    // Sans commune, le livreur ne peut pas livrer.
+    city: find("state", "wilaya", "province"),
+    commune: find("city", "commune", "baladia", "البلدية", "municipality"),
     raw: d,
   };
 }
