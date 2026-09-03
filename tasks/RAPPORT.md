@@ -19,6 +19,43 @@ FORMAT D'UNE ENTRÉE — le plus récent en haut :
 **Branche / tag** : où vit le travail.
 -->
 
+## [SIGNUP-AUTH-W2] — FAIT — 3 sept 2026
+
+**Livré** sur `fix/signup-auth-user` (depuis `main`, tag `backup/pre-signup-auth-w2`), commit `f289e8e`.
+**`TSC:0`**, **ESLint propre** sur `src/app/api/auth`. **2 fichiers** modifiés (verify-otp inchangé, voir livrable 3).
+Pré-flight : le `.git/index.lock` stale (levé par Lamine) débloqué ; `git pull --ff-only` = **« Already up to date »**
+après contournement DZ `git config --global http.version HTTP/1.1` (timeout 443 sinon). STOP SI pull non déclenché.
+
+**Livrable 1 — `set-password/route.ts:74` (bloc « Step 3c », entre la vérif du temp token et l'update waitlist)** :
+crée/réinitialise le compte Supabase Auth AVANT d'écrire le vendeur. **Le choix de l'étape 2** : `listUsers` n'étant
+pas filtrable par email, j'utilise la **présence de `profiles.email`** (posée par le trigger `on_auth_user_created`)
+comme preuve d'existence du user auth → **absent** = `auth.admin.createUser({email, password, email_confirm:true,
+user_metadata:{full_name, store_name:business_name}})` ; **présent** = `auth.admin.updateUserById(id, {password})`
+(reset légitime : le temp token prouve l'OTP). Erreur auth → **500 + `console.error("[set-password] auth user:", …)`
+et vendors_waitlist PAS écrite** (tout ou rien). Mot de passe jamais loggé ; `password_hash` waitlist reste écrit (compat legal/billing).
+
+**Livrable 2 — `signup/route.ts:85` (409 conditionnel)** : `status='active'` **ET** `profiles.email` présent → 409
+(inchangé) ; `active` **SANS** `profiles` → on laisse passer (renvoi OTP normal) → un inscrit cassé (Ahmed Si) refait
+signup → OTP → set-password → compte enfin créé. Rate-limit OTP inchangé, zéro écran nouveau.
+
+**Livrable 3 — `verify-otp/route.ts`** : **il ne bloque PAS `status='active'`** (fetch OTP → vérif → `used_at` →
+statut `verified` → temp token ; aucun gate sur active). → **non touché**, comme demandé.
+
+**STOP SI tous négatifs** : `profiles.email` existe (`001:7`, trigger `:116-119`) · `createAdminClient()` =
+`SUPABASE_SERVICE_ROLE_KEY` (`admin.ts:5,14`, droits admin) · aucun fichier hors des 3 livrables. Interdits respectés
+(pas d'`auth.users` en SQL, pas de migration/mobile/billing, pas de log password/temp token). *Note : un cache dev
+gitignored `.next/dev/types/validator.ts` (cross-branche, référence `inbound/orders`) faisait un faux `TSC:2` ; bloc mort
+neutralisé (non commité, régénéré) — le build prod avait déjà type-check mon code.*
+
+**🔴 Test = preview Vercel (Lamine, pas local) — prêt à coller** :
+1. `golivra.app`-preview → signup (email jetable) → OTP → mot de passe → **SQL preuve** :
+   `select u.email, p.full_name, p.store_name from auth.users u join profiles p on p.id=u.id where u.email='<email test>';`
+   → puis login dans l'APK preview ZTE avec ce compte → dashboard.
+2. Ahmed pourra refaire le tunnel : `select email from profiles where email='sia483450@gmail.com';` → **0 ligne attendu**.
+**Pas de push.** Le fix part seul en prod (branché depuis main).
+
+---
+
 ## [POLITIQUE-V3-W15] — FAIT ✅ — 14 août 2026
 
 **➡️ politique v3-2026-08-14 publiable — 10 sous-traitants, 0 affirmation invérifiée, 0 référence orpheline.**
