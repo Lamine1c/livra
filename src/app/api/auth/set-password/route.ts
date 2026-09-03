@@ -71,6 +71,53 @@ export async function POST(req: NextRequest) {
       null;
     const termsUserAgent = req.headers.get("user-agent") || null;
 
+    // Step 3c: Créer (ou réinitialiser) le compte Supabase Auth AVANT d'écrire le
+    // vendeur. Sans ligne auth.users, le vendeur ne peut jamais se connecter (l'app
+    // mobile fait signInWithPassword). Le temp token prouve la possession de l'email
+    // (OTP vérifié) → création légitime, ou reset légitime si le compte existe déjà.
+    // Soit tout réussit, soit on n'écrit RIEN (pas de demi-état).
+    const { data: vendorRow } = await supabaseAdmin
+      .from("vendors_waitlist")
+      .select("full_name, business_name")
+      .eq("email", email)
+      .maybeSingle();
+
+    // profiles.email est posé par le trigger on_auth_user_created → la présence de la
+    // ligne prouve que le user auth existe (listUsers n'est pas filtrable par email).
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    try {
+      if (existingProfile?.id) {
+        const { error: authUpdErr } = await supabaseAdmin.auth.admin.updateUserById(
+          existingProfile.id as string,
+          { password: body.password }
+        );
+        if (authUpdErr) throw authUpdErr;
+      } else {
+        const { error: authCreateErr } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: body.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: vendorRow?.full_name ?? null,
+            store_name: vendorRow?.business_name ?? null,
+          },
+        });
+        if (authCreateErr) throw authCreateErr;
+      }
+    } catch (authErr) {
+      // Le compte auth a échoué → on N'ÉCRIT PAS vendors_waitlist (tout ou rien).
+      console.error("[set-password] auth user:", authErr);
+      return NextResponse.json(
+        { error: "Erreur serveur" },
+        { status: 500, headers: CORS_HEADERS }
+      );
+    }
+
     // Step 4: Update vendor with password hash, acceptance proof, set status active
     // + démarrage du trial 7 jours (026_billing_trial_gate).
     console.log("[set-password] Updating vendor record for:", email);

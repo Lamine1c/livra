@@ -82,13 +82,24 @@ export async function POST(req: NextRequest) {
       throw existingError;
     }
 
-    // Step 3: Already active
+    // Step 3: Already active — 409 UNIQUEMENT si le compte auth existe vraiment.
+    // Un inscrit "active" SANS ligne profiles = compte cassé (auth.users jamais créé,
+    // bug historique) → on le laisse refaire le tunnel (OTP normal) pour créer enfin
+    // son compte. profiles.email est posé par le trigger on_auth_user_created.
     if (existing && existing.status === "active") {
-      console.log("[signup] Email already active:", body.email);
-      return NextResponse.json(
-        { error: "Tu es déjà inscrit·e" },
-        { status: 409, headers: CORS_HEADERS }
-      );
+      const { data: activeProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", body.email)
+        .maybeSingle();
+      if (activeProfile) {
+        console.log("[signup] Email already active:", body.email);
+        return NextResponse.json(
+          { error: "Tu es déjà inscrit·e" },
+          { status: 409, headers: CORS_HEADERS }
+        );
+      }
+      console.log("[signup] active mais aucun compte auth — on laisse refaire le tunnel:", body.email);
     }
 
     // Step 4: Rate limit — check for recent OTP
