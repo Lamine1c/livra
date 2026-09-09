@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { encryptToken } from "@/lib/crypto";
 import {
   exchangeShortToken,
   exchangeLongLivedToken,
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       {
         user_id: userId,
         meta_user_id: me.id,
-        access_token: long.access_token,
+        access_token: encryptToken(long.access_token),
         connected_at: new Date().toISOString(),
         last_refresh_at: new Date().toISOString(),
       },
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
           user_id: userId,
           page_id: page.id,
           page_name: page.name,
-          page_access_token: page.access_token,
+          page_access_token: encryptToken(page.access_token),
           active: activeByPage.get(page.id) ?? false,
         },
         { onConflict: "user_id,page_id" }
