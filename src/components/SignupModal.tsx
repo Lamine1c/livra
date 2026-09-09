@@ -1,58 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { WILAYAS } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Waitlist Fondateur ──────────────────────────────────────────────────────
+// Tant que l'app n'est pas sur les stores, /pricing n'inscrit plus personne :
+// on collecte nom + WhatsApp (POST /api/waitlist) et on prévient le prospect
+// sur WhatsApp le jour de l'ouverture. Le tunnel email -> OTP -> mot de passe
+// est retiré (routes /api/auth/* conservées, mais plus appelées côté front).
 
-interface SignupModalProps {
+interface WaitlistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedPlan: "founders" | "monthly";
 }
 
-interface FormState {
-  fullName: string;
-  email: string;
-  whatsapp: string;
-  boutique: string;
-  wilaya: string;
-  produit: string;
-}
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const PLAN_LABELS: Record<string, string> = {
-  founders: "Fondateur · 499 DA/mois À VIE",
-  monthly: "Standard · 999 DA/mois",
-};
-
-const EMPTY_FORM: FormState = {
-  fullName: "",
-  email: "",
-  whatsapp: "",
-  boutique: "",
-  wilaya: "",
-  produit: "",
-};
+// Format DZ local : 0 + [567] + 8 chiffres (espaces retirés avant test).
+const WHATSAPP_RE = /^0[567]\d{8}$/;
+const WHATSAPP_ERR = "Numéro WhatsApp invalide (ex. 05 XX XX XX XX)";
 
 const CARD_SHADOW_LG = "0 1px 0 rgba(255,255,255,0.05) inset, 0 30px 70px -34px rgba(0,0,0,0.85)";
 const BTN_SHADOW = "0 1px 0 rgba(255,255,255,0.12) inset, 0 4px 12px rgba(168,71,43,0.25)";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getPasswordStrength(pw: string): { pct: number; label: string } {
-  if (!pw) return { pct: 0, label: "" };
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  const labels = ["", "Faible", "Moyen", "Bon", "Fort", "Très fort"];
-  return { pct: Math.round((score / 5) * 100), label: labels[score] ?? "Fort" };
-}
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -73,267 +39,74 @@ const labelStyle: React.CSSProperties = {
   color: "#8A8A8E",
 };
 
-const CaretSvg = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-);
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
+  const [fullName, setFullName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ fullName?: string; whatsapp?: string; form?: string }>({});
+  const [submitted, setSubmitted] = useState(false);
 
-  // Step 1 form
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-
-  // Step 2 OTP
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [otpError, setOtpError] = useState("");
-  const [canResend, setCanResend] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null, null, null, null]);
-
-  // Step 2 temp token (never stored in localStorage)
-  const [tempToken, setTempToken] = useState("");
-
-  // Step 3 password
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-
-  // Step 4 founder info
-  const [founderIndex, setFounderIndex] = useState<number | null>(null);
-
-  // ── Reset on open ───────────────────────────────────────────────────────────
+  // Reset à chaque ouverture (le composant reste monté quand isOpen=false).
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire du wizard à chaque ouverture du modal (le composant reste monté quand isOpen=false).
-      setStep(1);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire du formulaire à chaque ouverture.
+      setFullName("");
+      setWhatsapp("");
       setErrors({});
-      setForm(EMPTY_FORM);
-      setOtp(["", "", "", "", "", ""]);
-      setPassword("");
-      setConfirmPassword("");
-      setPasswordError("");
-      setTermsAccepted(false);
-      setOtpError("");
-      setTempToken("");
-      setFounderIndex(null);
+      setSubmitted(false);
+      setLoading(false);
     }
   }, [isOpen]);
 
-  // ── Resend timer ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (step !== 2) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- réarmement volontaire du timer de resend à chaque entrée dans l'étape OTP.
-    setCanResend(false);
-    setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer((t) => {
-        if (t <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [step]);
-
-  // ── Step 1 ──────────────────────────────────────────────────────────────────
-  const validateStep1 = (): Record<string, string> => {
-    const errs: Record<string, string> = {};
-    if (!form.fullName.trim()) errs.fullName = "Requis";
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Email invalide";
-    if (!form.whatsapp.trim() || !/^\d{9}$/.test(form.whatsapp)) errs.whatsapp = "9 chiffres requis";
-    if (!form.boutique.trim()) errs.boutique = "Requis";
-    if (!form.wilaya) errs.wilaya = "Requis";
-    if (!form.produit.trim()) errs.produit = "Requis";
+  const validate = (): { fullName?: string; whatsapp?: string } => {
+    const errs: { fullName?: string; whatsapp?: string } = {};
+    const name = fullName.trim();
+    if (name.length < 2 || name.length > 120) errs.fullName = "Nom complet requis";
+    if (!WHATSAPP_RE.test(whatsapp.replace(/\s+/g, ""))) errs.whatsapp = WHATSAPP_ERR;
     return errs;
   };
 
-  const callSignup = async (): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          full_name: form.fullName,
-          business_name: form.boutique,
-          wilaya: form.wilaya,
-        }),
-      });
-
-      if (res.ok) return true;
-
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 409) {
-        setErrors((prev) => ({ ...prev, email: "Tu es déjà inscrit·e avec cet email" }));
-      } else if (res.status === 429) {
-        setErrors((prev) => ({ ...prev, email: data?.error ?? "Patiente 1 minute avant de redemander un code" }));
-      } else {
-        setErrors((prev) => ({ ...prev, email: data?.error ?? "Une erreur est survenue, réessaie" }));
-      }
-      return false;
-    } catch {
-      setErrors((prev) => ({ ...prev, email: "Une erreur est survenue, réessaie" }));
-      return false;
-    }
-  };
-
-  const handleStep1Submit = async () => {
-    const errs = validateStep1();
+  const handleSubmit = async () => {
+    const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    setLoading(true);
-    const ok = await callSignup();
-    setLoading(false);
-    if (ok) setStep(2);
-  };
-
-  const updateField = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
-  };
-
-  // ── Step 2 ──────────────────────────────────────────────────────────────────
-  const handleOtpAutoSubmit = async (digits: string[]) => {
-    const code = digits.join("");
-    setLoading(true);
-    setOtpError("");
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, code }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.ok) {
-        setTempToken(data.tempToken ?? "");
-        setStep(3);
-      } else if (res.status === 429) {
-        setOtpError("Trop de tentatives — renvoie un nouveau code");
-        setOtp(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      } else if (res.status === 400 && typeof data?.error === "string" && data.error.startsWith("Code expiré")) {
-        setOtpError("Code expiré, recommence");
-        setOtp(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      } else {
-        setOtpError(data?.error ?? "Code incorrect");
-        setOtp(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      }
-    } catch {
-      setOtpError("Une erreur est survenue, réessaie");
-      setOtp(["", "", "", "", "", ""]);
-      inputRefs.current[0]?.focus();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    const val = value.replace(/\D/g, "").slice(-1);
-    const next = [...otp];
-    next[index] = val;
-    setOtp(next);
-    if (val && index < 5) inputRefs.current[index + 1]?.focus();
-    if (next.join("").length === 6) handleOtpAutoSubmit(next);
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
-  };
-
-  const handleResend = async () => {
-    setOtp(["", "", "", "", "", ""]);
-    setOtpError("");
+    setErrors({});
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
-          full_name: form.fullName,
-          business_name: form.boutique,
-          wilaya: form.wilaya,
+          full_name: fullName.trim(),
+          whatsapp: whatsapp.replace(/\s+/g, ""),
         }),
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 429) {
-          setOtpError(data?.error ?? "Patiente 1 minute avant de redemander un code");
-        } else {
-          setOtpError(data?.error ?? "Une erreur est survenue, réessaie");
-        }
-      }
-    } catch {
-      setOtpError("Une erreur est survenue, réessaie");
-    } finally {
-      setLoading(false);
-      inputRefs.current[0]?.focus();
-    }
-  };
 
-  // ── Step 3 ──────────────────────────────────────────────────────────────────
-  const handleStep3Submit = async () => {
-    if (password.length < 8) { setPasswordError("8 caractères minimum"); return; }
-    if (password !== confirmPassword) { setPasswordError("Les mots de passe ne correspondent pas"); return; }
-    if (!termsAccepted) { setPasswordError("Tu dois accepter les CGU et la Politique de confidentialité"); return; }
-    setPasswordError("");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/set-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tempToken, password, termsAccepted: true }),
-      });
+      if (res.ok) { setSubmitted(true); return; }
 
       const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.ok) {
-        setFounderIndex(data.founder_index ?? null);
-        setStep(4);
-      } else if (res.status === 401) {
-        setPasswordError("Session expirée, recommence l'inscription");
-        setTimeout(() => {
-          setStep(1);
-          setTempToken("");
-          setPassword("");
-          setConfirmPassword("");
-          setPasswordError("");
-        }, 2000);
+      if (res.status === 429) {
+        setErrors({ form: data?.error ?? "Trop de tentatives. Réessaie dans une heure." });
+      } else if (res.status === 422) {
+        setErrors({ whatsapp: WHATSAPP_ERR });
       } else {
-        setPasswordError(data?.error ?? "Une erreur est survenue, réessaie");
+        setErrors({ form: "Une erreur est survenue, réessaie." });
       }
     } catch {
-      setPasswordError("Une erreur est survenue, réessaie");
+      setErrors({ form: "Une erreur est survenue, réessaie." });
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Guard ───────────────────────────────────────────────────────────────────
   if (!isOpen) return null;
 
-  const pwStrength = getPasswordStrength(password);
-
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
         @keyframes scaleIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
         .su-input:focus{border-color:rgba(217,119,87,0.55)!important;}
-        .su-btn-outline:hover{border-color:var(--terracotta)!important;transform:translateY(-2px);}
         .su-btn-primary:hover{transform:translateY(-2px);filter:brightness(1.04);}
       `}</style>
       <div
@@ -370,117 +143,67 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
             </svg>
           </button>
 
-          {/* Stepper */}
-          <div style={{ display: "flex", gap: "7px", marginBottom: "22px" }}>
-            {([1, 2, 3, 4] as const).map((s) => (
-              <div
-                key={s}
-                style={{
-                  flex: 1, height: "4px", borderRadius: "9999px",
-                  background: s <= step ? "#D97757" : "rgba(255,255,255,0.07)",
-                  boxShadow: s === step ? "0 0 10px 0 rgba(217,119,87,0.5)" : "none",
-                  transition: "background .3s, box-shadow .3s",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Plan badge */}
+          {/* Badge Fondateur */}
           <span style={{
-            display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "20px",
+            display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "18px",
             fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
             color: "#D97757", background: "rgba(217,119,87,0.12)", border: "1px solid rgba(217,119,87,0.3)",
             padding: "7px 13px", borderRadius: "9999px", whiteSpace: "nowrap", alignSelf: "flex-start",
           }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
-            {PLAN_LABELS[selectedPlan]}
+            Fondateur
           </span>
 
-          {/* ── STEP 1 ─────────────────────────────────────────────────────── */}
-          {step === 1 && (
+          {/* ── FORMULAIRE ──────────────────────────────────────────────────── */}
+          {!submitted && (
             <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
               <div>
-                <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1" }}>
-                  Crée ton compte LIVRA
+                <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.15" }}>
+                  Fondateur · 499 DA/mois à vie — les 50 premières places
                 </h2>
-                <p style={{ marginTop: "8px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                  C&apos;est rapide. 1 minute max.
+                <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
+                  L&apos;app arrive sur le Play Store. Laisse ton WhatsApp, tu seras prévenu le jour J — ta place est gardée.
                 </p>
               </div>
 
               {/* Nom complet */}
               <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
                 <label style={labelStyle}>Nom complet</label>
-                <input className="su-input" type="text" autoComplete="name" placeholder="Mohamed Amine" value={form.fullName} onChange={updateField("fullName")} style={inputStyle} />
+                <input
+                  className="su-input"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Mohamed Amine"
+                  value={fullName}
+                  onChange={(e) => { setFullName(e.target.value); if (errors.fullName) setErrors((p) => ({ ...p, fullName: undefined })); }}
+                  style={inputStyle}
+                />
                 {errors.fullName && <span className="text-xs text-red-400">{errors.fullName}</span>}
-              </div>
-
-              {/* Email */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Email</label>
-                <input className="su-input" type="email" inputMode="email" autoComplete="email" placeholder="toi@exemple.com" value={form.email} onChange={updateField("email")} style={inputStyle} />
-                {errors.email && <span className="text-xs text-red-400">{errors.email}</span>}
               </div>
 
               {/* WhatsApp */}
               <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>WhatsApp</label>
-                <div style={{ display: "flex", alignItems: "stretch", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "#0A0A0C" }}>
-                  <span style={{ display: "flex", alignItems: "center", padding: "0 13px", fontSize: "14.5px", fontWeight: 600, color: "#F5F0E8", background: "rgba(255,255,255,0.04)", borderRight: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
-                    +213
-                  </span>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={9}
-                    placeholder="6XXXXXXXX"
-                    value={form.whatsapp}
-                    onChange={updateField("whatsapp")}
-                    style={{ flex: 1, minWidth: 0, padding: "13px 14px", background: "transparent", border: "none", color: "#F5F0E8", fontSize: "14.5px", letterSpacing: "0.04em", outline: "none" }}
-                  />
-                </div>
+                <label style={labelStyle}>Numéro WhatsApp</label>
+                <input
+                  className="su-input"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={16}
+                  placeholder="05 XX XX XX XX"
+                  value={whatsapp}
+                  onChange={(e) => { setWhatsapp(e.target.value); if (errors.whatsapp) setErrors((p) => ({ ...p, whatsapp: undefined })); }}
+                  style={{ ...inputStyle, letterSpacing: "0.04em" }}
+                />
                 {errors.whatsapp && <span className="text-xs text-red-400">{errors.whatsapp}</span>}
               </div>
 
-              {/* Nom de boutique */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Nom de ta boutique</label>
-                <input className="su-input" type="text" placeholder="Boutique Atlas" value={form.boutique} onChange={updateField("boutique")} style={inputStyle} />
-                {errors.boutique && <span className="text-xs text-red-400">{errors.boutique}</span>}
-              </div>
-
-              {/* Wilaya */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Wilaya</label>
-                <div style={{ position: "relative" }}>
-                  <select
-                    value={form.wilaya}
-                    onChange={updateField("wilaya")}
-                    style={{ ...inputStyle, appearance: "none", paddingRight: "38px", cursor: "pointer" }}
-                  >
-                    <option value="">Choisir une wilaya</option>
-                    {Object.entries(WILAYAS).map(([code, name]) => (
-                      <option key={code} value={code}>{code} — {name}</option>
-                    ))}
-                  </select>
-                  <span style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#8A8A8E" }}>
-                    <CaretSvg />
-                  </span>
-                </div>
-                {errors.wilaya && <span className="text-xs text-red-400">{errors.wilaya}</span>}
-              </div>
-
-              {/* Produit vendu */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Produit vendu</label>
-                <input className="su-input" type="text" placeholder="Casques & écouteurs" value={form.produit} onChange={updateField("produit")} style={inputStyle} />
-                {errors.produit && <span className="text-xs text-red-400">{errors.produit}</span>}
-              </div>
+              {errors.form && <p className="text-xs text-red-400" role="alert">{errors.form}</p>}
 
               <button
                 type="button"
                 disabled={loading}
-                onClick={handleStep1Submit}
+                onClick={handleSubmit}
                 className="su-btn-primary"
                 style={{
                   appearance: "none", border: "none", cursor: loading ? "not-allowed" : "pointer",
@@ -493,210 +216,13 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease, opacity .2s",
                 }}
               >
-                {loading ? "Chargement..." : "Recevoir mon code par email"}
+                {loading ? "Chargement..." : "Réserver ma place Fondateur"}
               </button>
             </div>
           )}
 
-          {/* ── STEP 2 ─────────────────────────────────────────────────────── */}
-          {step === 2 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              <div>
-                <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1" }}>
-                  Vérifie ton email
-                </h2>
-                <p style={{ marginTop: "8px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                  Code envoyé à {form.email}
-                </p>
-              </div>
-
-              {/* OTP inputs */}
-              <div style={{ display: "flex", gap: "10px", justifyContent: "center", margin: "13px 0 4px" }}>
-                {otp.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    disabled={loading}
-                    aria-label={`Chiffre ${i + 1} du code`}
-                    style={{
-                      width: "56px", height: "56px",
-                      background: "#0A0A0C",
-                      border: `1px solid ${digit ? "#D97757" : "rgba(255,255,255,0.08)"}`,
-                      borderRadius: "14px",
-                      fontSize: "24px", fontWeight: 800,
-                      color: "#F5F0E8", textAlign: "center" as const,
-                      fontVariantNumeric: "tabular-nums",
-                      outline: "none",
-                      boxShadow: digit ? "0 0 0 3px rgba(217,119,87,0.14)" : "none",
-                      transition: "border-color .15s, box-shadow .15s",
-                    }}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  />
-                ))}
-              </div>
-
-              {otpError && (
-                <p className="text-xs text-center" role="alert" style={{ color: "#D97757" }}>
-                  {otpError}{" "}
-                  {(otpError.startsWith("Code expiré") || otpError.startsWith("Trop de tentatives") || otpError.startsWith("Patiente")) && (
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={handleResend}
-                      style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "3px", cursor: loading ? "not-allowed" : "pointer", background: "none", border: "none", fontSize: "inherit", padding: 0 }}
-                    >
-                      Renvoyer un code
-                    </button>
-                  )}
-                </p>
-              )}
-              {loading && <p className="text-xs text-center" aria-live="polite" style={{ color: "#8A8A8E" }}>Vérification…</p>}
-
-              {/* Resend */}
-              <p style={{ marginTop: "7px", textAlign: "center", fontSize: "13px", color: "#8A8A8E" }}>
-                {canResend ? (
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleResend}
-                    style={{ color: "#8A8A8E", textDecoration: "underline", textUnderlineOffset: "3px", opacity: loading ? 0.4 : 0.85, cursor: loading ? "not-allowed" : "pointer", background: "none", border: "none" }}
-                  >
-                    Renvoyer le code
-                  </button>
-                ) : (
-                  <span>Renvoyer le code (dans {resendTimer}s)</span>
-                )}
-              </p>
-
-              <button
-                type="button"
-                disabled
-                style={{
-                  appearance: "none", cursor: "not-allowed",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px", marginTop: "2px",
-                  fontSize: "15px", fontWeight: 600,
-                  background: "rgba(255,255,255,0.05)", color: "#8A8A8E",
-                  border: "none", boxShadow: "none",
-                }}
-              >
-                Vérifier
-              </button>
-            </div>
-          )}
-
-          {/* ── STEP 3 ─────────────────────────────────────────────────────── */}
-          {step === 3 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              <div>
-                <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1" }}>
-                  Crée ton mot de passe
-                </h2>
-                <p style={{ marginTop: "8px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                  Minimum 8 caractères.
-                </p>
-              </div>
-
-              {/* Password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Mot de passe</label>
-                <input
-                  className="su-input"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); if (passwordError) setPasswordError(""); }}
-                  style={inputStyle}
-                />
-              </div>
-
-              {/* Confirm password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={labelStyle}>Confirme le mot de passe</label>
-                <input
-                  className="su-input"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => { setConfirmPassword(e.target.value); if (passwordError) setPasswordError(""); }}
-                  style={inputStyle}
-                />
-              </div>
-
-              {/* Password strength meter */}
-              {password && (
-                <div style={{ marginTop: "14px" }}>
-                  <div style={{ height: "5px", borderRadius: "9999px", background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%",
-                      width: `${pwStrength.pct}%`,
-                      borderRadius: "9999px",
-                      background: "#D97757",
-                      boxShadow: "0 0 8px 0 rgba(217,119,87,0.5)",
-                      transition: "width .3s ease",
-                    }} />
-                  </div>
-                  {pwStrength.label && (
-                    <span style={{ display: "block", marginTop: "8px", fontSize: "11.5px", color: "#8A8A8E", letterSpacing: "0.02em" }}>
-                      Force du mot de passe : {pwStrength.label}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {passwordError && <p className="text-xs text-red-400" role="alert">{passwordError}</p>}
-
-              {/* Acceptation expresse CGU + Privacy (preuve juridique) */}
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", marginTop: "4px" }}>
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => { setTermsAccepted(e.target.checked); if (passwordError) setPasswordError(""); }}
-                  style={{ width: "18px", height: "18px", marginTop: "1px", flexShrink: 0, accentColor: "#D97757", cursor: "pointer" }}
-                />
-                <span style={{ fontSize: "13px", lineHeight: "1.5", color: "#8A8A8E" }}>
-                  J&apos;accepte les{" "}
-                  <a href="/cgu" target="_blank" rel="noopener noreferrer" style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "2px" }}>
-                    Conditions Générales d&apos;Utilisation
-                  </a>{" "}
-                  et la{" "}
-                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#D97757", textDecoration: "underline", textUnderlineOffset: "2px" }}>
-                    Politique de confidentialité
-                  </a>
-                  {", et que les signaux de mes commandes (livraisons réussies, refus) alimentent le score anti-fraude partagé entre vendeurs LIVRA."}
-                </span>
-              </label>
-
-              <button
-                type="button"
-                disabled={loading || !termsAccepted}
-                onClick={handleStep3Submit}
-                className="su-btn-primary"
-                style={{
-                  appearance: "none", border: "none", cursor: loading || !termsAccepted ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px", marginTop: "2px",
-                  fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
-                  background: "#D97757", color: "#1a0f0a",
-                  boxShadow: BTN_SHADOW,
-                  opacity: loading || !termsAccepted ? 0.6 : 1,
-                  transition: "transform .2s ease, box-shadow .2s ease, filter .2s ease, opacity .2s",
-                }}
-              >
-                {loading ? "Chargement..." : "Créer mon compte"}
-              </button>
-            </div>
-          )}
-
-          {/* ── STEP 4 ─────────────────────────────────────────────────────── */}
-          {step === 4 && (
+          {/* ── SUCCÈS ──────────────────────────────────────────────────────── */}
+          {submitted && (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
               <div
                 aria-hidden="true"
@@ -714,40 +240,12 @@ export default function SignupModal({ isOpen, onClose, selectedPlan }: SignupMod
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              {founderIndex != null ? (
-                <>
-                  <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
-                    🎉 Tu es fondateur LIVRA #{founderIndex} !
-                  </h2>
-                  <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                    Ton tarif fondateur 499 DA/mois est verrouillé à vie.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
-                    Bienvenue dans LIVRA !
-                  </h2>
-                  <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
-                    Ton compte est créé.
-                  </p>
-                </>
-              )}
-              <Link
-                href="/telecharger"
-                onClick={onClose}
-                className="su-btn-primary"
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", padding: "16px", borderRadius: "14px", marginTop: "26px",
-                  fontSize: "15px", fontWeight: 700, letterSpacing: "-0.005em",
-                  background: "#D97757", color: "#1a0f0a",
-                  boxShadow: BTN_SHADOW, textDecoration: "none",
-                  transition: "transform .2s ease, filter .2s ease",
-                }}
-              >
-                Télécharger l&apos;app
-              </Link>
+              <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.025em", color: "#F5F0E8", lineHeight: "1.1", marginTop: "26px" }}>
+                C&apos;est noté !
+              </h2>
+              <p style={{ marginTop: "10px", fontSize: "14px", color: "#8A8A8E", lineHeight: "1.5" }}>
+                On t&apos;écrit sur WhatsApp dès l&apos;ouverture.
+              </p>
             </div>
           )}
         </div>

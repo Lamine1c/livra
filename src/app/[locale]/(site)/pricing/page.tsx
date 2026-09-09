@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Footer from "@/components/site/Footer";
-import SignupModal from "@/components/SignupModal";
-
-type PlanKey = "founders" | "monthly";
+import WaitlistModal from "@/components/SignupModal";
 
 // ── Icons (inline SVG — no emoji, brand rule) ────────────────────────────────
 function FeatIcon({ children }: { children: React.ReactNode }) {
@@ -63,13 +61,7 @@ function FeatureList() {
 
 export default function PricingPage() {
   const t = useTranslations("Pricing");
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  function openModal(plan: PlanKey) {
-    setSelectedPlan(plan);
-    setModalOpen(true);
-  }
 
   return (
     <>
@@ -276,7 +268,7 @@ export default function PricingPage() {
               <button
                 type="button"
                 className="pv-cta pv-cta--primary"
-                onClick={() => openModal("founders")}
+                onClick={() => setModalOpen(true)}
               >
                 {t("founderCta")}
                 <ArrowSvg />
@@ -297,7 +289,7 @@ export default function PricingPage() {
                 <p className="pv-standard-note">{t("standardNote")}</p>
               </div>
 
-              <button type="button" className="pv-cta pv-cta--ghost" onClick={() => openModal("monthly")}>
+              <button type="button" className="pv-cta pv-cta--ghost" onClick={() => setModalOpen(true)}>
                 {t("standardCta")}
                 <ArrowSvg />
               </button>
@@ -327,10 +319,9 @@ export default function PricingPage() {
 
       <Footer />
 
-      <SignupModal
+      <WaitlistModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        selectedPlan={selectedPlan ?? "monthly"}
       />
     </>
   );
