@@ -9,12 +9,15 @@ import type { InboundOrderInput } from "./schema";
 // webhook Meta (leads/webhook/route.ts:88-121) : clients → orders → order_items, avec
 // idempotence par (user_id, source='api', external_order_id) — index unique partiel 035.
 
-type InboundCtx = { userId: string; supabase: SupabaseClient };
+// source : 'api' (porte 1, défaut) ou 'email' (porte 0). Détermine le namespace
+// d'idempotence (index unique partiel 035 sur user_id, source, external_order_id).
+type InboundSource = "api" | "email";
+type InboundCtx = { userId: string; supabase: SupabaseClient; source?: InboundSource };
 
 export type InboundResult = { duplicate: boolean; orderId: string; reference: string };
 
 // ─── Journal : une ligne inbound_events par requête. JAMAIS le payload brut. ──
-type EventStatus = "order_created" | "rejected" | "error";
+type EventStatus = "received" | "order_created" | "rejected" | "error";
 
 export async function logInboundEvent(
   supabase: SupabaseClient,
@@ -22,6 +25,7 @@ export async function logInboundEvent(
     sourceId: string | null;
     userId: string | null;
     status: EventStatus;
+    kind?: string; // 'api' (défaut, porte 1) | 'email' | 'email_webhook'
     rejectReason?: string | null;
     errorMessage?: string | null;
     orderId?: string | null;
@@ -32,7 +36,7 @@ export async function logInboundEvent(
     const { error } = await supabase.from("inbound_events").insert({
       source_id: e.sourceId,
       user_id: e.userId,
-      kind: "api",
+      kind: e.kind ?? "api",
       external_ref: e.externalRef ?? null,
       status: e.status,
       reject_reason: e.rejectReason ?? null,
@@ -50,13 +54,14 @@ export async function createInboundOrder(
   ctx: InboundCtx
 ): Promise<InboundResult> {
   const { userId, supabase } = ctx;
+  const source = ctx.source ?? "api";
 
   // 1) Idempotence — pré-check avant toute écriture.
   const { data: existing } = await supabase
     .from("orders")
     .select("id, reference")
     .eq("user_id", userId)
-    .eq("source", "api")
+    .eq("source", source)
     .eq("external_order_id", input.external_order_id)
     .maybeSingle();
   if (existing) {
@@ -95,7 +100,7 @@ export async function createInboundOrder(
   if (clientError || !client) throw new Error(`Client insert failed: ${clientError?.message}`);
 
   // 4) Order — l'index unique partiel 035 garantit l'idempotence même en course.
-  const reference = `LV-API-${Date.now().toString(36).toUpperCase()}`;
+  const reference = `LV-${source === "email" ? "EML" : "API"}-${Date.now().toString(36).toUpperCase()}`;
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -103,11 +108,11 @@ export async function createInboundOrder(
       client_id: client.id,
       reference,
       status: "pending_confirmation",
-      source: "api",
+      source,
       external_order_id: input.external_order_id,
       total_amount: totalAmount,
       delivery_fee: deliveryFee,
-      notes: input.source_label ?? "Commande API",
+      notes: input.source_label ?? (source === "email" ? "Commande email" : "Commande API"),
     })
     .select("id")
     .single();
@@ -122,7 +127,7 @@ export async function createInboundOrder(
         .from("orders")
         .select("id, reference")
         .eq("user_id", userId)
-        .eq("source", "api")
+        .eq("source", source)
         .eq("external_order_id", input.external_order_id)
         .maybeSingle();
       if (won) return { duplicate: true, orderId: won.id as string, reference: won.reference as string };
