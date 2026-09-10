@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { decryptToken } from "@/lib/crypto";
 import { graphFetch, verifySupabaseJwt } from "@/lib/meta";
 
 // Déconnexion Meta Ads : révoque le token côté Meta (best-effort) puis purge la
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
     .select("access_token")
     .eq("user_id", userId)
     .maybeSingle();
-  const token = (conn as { access_token?: string } | null)?.access_token;
+  const storedToken = (conn as { access_token?: string } | null)?.access_token;
+  const token = storedToken ? decryptToken(storedToken) : undefined;
   if (token) {
     try {
       await graphFetch("me/permissions", { access_token: token }, "DELETE");

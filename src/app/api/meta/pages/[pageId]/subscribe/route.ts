@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { decryptToken } from "@/lib/crypto";
 import { graphFetch, verifySupabaseJwt } from "@/lib/meta";
 
 type Params = { params: Promise<{ pageId: string }> };
@@ -12,7 +13,7 @@ async function getPageToken(userId: string, pageId: string): Promise<string | nu
     .eq("user_id", userId)
     .eq("page_id", pageId)
     .single();
-  return data?.page_access_token ?? null;
+  return data?.page_access_token ? decryptToken(data.page_access_token) : null;
 }
 
 // POST — activate leadgen subscription on a page

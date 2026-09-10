@@ -1,6 +1,7 @@
 import { NextRequest, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyWebhookSignature, getLeadData } from "@/lib/meta";
+import { decryptToken, encryptToken, isEncrypted } from "@/lib/crypto";
 import { sendExpoPush } from "@/lib/expo-push";
 import { metaLead } from "@/lib/push-messages";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
@@ -82,8 +83,31 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
+        // Déchiffre le token de page (legacy en clair → retourné tel quel).
+        const storedPageToken = subscription.page_access_token;
+        const pageToken = decryptToken(storedPageToken);
+
+        // Ré-encryption LAZY : si le token stocké est encore en clair (legacy),
+        // on le ré-écrit chiffré dans la même ligne, best-effort, hors chemin
+        // critique (after()). Jamais le token dans un log.
+        if (!isEncrypted(storedPageToken)) {
+          const subUserId = subscription.user_id;
+          after(async () => {
+            try {
+              const { error } = await supabase
+                .from("meta_page_subscriptions")
+                .update({ page_access_token: encryptToken(storedPageToken) })
+                .eq("user_id", subUserId)
+                .eq("page_id", pageId);
+              if (error) console.error("[meta/webhook] ré-encryption token échouée:", error.message);
+            } catch (e) {
+              console.error("[meta/webhook] ré-encryption token échouée:", e instanceof Error ? e.message : "erreur inconnue");
+            }
+          });
+        }
+
         // Fetch lead data from Graph API
-        const lead = await getLeadData(leadgenId, subscription.page_access_token);
+        const lead = await getLeadData(leadgenId, pageToken);
 
         // Insert client row first
         const { data: client, error: clientError } = await supabase
