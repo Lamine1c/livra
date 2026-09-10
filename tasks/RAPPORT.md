@@ -205,6 +205,53 @@ Le commit est un **checkpoint fidèle** ; **publication bloquée** tant que §4/
 que le label de lien footer `"confidentialite"`) → rien à traduire. Page web **`/rejoindre`** = **N'EXISTE PAS**
 (glob `src/app/**/rejoindre/**` vide ; le livreur s'inscrit côté mobile). Page **CGU** ne référence pas la version
 de la politique → non touchée. `TERMS_VERSION` inchangé.
+## [INGESTION-W1] — FAIT (code), test curl EN ATTENTE du gate Lamine — 3 sept 2026
+
+**Livré** sur `feat/ingestion` (tag `backup/pre-ingestion-w1`) : migration 035 commitée (`98d4d10`) + 4 livrables
+(`c943e7b`). **`tsc:0`**, **ESLint propre** sur `src/lib/inbound` + `src/app/api/inbound`. Rien hors des 4 fichiers.
+Fichiers : `src/lib/inbound/schema.ts` (zod), `auth.ts` (resolveApiKey sha256), `create-order.ts` (createInboundOrder
++ logInboundEvent), `src/app/api/inbound/orders/route.ts` (POST, `runtime="nodejs"`).
+
+**STOP SI tous négatifs** : `zod` présent (v4.4.3, `package.json:28`) · `pending_confirmation` bien dans le CHECK
+(`013_meta_lead_ads.sql`) · working tree propre hors `tasks/`. Interdits respectés (rien touché dans `meta/**`,
+`whatsapp.ts`, `rate-limit.ts`).
+
+**Choix de conception (à valider)** : (1) **journal centralisé dans la route** — 1 `inbound_events`/requête via
+`logInboundEvent`, jamais le payload/tel/clé ; statut final seulement (order_created/rejected/error). (2) **push =
+`metaLead()` réutilisé** (placeholder) — **un message dédié « commande API » reste à écrire**. (3) `buyer.notes` →
+`clients.notes` (car `orders.notes` porte le `source_label`). (4) `occurred_at` **validé** (Date.parse) mais **non
+persisté** — aucune colonne pour lui dans cette porte ; à confirmer. (5) 23505 → delete du client orphelin **qu'on
+vient de créer** (seul delete) + relecture → `duplicate`.
+
+**🔴 Test curl NON exécuté par moi** : il faut une ligne `inbound_sources` (Lamine) **et** chaque requête écrirait
+dans `inbound_events` en **prod** — je n'écris pas en prod. Tout est prêt pour le gate :
+
+**Clé API en clair (ICI UNIQUEMENT, jamais dans le repo)** : `livra_sk_8644b51495875bc4bfbd201b54e53fb55543ea6953beadb7`
+
+**SQL à coller (Lamine) — insère la source de test** *(remplace `<USER_ID>` par un vendeur réel)* :
+```sql
+insert into public.inbound_sources (user_id, kind, api_key_hash, label, active)
+values ('<USER_ID>', 'api', '0e94a5a1ef454c034c68e2879639f9b46baba116a8988e09e9a5df40cdf66c5f', 'Test porte API W1', true);
+```
+
+**3 curl (après `npm run dev`)** :
+```bash
+# 1) valide → 201 {status:"created",...}
+curl -sS -X POST localhost:3000/api/inbound/orders -H "Authorization: Bearer livra_sk_8644b51495875bc4bfbd201b54e53fb55543ea6953beadb7" -H "Content-Type: application/json" -d '{"external_order_id":"ORD-1001","buyer":{"full_name":"Test Acheteur","phone":"0555123456","wilaya":"Alger","commune":"Bab Ezzouar"},"items":[{"product_name":"Chaussures","quantity":2,"unit_price":2500}]}'
+# 2) MÊME payload → 200 {status:"duplicate",...}   (rejoue la commande 1 à l'identique)
+# 3) sans buyer.phone → 422 {error:"validation",fields:["buyer.phone"]}
+curl -sS -X POST localhost:3000/api/inbound/orders -H "Authorization: Bearer livra_sk_8644b51495875bc4bfbd201b54e53fb55543ea6953beadb7" -H "Content-Type: application/json" -d '{"external_order_id":"ORD-1002","buyer":{"full_name":"Test","wilaya":"Alger","commune":"X"},"items":[{"product_name":"Y"}]}'
+```
+
+**2 SQL de preuve** :
+```sql
+select reference, source, external_order_id from orders where source='api';
+select status, reject_reason from inbound_events order by created_at;
+```
+**Pas de push** (interdit). Après le gate vert, révoquer la clé de test (`update inbound_sources set revoked_at=now() where label='Test porte API W1'`).
+
+---
+
 ## [CONSENTEMENT-LIVREUR-W17] — FAIT (design A) — 14 août 2026
 
 **Livré** sur `feat/consentement-livreur` (tag `backup/pre-consentement-livreur-w17`), commit `5b0a4b2`.
