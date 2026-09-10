@@ -20,7 +20,7 @@ import { createInboundOrder, logInboundEvent } from "@/lib/inbound/create-order"
 // re-livre que sans 200 ; on absorbe donc toute erreur post-signature en 200 + event journalisé).
 export const runtime = "nodejs";
 
-const RESEND_RETRIEVE_URL = "https://api.resend.com/emails";
+const RESEND_RETRIEVE_URL = "https://api.resend.com/emails/receiving";
 const SIGNATURE_TOLERANCE_S = 5 * 60;
 
 // ─── Vérification manuelle de la signature svix (pas de dépendance svix) ──────
