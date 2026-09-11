@@ -73,6 +73,24 @@ export function metaLead(
   };
 }
 
+// ââ Vendeur â commande boutique inbound (email/api) ââ
+export function inboundOrder(
+  locale: string | null | undefined,
+  vars: { clientName: string }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return {
+      title: "🛒 Ø·ÙØ¨ Ø¬Ø¯ÙØ¯ ÙÙ ÙØªØ¬Ø±Ù",
+      body: `${vars.clientName} â ØªØ­ÙÙ ÙØ£ÙØ¯ Ø§ÙØ·ÙØ¨ ÙÙ LIVRA`,
+    };
+  }
+  return {
+    title: "🛒 Nouvelle commande boutique",
+    body: `${vars.clientName} â vÃ©rifie et confirme dans LIVRA`,
+  };
+}
+
 // ── Vendeur — position client confirmée (orders/locate) ──
 export function buyerLocationConfirmed(
   locale: string | null | undefined,

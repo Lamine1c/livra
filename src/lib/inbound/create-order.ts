@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
-import { metaLead } from "@/lib/push-messages";
+import { inboundOrder } from "@/lib/push-messages";
 import { sendExpoPush } from "@/lib/expo-push";
 import type { InboundOrderInput } from "./schema";
 
@@ -145,7 +145,7 @@ export async function createInboundOrder(
     .insert(items.map((it) => ({ order_id: order.id, ...it })));
   if (itemsError) throw new Error(`Order items insert failed: ${itemsError.message}`);
 
-  // 6) Push vendeur — même bloc que Meta (message metaLead() en attendant un message
+  // 6) Push vendeur — même bloc que Meta (message inboundOrder() en attendant un message
   //    dédié « commande API », à noter au RAPPORT). Best-effort via after().
   const { data: profile } = await supabase
     .from("profiles")
@@ -153,7 +153,7 @@ export async function createInboundOrder(
     .eq("id", userId)
     .single();
   if (profile?.expo_push_token) {
-    const { title, body } = metaLead(profile.locale, { clientName: input.buyer.full_name });
+    const { title, body } = inboundOrder(profile.locale, { clientName: input.buyer.full_name });
     const pushToken = profile.expo_push_token as string;
     const orderId = order.id as string;
     after(async () => {
