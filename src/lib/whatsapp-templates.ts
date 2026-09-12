@@ -21,6 +21,12 @@ export type WhatsAppTemplate = {
 
 const SEP = "━━━━━━━━━━━━━━";
 
+// ─── Signature LIVRA (bas de CHAQUE message acheteur, FR+AR) ──────────────────
+// Ajoutée en pied de bloc AR et de bloc FR par appendSignature() plus bas, à TOUS les
+// templates SAUF order_confirmation_request (déjà approuvé en prod — on n'y touche pas).
+const SIG_AR = "✓ LIVRA — مقامك الخاص بك يحميك و يعطيك الأولوية في جميع متاجر LIVRA";
+const SIG_FR = "✓ LIVRA — ton statut client te protege et te priorise dans toutes les boutiques LIVRA";
+
 export const TEMPLATES = {
   // ─── MSG 1 — Confirmation de commande (OUI/NON) ───
   order_confirmation_request: {
@@ -310,6 +316,28 @@ ${SEP}
 Contactez {{1}} pour reprogrammer votre livraison.`,
   },
 } satisfies Record<string, WhatsAppTemplate>;
+
+// ─── Signature LIVRA en pied de chaque message ACHETEUR (FR+AR) ───────────────
+// Insère SIG_AR en bas du bloc AR (avant ${SEP}) et SIG_FR en bas du bloc FR. Appliquée
+// une seule fois, à la définition, à TOUS les templates SAUF ceux exclus. order_confirmation_request
+// est EXCLU : template approuvé en prod (STOP SI — on ne modifie pas sa copy). vendorMessage()
+// n'est pas dans TEMPLATES (fonction vendeur) → naturellement hors signature acheteur.
+// Rappel : pour les envois en TEMPLATE (delivery_*, repli tunnel), Meta délivre SA copy approuvée
+// — la signature ci-dessous ne s'affiche qu'après re-soumission (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
+const SIGNATURE_EXCLUDE = new Set<string>(["order_confirmation_request"]);
+
+function appendSignature(body: string): string {
+  const marker = `\n\n${SEP}\n\n`;
+  const i = body.indexOf(marker);
+  if (i === -1) return `${body}\n\n${SIG_FR}`; // pas de séparateur AR/FR (ne devrait pas arriver)
+  const ar = body.slice(0, i);
+  const fr = body.slice(i + marker.length);
+  return `${ar}\n\n${SIG_AR}${marker}${fr}\n\n${SIG_FR}`;
+}
+
+for (const t of Object.values(TEMPLATES) as WhatsAppTemplate[]) {
+  if (!SIGNATURE_EXCLUDE.has(t.name)) t.body = appendSignature(t.body);
+}
 
 // ─── BUILD META CLOUD API PAYLOAD ─────────────────────────────
 // Construit le payload "template" Meta Cloud API (Meta + 360dialog partagent ce
