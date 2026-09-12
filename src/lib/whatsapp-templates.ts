@@ -349,6 +349,34 @@ export function buildTemplatePayload(
   };
 }
 
+// ─── BUILD META INTERACTIVE (reply buttons) ──────────────────
+// Message interactif "reply buttons" (type: "interactive") — n'est délivré que DANS la
+// fenêtre 24h (message de session), pas hors fenêtre (là c'est le template qui prend le
+// relais). Au clic, le webhook entrant reçoit interactive.button_reply = { id, title } :
+// `title` = libellé darija affiché, `id` = payload de routage stable (défaut = text si
+// non fourni). Meta limite à 3 boutons ; le corps interactif est limité à 1024 chars.
+export function buildInteractiveButtonsPayload(
+  to: string,
+  bodyText: string,
+  buttons: NonNullable<WhatsAppTemplate["buttons"]>
+): object {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((btn) => ({
+          type: "reply",
+          reply: { id: btn.id ?? btn.text, title: btn.text },
+        })),
+      },
+    },
+  };
+}
+
 // ─── RENDU TEXTE (fallback texte Meta) ───────────────────────
 // Le sender runtime (whatsapp.ts → sendWhatsAppNotification) envoie une string :
 // on interpole {{1}}…{{n}} dans le corps. Les boutons quick-reply ne s'appliquent

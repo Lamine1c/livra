@@ -254,10 +254,7 @@ export async function handleInboundReply(
   // par NOT_AVAIL_RE / MIND_CHANGED_RE / CHEAPER_RE. En fenêtre 24h (le client vient
   // d'écrire « NON ») → message interactif ; hors fenêtre = repli template (livrable 2).
   if (NO_RE.test(bodyTrim)) {
-    const tmpl = TEMPLATES.order_cancel_reasons;
-    const body = renderTemplateText(tmpl, []);
-    const buttons = (tmpl.buttons ?? []).map((b) => ({ id: b.id ?? b.text, title: b.text }));
-    const r = await sendWhatsAppInteractiveButtons(phone, body, buttons);
+    const r = await sendWhatsAppInteractiveButtons(phone, TEMPLATES.order_cancel_reasons, []);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG4 (boutons) failed:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (boutons interactifs) envoyé`);
     return { action: "declined" };
