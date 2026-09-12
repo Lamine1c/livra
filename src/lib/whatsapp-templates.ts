@@ -200,7 +200,7 @@ Si vous changez d'avis, {{2}} reste à votre service 👋`,
 
 ${SEP}
 
-Le proverbe le dit : "على رخصو خلا نصو" 😜
+Le proverbe le dit : « Qui achète trop bon marché, achète deux fois »
 
 Le moins cher cache souvent un faux produit ou un vendeur pas professionnel.
 Ici, vous payez à la livraison — une fois le produit en main, vérifié.
