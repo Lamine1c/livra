@@ -13,7 +13,9 @@ export type WhatsAppTemplate = {
   category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
   language: string;
   body: string;
-  buttons?: Array<{ type: "QUICK_REPLY"; text: string }>;
+  // `id` = payload stable (retourné par Meta au clic, sert au routage inbound) ;
+  // `text` = libellé darija ≤20 chars (limite Meta quick-reply / bouton interactif).
+  buttons?: Array<{ type: "QUICK_REPLY"; text: string; id?: string }>;
   variables: string[]; // libellés humains, ordre = {{1}}, {{2}}…
 };
 
@@ -119,17 +121,19 @@ On attend votre code 🙂`,
   },
 
   // ─── MSG 4 — Pourquoi ? (après NON) ───
-  // ⚠️ Boutons bilingues > 20 caractères = limite Meta quick-reply (à raccourcir
-  //    avant soumission Meta — copy verbatim conservée ici, décision Lamine).
+  // Boutons 100% darija ≤20 chars (limite Meta) — servent le message INTERACTIF en
+  // fenêtre 24h ET le template quick-reply hors fenêtre. `id` = payload de routage :
+  // le clic renvoie le libellé darija, capté par NOT_AVAIL_RE / MIND_CHANGED_RE /
+  // CHEAPER_RE dans confirm-order.ts (branches A/B/C déjà câblées).
   order_cancel_reasons: {
     name: "order_cancel_reasons",
     category: "UTILITY",
     language: "fr",
     variables: [],
     buttons: [
-      { type: "QUICK_REPLY", text: "📅 ماشي اليوم / Pas dispo" },
-      { type: "QUICK_REPLY", text: "🤔 بدلت رايي / Changé d'avis" },
-      { type: "QUICK_REPLY", text: "💰 لقيت أرخص / Moins cher" },
+      { type: "QUICK_REPLY", id: "not_available", text: "ماشي اليوم" },
+      { type: "QUICK_REPLY", id: "changed_mind", text: "بدلت رايي" },
+      { type: "QUICK_REPLY", id: "found_cheaper", text: "لقيت أرخص" },
     ],
     body: `message en français suit
 

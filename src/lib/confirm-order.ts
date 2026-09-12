@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordRefusInsight } from "@/lib/delivery-insight";
-import { normalizePhoneNumber, sendWhatsAppNotification } from "@/lib/whatsapp";
+import { normalizePhoneNumber, sendWhatsAppNotification, sendWhatsAppInteractiveButtons } from "@/lib/whatsapp";
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
@@ -248,12 +248,18 @@ export async function handleInboundReply(
     return { action: "code_sent", orderId: order.id };
   }
 
-  // ── NON → envoyer MSG 4 (raisons), aucun changement DB ──
+  // ── NON → MSG 4 INTERACTIF à boutons (3 raisons darija), aucun changement DB ──
+  // Les 3 boutons (ماشي اليوم / بدلت رايي / لقيت أرخص) déclenchent les branches A/B/C
+  // ci-dessous quand le client tape/clique : le clic renvoie le libellé darija, capté
+  // par NOT_AVAIL_RE / MIND_CHANGED_RE / CHEAPER_RE. En fenêtre 24h (le client vient
+  // d'écrire « NON ») → message interactif ; hors fenêtre = repli template (livrable 2).
   if (NO_RE.test(bodyTrim)) {
-    const msg = renderTemplateText(TEMPLATES.order_cancel_reasons, []);
-    const r = await sendWhatsAppNotification(phone, msg);
-    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG4 (raisons) failed:`, r.error);
-    console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (raisons) envoyé`);
+    const tmpl = TEMPLATES.order_cancel_reasons;
+    const body = renderTemplateText(tmpl, []);
+    const buttons = (tmpl.buttons ?? []).map((b) => ({ id: b.id ?? b.text, title: b.text }));
+    const r = await sendWhatsAppInteractiveButtons(phone, body, buttons);
+    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG4 (boutons) failed:`, r.error);
+    console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (boutons interactifs) envoyé`);
     return { action: "declined" };
   }
 

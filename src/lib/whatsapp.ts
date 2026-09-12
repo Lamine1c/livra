@@ -161,3 +161,38 @@ function buildTextPayload(to: string, message: string) {
     text: { body: message },
   };
 }
+
+// ─── MESSAGE INTERACTIF À BOUTONS (fenêtre 24h) ───────────────
+// Boutons "reply" WhatsApp Cloud API. Délivré UNIQUEMENT dans la fenêtre 24h (comme
+// le texte libre) : le tunnel l'appelle en réponse à un message ENTRANT du client.
+// Hors fenêtre → repli template quick-reply (sendWhatsAppTemplate). Meta borne à
+// 3 boutons ; title ≤20 chars, id ≤256. Le clic renvoie {button_reply:{id,title}}.
+export type InteractiveButton = { id: string; title: string };
+
+function buildInteractivePayload(to: string, bodyText: string, buttons: InteractiveButton[]) {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((b) => ({
+          type: "reply",
+          reply: { id: b.id, title: b.title },
+        })),
+      },
+    },
+  };
+}
+
+export async function sendWhatsAppInteractiveButtons(
+  phone: string,
+  bodyText: string,
+  buttons: InteractiveButton[]
+): Promise<{ success: boolean; error?: string }> {
+  const to = normalizePhoneNumber(phone);
+  const result = await postToMeta(buildInteractivePayload(to, bodyText, buttons), "interactive:buttons");
+  return { success: result.ok, error: result.error };
+}
