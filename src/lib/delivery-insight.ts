@@ -89,13 +89,23 @@ type InsightRow = {
   delivered_on: string;
 };
 
+// Best-effort STRICT (ne throw jamais) + 1 retentative. Dette W8 : sans retry, un
+// hoquet DB transitoire à la clôture perdait l'insight ET, côté moto_perso, les
+// positions GPS sont purgées ~30 j après (032) → distance irrécupérable. Une seule
+// retentative (2 essais, 500 ms) couvre le hoquet transitoire sans jamais bloquer la
+// clôture (appelée via after()). Le contrat appelant (Promise<void>, ne throw pas) est inchangé.
 async function insertInsight(supabase: DB, row: InsightRow): Promise<void> {
-  try {
-    const { error } = await supabase.from("delivery_insights").insert(row);
-    if (error) console.error("[delivery-insight] insert failed:", error.message);
-  } catch (e) {
-    console.error("[delivery-insight] insert threw:", e);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const { error } = await supabase.from("delivery_insights").insert(row);
+      if (!error) return;
+      console.error(`[delivery-insight] insert failed (essai ${attempt}/2):`, error.message);
+    } catch (e) {
+      console.error(`[delivery-insight] insert threw (essai ${attempt}/2):`, e);
+    }
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 500));
   }
+  console.error("[delivery-insight] insert ABANDONNÉ après 2 essais — insight perdu:", row.mode, row.statut_final);
 }
 
 function pickClient(order: unknown): { wilaya: string | null; commune: string | null } {
