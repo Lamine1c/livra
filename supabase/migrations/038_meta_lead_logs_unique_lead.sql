@@ -1,0 +1,73 @@
+-- 038 — W7 ROBUSTESSE · unicité de conversion sur meta_lead_logs
+--
+-- POURQUOI (dette signalée RAPPORT W4) : meta_lead_logs n'a aucune contrainte d'unicité
+-- sur lead_id → au pire deux lignes 'order_created' pour un même lead → deux insights /
+-- deux commandes possibles (double-log en race).
+--
+-- ⚠️⚠️ PHASE A OBLIGATOIRE AVANT D'APPLIQUER — lire ce bloc en entier ⚠️⚠️
+--
+-- Un `UNIQUE(lead_id)` PLEIN (comme demandé littéralement au brief) est DANGEREUX ICI,
+-- pour DEUX raisons prouvées dans le code — d'où ce choix d'un index UNIQUE PARTIEL :
+--
+--  1) LE WEBHOOK FAIT DES INSERTS MULTIPLES LÉGITIMES PAR lead_id.
+--     `meta/leads/webhook/route.ts:53-58` ne court-circuite QUE si une ligne
+--     status='order_created' existe déjà ; sinon il fait un INSERT AVEUGLE d'une ligne
+--     status='received' (`:63-67`). Donc :
+--       · un lead qui a fini en 'error' (pas d'abonnement actif, getLeadData qui throw)
+--         puis re-livré par Meta → nouvelle ligne 'received' (le check 'order_created'
+--         ne matche pas) ;
+--       · deux livraisons concurrentes du même leadgen_id → deux 'received'.
+--     Avec un UNIQUE(lead_id) PLEIN, ce 2e INSERT lèverait 23505 → `.single()` renvoie
+--     une erreur, `logId` devient undefined, et les UPDATE suivants ciblent `.eq("id",
+--     undefined)` → le lead ne peut PLUS JAMAIS être retraité après une erreur. RÉGRESSION.
+--
+--  2) DES DOUBLONS PEUVENT DÉJÀ EXISTER EN PROD (voir requête de détection ci-dessous)
+--     → un UNIQUE(lead_id) PLEIN échouerait à la création sur données existantes.
+--
+-- L'INVARIANT MÉTIER RÉEL = « au plus UNE conversion (order_created) par lead ». C'est
+-- exactement ce que garde l'index partiel ci-dessous, SANS casser le flux 'received'/'error'
+-- ni les retries. Note : `orders.meta_lead_id` est déjà UNIQUE (013:33) → une 2e commande
+-- pour le même lead échoue déjà côté orders (sa ligne log part en 'error', pas 'order_created')
+-- → une violation de cet index partiel sur données existantes est hautement improbable.
+--
+-- ─── PHASE A — requêtes de détection à LANCER PAR LAMINE avant d'appliquer ────
+-- (a) doublons de CONVERSION (ce que l'index partiel refuserait) — doit renvoyer 0 ligne :
+--     SELECT lead_id, COUNT(*)
+--       FROM public.meta_lead_logs
+--      WHERE status = 'order_created'
+--      GROUP BY lead_id
+--     HAVING COUNT(*) > 1;
+-- (b) doublons TOUS statuts confondus (contexte — attendu > 0 si retries/erreurs) :
+--     SELECT lead_id, COUNT(*)
+--       FROM public.meta_lead_logs
+--      GROUP BY lead_id
+--     HAVING COUNT(*) > 1
+--      ORDER BY COUNT(*) DESC;
+--
+-- Si (a) renvoie des lignes → dédupliquer AVANT de créer l'index (préambule commenté
+-- ci-dessous : garde la ligne de conversion la plus ANCIENNE, supprime les autres) :
+--
+--   -- WITH ranked AS (
+--   --   SELECT id,
+--   --          ROW_NUMBER() OVER (PARTITION BY lead_id ORDER BY created_at ASC) AS rn
+--   --     FROM public.meta_lead_logs
+--   --    WHERE status = 'order_created'
+--   -- )
+--   -- DELETE FROM public.meta_lead_logs m
+--   --  USING ranked r
+--   --  WHERE m.id = r.id AND r.rn > 1;
+--   -- ⚠️ order_id de la ligne supprimée : vérifier qu'aucune commande n'y est rattachée
+--   --    seule (orders.meta_lead_id UNIQUE garantit 1 commande/lead → la commande reste
+--   --    portée par la ligne conservée ; ne PAS supprimer d'orders ici).
+--
+-- ⚠️ NE PAS appliquer via un outil — Lamine l'exécute dans le SQL Editor Supabase.
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_meta_lead_logs_conversion
+  ON public.meta_lead_logs (lead_id)
+  WHERE status = 'order_created';
+
+-- ─── OPTION « UNIQUE(lead_id) PLEIN » (déconseillée, NON activée) ─────────────
+-- À n'activer QUE si le webhook est d'abord migré vers un upsert onConflict(lead_id)
+-- au lieu de l'INSERT aveugle 'received' (sinon régression décrite au point 1) :
+--   -- CREATE UNIQUE INDEX IF NOT EXISTS uq_meta_lead_logs_lead_id
+--   --   ON public.meta_lead_logs (lead_id);
