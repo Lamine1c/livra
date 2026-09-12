@@ -69,8 +69,10 @@ export default function BillingSuccessPage() {
             Merci ! Ton abonnement LIVRA est prolongé de 30 jours. La confirmation
             peut prendre quelques instants avant d&apos;apparaître dans l&apos;app.
           </p>
-          <Link
-            href="/telecharger"
+          {/* N7.1 — deeplink vers l'app (livramobile://) ; fallback /telecharger si non installée
+              (patron oauth/meta-callback). Le scheme app est un <a> (pas une route interne). */}
+          <a
+            href="livramobile://"
             style={{
               display: "inline-block",
               marginTop: "28px",
@@ -84,10 +86,10 @@ export default function BillingSuccessPage() {
             }}
           >
             Retourner dans l&apos;app
-          </Link>
+          </a>
           <p style={{ margin: "20px 0 0", fontSize: "13px" }}>
-            <Link href="/" style={{ color: "var(--mist)", textDecoration: "underline" }}>
-              Retour à l&apos;accueil
+            <Link href="/telecharger" style={{ color: "var(--mist)", textDecoration: "underline" }}>
+              L&apos;application n&apos;est pas installée ? Télécharger LIVRA
             </Link>
           </p>
         </div>
