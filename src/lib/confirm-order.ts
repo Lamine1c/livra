@@ -1,8 +1,8 @@
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordRefusInsight } from "@/lib/delivery-insight";
-import { normalizePhoneNumber, sendWhatsAppNotification, sendWhatsAppInteractiveButtons } from "@/lib/whatsapp";
-import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
+import { normalizePhoneNumber, sendTunnelMessage } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
 
@@ -110,8 +110,7 @@ export async function confirmOrderByInboundCode(
     // Meta) qu'il peut renvoyer le bon code — sinon la commande meurt en silence,
     // invisible pour le score. UNIQUEMENT sur wrong_code (les autres reason restent
     // muets). Un échec d'envoi ne doit PAS faire échouer le webhook (Meta rejouerait).
-    const wrongMsg = renderTemplateText(TEMPLATES.order_otp_wrong_code, []);
-    const wr = await sendWhatsAppNotification(phone, wrongMsg);
+    const wr = await sendTunnelMessage(phone, TEMPLATES.order_otp_wrong_code, []);
     if (!wr.success) console.error(`[whatsapp/inbound] from=${masked} wrong_code reply failed:`, wr.error);
     return { matched: false, reason: "wrong_code" };
   }
@@ -136,8 +135,7 @@ export async function confirmOrderByInboundCode(
 
   // Accusé de confirmation + badge réputation "client vérifié" (best-effort :
   // un échec d'envoi ne doit PAS faire échouer la confirmation déjà persistée).
-  const confirmMsg = renderTemplateText(TEMPLATES.order_confirmed_verified, []);
-  const r = await sendWhatsAppNotification(phone, confirmMsg);
+  const r = await sendTunnelMessage(phone, TEMPLATES.order_confirmed_verified, []);
   if (!r.success) console.error(`[whatsapp/inbound] from=${masked} accusé confirmation failed:`, r.error);
 
   // Push VENDEUR — commande confirmée (fix « confirmation muette »). C'est LE moment
@@ -233,15 +231,15 @@ export async function handleInboundReply(
       console.log(`[whatsapp/inbound] from=${masked} OUI mais aucun order en attente`);
       return { action: "no_pending" };
     }
-    const msg = renderTemplateText(TEMPLATES.order_otp_code, [order.otp_code]);
     // [LOT1][A2] MSG 2 = le code OTP. Seul message du tunnel dont l'absence tue la
     // commande → on lit .success ET on réessaie UNE fois (1,5 s) avant d'abandonner.
     // On ne change NI le flux NI la valeur de retour : le webhook répond toujours 200.
-    let r = await sendWhatsAppNotification(phone, msg);
+    // sendTunnelMessage : fenêtre 24h (texte) puis repli template order_otp_code hors fenêtre.
+    let r = await sendTunnelMessage(phone, TEMPLATES.order_otp_code, [order.otp_code]);
     if (!r.success) {
       console.error(`[LOT1][A2] from=${masked} MSG2 (code) échec 1/2:`, r.error);
       await new Promise((s) => setTimeout(s, 1500));
-      r = await sendWhatsAppNotification(phone, msg);
+      r = await sendTunnelMessage(phone, TEMPLATES.order_otp_code, [order.otp_code]);
     }
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG2 (code) ÉCHEC DÉFINITIF order=${order.id}:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} OUI → MSG 2 (code) envoyé pour order ${order.id}`);
@@ -254,7 +252,8 @@ export async function handleInboundReply(
   // par NOT_AVAIL_RE / MIND_CHANGED_RE / CHEAPER_RE. En fenêtre 24h (le client vient
   // d'écrire « NON ») → message interactif ; hors fenêtre = repli template (livrable 2).
   if (NO_RE.test(bodyTrim)) {
-    const r = await sendWhatsAppInteractiveButtons(phone, TEMPLATES.order_cancel_reasons, []);
+    // Fenêtre 24h → interactif (3 boutons) ; hors fenêtre → repli template quick-reply.
+    const r = await sendTunnelMessage(phone, TEMPLATES.order_cancel_reasons, [], { interactive: true });
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG4 (boutons) failed:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} NON → MSG 4 (boutons interactifs) envoyé`);
     return { action: "declined" };
@@ -268,8 +267,7 @@ export async function handleInboundReply(
       console.log(`[whatsapp/inbound] from=${masked} "pas dispo" mais aucun order en attente`);
       return { action: "no_pending" };
     }
-    const msg = renderTemplateText(TEMPLATES.order_reschedule_request, []);
-    const r = await sendWhatsAppNotification(phone, msg);
+    const r = await sendTunnelMessage(phone, TEMPLATES.order_reschedule_request, []);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG5 (reschedule) failed:`, r.error);
 
     const supabase = createAdminClient();
@@ -306,8 +304,7 @@ export async function handleInboundReply(
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
     const prenom = (enrichedClient(order)?.full_name ?? "").split(" ")[0] ?? "";
 
-    const msg = renderTemplateText(TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
-    const r = await sendWhatsAppNotification(phone, msg);
+    const r = await sendTunnelMessage(phone, TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG6 (annulation) failed:`, r.error);
 
     const { data: flipped, error: updErr } = await supabase
@@ -357,8 +354,7 @@ export async function handleInboundReply(
       console.log(`[whatsapp/inbound] from=${masked} "moins cher" mais aucun order en attente`);
       return { action: "no_pending" };
     }
-    const msg = renderTemplateText(TEMPLATES.order_objection_cheaper, []);
-    const r = await sendWhatsAppNotification(phone, msg);
+    const r = await sendTunnelMessage(phone, TEMPLATES.order_objection_cheaper, []);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG7 (objection prix) failed:`, r.error);
 
     const supabase = createAdminClient();

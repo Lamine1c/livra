@@ -56,7 +56,7 @@ interface WhatsAppResult {
 // ⚠️ Fenêtre 24h : un message TEXTE "de service" n'est délivré que dans les 24h
 // suivant un message ENTRANT du client. Hors fenêtre (business-initiated), Meta
 // exige un TEMPLATE approuvé. On ne logge JAMAIS de PII : status + erreur Meta.
-async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string; wamid?: string }> {
+async function postToMeta(payload: object, label: string): Promise<{ ok: boolean; error?: string; code?: number; wamid?: string }> {
   const url = graphMessagesUrl();
   if (!url) return { ok: false, error: "WHATSAPP_PHONE_NUMBER_ID manquant" };
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -72,18 +72,26 @@ async function postToMeta(payload: object, label: string): Promise<{ ok: boolean
   });
 
   const data = (await res.json().catch(() => null)) as {
-    error?: { message?: string };
+    error?: { message?: string; code?: number };
     messages?: Array<{ id?: string }>;
   } | null;
 
   if (!res.ok) {
     console.error("[Meta WhatsApp] échec", { label, status: res.status, error: data?.error });
-    return { ok: false, error: data?.error?.message ?? `Meta error ${res.status}` };
+    return { ok: false, error: data?.error?.message ?? `Meta error ${res.status}`, code: data?.error?.code };
   }
   return { ok: true, wamid: data?.messages?.[0]?.id };
 }
 
-async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
+// Codes Meta signalant que la fenêtre de service 24h est fermée → un message de session
+// (texte/interactif) est refusé, seul un TEMPLATE approuvé passe. 131047 = "Re-engagement
+// message" (canonique), 470 = variante legacy re-engagement.
+const OUT_OF_WINDOW_CODES = new Set([131047, 470]);
+function isOutOfWindow(code?: number): boolean {
+  return code != null && OUT_OF_WINDOW_CODES.has(code);
+}
+
+async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string; code?: number }> {
   return postToMeta(buildTextPayload(to, message), "text");
 }
 
@@ -152,10 +160,10 @@ function buildOtpMessage(clientName: string, otp: string, ctx?: OtpMessageContex
 export async function sendWhatsAppNotification(
   phone: string,
   message: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; code?: number }> {
   const to = normalizePhoneNumber(phone);
   const result = await sendMetaText(to, message);
-  return { success: result.ok, error: result.error };
+  return { success: result.ok, error: result.error, code: result.code };
 }
 
 function buildTextPayload(to: string, message: string) {
@@ -176,10 +184,38 @@ export async function sendWhatsAppInteractiveButtons(
   phone: string,
   template: WhatsAppTemplate,
   variables: string[]
-): Promise<{ success: boolean; error?: string; wamid?: string }> {
+): Promise<{ success: boolean; error?: string; code?: number; wamid?: string }> {
   const to = normalizePhoneNumber(phone);
   const body = renderTemplateText(template, variables);
   const payload = buildInteractiveButtonsPayload(to, body, template.buttons ?? []);
   const result = await postToMeta(payload, `interactive:${template.name}`);
-  return { success: result.ok, error: result.error, wamid: result.wamid };
+  return { success: result.ok, error: result.error, code: result.code, wamid: result.wamid };
+}
+
+// ─── ENVOI TUNNEL : fenêtre 24h d'abord, repli TEMPLATE hors fenêtre ──────────
+// Chaque message conversationnel du tunnel (confirm-order) est une RÉPONSE à un message
+// entrant → la fenêtre 24h est normalement ouverte. Ce helper tente d'abord le chemin de
+// session (interactif si le template a des boutons ET opts.interactive, sinon texte libre) ;
+// si Meta refuse pour fenêtre fermée (isOutOfWindow), il bascule sur le TEMPLATE approuvé
+// (sendWhatsAppTemplate — quick-reply pour les boutons). `viaTemplate` = true si repli.
+// Le template de repli doit être approuvé côté Meta (voir tasks/TEMPLATES_A_SOUMETTRE.md) ;
+// tant qu'il ne l'est pas, le repli échoue PROPREMENT (loggé, non bloquant) comme aujourd'hui.
+export async function sendTunnelMessage(
+  phone: string,
+  template: WhatsAppTemplate,
+  variables: string[],
+  opts?: { interactive?: boolean }
+): Promise<{ success: boolean; error?: string; viaTemplate?: boolean }> {
+  const windowResult =
+    opts?.interactive && (template.buttons?.length ?? 0) > 0
+      ? await sendWhatsAppInteractiveButtons(phone, template, variables)
+      : await sendWhatsAppNotification(phone, renderTemplateText(template, variables));
+
+  if (windowResult.success) return { success: true };
+
+  if (isOutOfWindow(windowResult.code)) {
+    const t = await sendWhatsAppTemplate(phone, template, variables);
+    return { success: t.success, error: t.error, viaTemplate: true };
+  }
+  return { success: false, error: windowResult.error };
 }
