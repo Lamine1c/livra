@@ -55,10 +55,17 @@ export default async function TrackPage({
   } | null = null;
 
   if (order.delivery_mode === "moto_perso") {
+    // [N3-B5] Une commande peut avoir PLUSIEURS deliveries (ex. une annulée + une nouvelle)
+    // → maybeSingle() sans tri throw sur >1 ligne. `deliveries` n'a PAS de created_at en prod :
+    // je trie par completed_at DESC NULLS FIRST (la course ACTIVE, completed_at=null, passe en
+    // premier ; sinon la plus récemment clôturée), tiebreak id DESC, limit(1).
     const { data: deliveryRow } = await supabase
       .from("deliveries")
       .select("id, last_lat, last_lng, status")
       .eq("order_id", order.id)
+      .order("completed_at", { ascending: false, nullsFirst: true })
+      .order("id", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (deliveryRow) {

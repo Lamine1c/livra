@@ -23,10 +23,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
+  // [N3-B5] Plusieurs deliveries possibles pour une commande → maybeSingle() sans tri throw
+  // sur >1 ligne. `deliveries` n'a PAS de created_at en prod : tri completed_at DESC NULLS
+  // FIRST (course ACTIVE d'abord, sinon la plus récemment clôturée), tiebreak id DESC, limit(1).
   const { data: delivery } = await supabase
     .from("deliveries")
     .select("last_lat, last_lng, status")
     .eq("order_id", result.orderId)
+    .order("completed_at", { ascending: false, nullsFirst: true })
+    .order("id", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   // P5 — une commande/delivery terminée (livrée, returned, cancelled) ne doit PLUS
