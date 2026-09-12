@@ -44,6 +44,51 @@ Repérés au grep, NON câblés sur `sendTunnelMessage` ce tour (hors périmètr
 Ces deux-là partent hors d'une réponse client → **échouent hors fenêtre 24h aujourd'hui**. À
 traiter dans un lot ultérieur (template dédié) — signalé, non corrigé (périmètre = tunnel).
 
-## MSG 1 — forme finale (spec N1.5, ci-dessous)
+## MSG 1 — forme finale à re-soumettre (spec N1.5, ZÉRO code)
 
-_(section ajoutée par le livrable N1.5)_
+> `order_confirmation_request` est **approuvé en prod** → cc ne touche PAS son code (STOP SI).
+> Ceci est la **forme cible à re-soumettre** quand Lamine décidera de la mettre à jour. Le seul
+> ajout vs la version prod = la **couche de confiance (Trust Layer) neutre** en pied, FR+AR
+> (mêmes lignes que la signature LIVRA N1.4), pour cohérence avec le reste du tunnel.
+>
+> ⚠️ **D4 (séparer prix produit / livraison / total) N'EST PAS tranchée** → on garde **UN SEUL
+> total** `{{4}}`. Ne PAS ajouter de slots prix-produit/prix-livraison tant que D4 n'est pas décidée.
+
+- **name** : `order_confirmation_request` · **category** : `UTILITY` · **language** : `fr`
+- **variables** (ordre inchangé) : `{{1}}`=prénom · `{{2}}`=boutique · `{{3}}`=produit · `{{4}}`=**total unique**
+- **boutons** (inchangés) : `✅ إيه / OUI` · `❌ لا / NON`
+- **body cible** (Trust Layer neutre en pied — slot neutre, aucune promesse chiffrée) :
+
+```
+message en français suit
+
+سلام {{1}} 👋
+كوموند تاعك عند {{2}} محجوزة باسمك.
+
+🛍️ {{3}}
+💰 ‪{{4}}‬ دج
+📦 الخلاص عند التوصيل · ما تخلص والو دروك
+
+تحب نبداو التوصيل ؟
+
+✓ LIVRA — مقامك الخاص بك يحميك و يعطيك الأولوية في جميع متاجر LIVRA
+
+━━━━━━━━━━━━━━
+
+Bonjour {{1}} 👋
+Bonne nouvelle : votre commande chez {{2}} est réservée à votre nom.
+
+🛍️ {{3}}
+💰 {{4}} DA
+📦 Paiement à la livraison · rien à payer maintenant
+
+Voulez-vous procéder à la livraison ?
+
+✓ LIVRA — ton statut client te protege et te priorise dans toutes les boutiques LIVRA
+```
+
+**Slots Trust Layer neutres** = la ligne `✓ LIVRA — …` (FR/AR). « Neutre » : elle affirme le
+statut/priorité du client sans chiffre ni promesse de délai — rien à re-valider si le barème de
+score évolue. Si un jour D4 est tranchée « prix séparé », alors seulement : remplacer la ligne
+`💰 {{4}}` par 3 lignes (produit `{{4}}` / livraison `{{5}}` / total `{{6}}`) et re-décaler les
+variables — **hors périmètre tant que D4 n'est pas décidée**.
