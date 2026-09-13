@@ -71,20 +71,19 @@ export default function RejoindreClient() {
           }}
         />
 
+        {/* N8 — CTA PLEIN terracotta, valeurs copiées verbatim du bouton « Retourner dans
+            l'app » de /billing/success (référence validée par Lamine) : pill terracotta plein. */}
         <a
           href={deepLink}
           style={{
-            display: "block",
-            backgroundColor: "#232629",
-            color: "#E0764E",
+            display: "inline-block",
+            padding: "12px 28px",
+            borderRadius: "999px",
+            background: "var(--terracotta)",
+            color: "var(--onyx)",
             fontWeight: 700,
-            fontSize: "15px",
-            letterSpacing: "0.3px",
-            padding: "14px 28px",
-            borderRadius: "28px",
-            border: "1px solid rgba(199,91,57,0.35)",
+            fontSize: "14px",
             textDecoration: "none",
-            boxShadow: "4px 4px 12px #0A0B0C, -4px -4px 12px #2C3035",
             marginBottom: "16px",
           }}
         >
