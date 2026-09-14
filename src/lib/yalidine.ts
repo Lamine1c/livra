@@ -162,6 +162,30 @@ export async function deleteYalidineParcel(
   }
 }
 
+// ─── TEST CREDENTIALS (Réglages, avant sauvegarde) ────────────
+// Équivalent Yalidine de testEcotrackToken. GET /v1/wilayas/?page_size=1 : endpoint léger qui
+// EXIGE l'auth (X-API-ID + X-API-TOKEN) → 200 = identifiants valides. Ne throw jamais.
+export async function testYalidineCredentials(
+  centerId: string,
+  token: string
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await fetch(`${YALIDINE_API}/wilayas/?page_size=1`, {
+      method: "GET",
+      headers: yalidineHeaders({ centerId, token }),
+    });
+    console.log("[Yalidine test/credentials]", { status: res.status });
+    if (res.ok) return { ok: true, message: "Identifiants Yalidine valides." };
+    if (res.status === 401 || res.status === 403) {
+      return { ok: false, message: "Identifiants Yalidine invalides (API ID ou token)." };
+    }
+    return { ok: false, message: `Erreur Yalidine (${res.status}).` };
+  } catch (err) {
+    console.warn("[Yalidine test/credentials] error", err);
+    return { ok: false, message: "Yalidine injoignable. Réessaie." };
+  }
+}
+
 // ─── FETCH PARCEL STATUS (POLLING) ────────────────────────────
 export async function fetchParcelStatus(
   tracking: string,

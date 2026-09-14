@@ -5,6 +5,7 @@ import { decryptToken, encryptToken, isEncrypted } from "@/lib/crypto";
 import { sendExpoPush } from "@/lib/expo-push";
 import { metaLead } from "@/lib/push-messages";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
+import { requireActiveSubscription } from "@/lib/billing-guard";
 
 // GET — Meta webhook verification handshake
 export async function GET(req: NextRequest) {
@@ -81,6 +82,29 @@ export async function POST(req: NextRequest) {
             .update({ status: "error", error_message: `No active subscription for page ${pageId}` })
             .eq("id", logId);
           continue;
+        }
+
+        // [N3-ENFORCEMENT] Le webhook tourne en SERVICE ROLE → il contourne la RLS. On vérifie
+        // donc EXPLICITEMENT le statut d'abonnement du vendeur AVANT toute création (avant même
+        // l'appel Graph). Décision Claudy (réversible) : un lead rejeté est JOURNALISÉ
+        // (status=error + reason 'subscription_inactive'), PAS ignoré — le raw_payload déjà
+        // stocké dans la ligne 'received' permet un replay ultérieur (pas de replay cette nuit).
+        // Fail-open (billing-guard : vendeur inconnu / panne DB → allowed) : on ne bloque que
+        // les expirations avérées, jamais un vendeur légitime sur un hoquet.
+        const { data: vendorProfile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", subscription.user_id)
+          .maybeSingle();
+        if (vendorProfile?.email) {
+          const gate = await requireActiveSubscription(vendorProfile.email);
+          if (!gate.allowed) {
+            await supabase.from("meta_lead_logs")
+              .update({ status: "error", error_message: "subscription_inactive" })
+              .eq("id", logId);
+            console.error(`[meta/webhook] lead rejeté — abonnement ${gate.status} (vendor ${subscription.user_id})`);
+            continue;
+          }
         }
 
         // Déchiffre le token de page (legacy en clair → retourné tel quel).

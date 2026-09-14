@@ -13,11 +13,19 @@ export type WhatsAppTemplate = {
   category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
   language: string;
   body: string;
-  buttons?: Array<{ type: "QUICK_REPLY"; text: string }>;
+  // `id` = payload stable (retourné par Meta au clic, sert au routage inbound) ;
+  // `text` = libellé darija ≤20 chars (limite Meta quick-reply / bouton interactif).
+  buttons?: Array<{ type: "QUICK_REPLY"; text: string; id?: string }>;
   variables: string[]; // libellés humains, ordre = {{1}}, {{2}}…
 };
 
 const SEP = "━━━━━━━━━━━━━━";
+
+// ─── Signature LIVRA (bas de CHAQUE message acheteur, FR+AR) ──────────────────
+// Ajoutée en pied de bloc AR et de bloc FR par appendSignature() plus bas, à TOUS les
+// templates SAUF order_confirmation_request (déjà approuvé en prod — on n'y touche pas).
+const SIG_AR = "✓ LIVRA — مقامك الخاص بك يحميك و يعطيك الأولوية في جميع متاجر LIVRA";
+const SIG_FR = "✓ LIVRA — ton statut client te protege et te priorise dans toutes les boutiques LIVRA";
 
 export const TEMPLATES = {
   // ─── MSG 1 — Confirmation de commande (OUI/NON) ───
@@ -119,17 +127,19 @@ On attend votre code 🙂`,
   },
 
   // ─── MSG 4 — Pourquoi ? (après NON) ───
-  // ⚠️ Boutons bilingues > 20 caractères = limite Meta quick-reply (à raccourcir
-  //    avant soumission Meta — copy verbatim conservée ici, décision Lamine).
+  // Boutons 100% darija ≤20 chars (limite Meta) — servent le message INTERACTIF en
+  // fenêtre 24h ET le template quick-reply hors fenêtre. `id` = payload de routage :
+  // le clic renvoie le libellé darija, capté par NOT_AVAIL_RE / MIND_CHANGED_RE /
+  // CHEAPER_RE dans confirm-order.ts (branches A/B/C déjà câblées).
   order_cancel_reasons: {
     name: "order_cancel_reasons",
     category: "UTILITY",
     language: "fr",
     variables: [],
     buttons: [
-      { type: "QUICK_REPLY", text: "📅 ماشي اليوم / Pas dispo" },
-      { type: "QUICK_REPLY", text: "🤔 بدلت رايي / Changé d'avis" },
-      { type: "QUICK_REPLY", text: "💰 لقيت أرخص / Moins cher" },
+      { type: "QUICK_REPLY", id: "not_available", text: "ماشي اليوم" },
+      { type: "QUICK_REPLY", id: "changed_mind", text: "بدلت رايي" },
+      { type: "QUICK_REPLY", id: "found_cheaper", text: "لقيت أرخص" },
     ],
     body: `message en français suit
 
@@ -196,7 +206,7 @@ Si vous changez d'avis, {{2}} reste à votre service 👋`,
 
 ${SEP}
 
-Le proverbe le dit : "على رخصو خلا نصو" 😜
+Le proverbe le dit : « Qui achète trop bon marché, achète deux fois »
 
 Le moins cher cache souvent un faux produit ou un vendeur pas professionnel.
 Ici, vous payez à la livraison — une fois le produit en main, vérifié.
@@ -307,6 +317,28 @@ Contactez {{1}} pour reprogrammer votre livraison.`,
   },
 } satisfies Record<string, WhatsAppTemplate>;
 
+// ─── Signature LIVRA en pied de chaque message ACHETEUR (FR+AR) ───────────────
+// Insère SIG_AR en bas du bloc AR (avant ${SEP}) et SIG_FR en bas du bloc FR. Appliquée
+// une seule fois, à la définition, à TOUS les templates SAUF ceux exclus. order_confirmation_request
+// est EXCLU : template approuvé en prod (STOP SI — on ne modifie pas sa copy). vendorMessage()
+// n'est pas dans TEMPLATES (fonction vendeur) → naturellement hors signature acheteur.
+// Rappel : pour les envois en TEMPLATE (delivery_*, repli tunnel), Meta délivre SA copy approuvée
+// — la signature ci-dessous ne s'affiche qu'après re-soumission (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
+const SIGNATURE_EXCLUDE = new Set<string>(["order_confirmation_request"]);
+
+function appendSignature(body: string): string {
+  const marker = `\n\n${SEP}\n\n`;
+  const i = body.indexOf(marker);
+  if (i === -1) return `${body}\n\n${SIG_FR}`; // pas de séparateur AR/FR (ne devrait pas arriver)
+  const ar = body.slice(0, i);
+  const fr = body.slice(i + marker.length);
+  return `${ar}\n\n${SIG_AR}${marker}${fr}\n\n${SIG_FR}`;
+}
+
+for (const t of Object.values(TEMPLATES) as WhatsAppTemplate[]) {
+  if (!SIGNATURE_EXCLUDE.has(t.name)) t.body = appendSignature(t.body);
+}
+
 // ─── BUILD META CLOUD API PAYLOAD ─────────────────────────────
 // Construit le payload "template" Meta Cloud API (Meta + 360dialog partagent ce
 // format). `variables` = valeurs dans l'ordre {{1}}…{{n}}.
@@ -341,6 +373,34 @@ export function buildTemplatePayload(
       name: template.name,
       language: { code: template.language },
       components,
+    },
+  };
+}
+
+// ─── BUILD META INTERACTIVE (reply buttons) ──────────────────
+// Message interactif "reply buttons" (type: "interactive") — n'est délivré que DANS la
+// fenêtre 24h (message de session), pas hors fenêtre (là c'est le template qui prend le
+// relais). Au clic, le webhook entrant reçoit interactive.button_reply = { id, title } :
+// `title` = libellé darija affiché, `id` = payload de routage stable (défaut = text si
+// non fourni). Meta limite à 3 boutons ; le corps interactif est limité à 1024 chars.
+export function buildInteractiveButtonsPayload(
+  to: string,
+  bodyText: string,
+  buttons: NonNullable<WhatsAppTemplate["buttons"]>
+): object {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((btn) => ({
+          type: "reply",
+          reply: { id: btn.id ?? btn.text, title: btn.text },
+        })),
+      },
     },
   };
 }

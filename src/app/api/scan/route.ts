@@ -104,11 +104,16 @@ export async function GET(req: NextRequest) {
   // driver résolu (avant, c'était au niveau racine : un token sans `d` faisait avancer
   // le statut = cœur de la faille C6). Only moves forward — won't downgrade an order
   // already in progress.
-  await supabase
+  // [N3-B1] Inclut `pending_confirmation` : une commande issue d'un lead FB naît en
+  // pending_confirmation → sans ce statut dans le filtre, un scan ne la faisait JAMAIS
+  // passer en processing (alors que le livreur la traite). Erreur de cet UPDATE désormais
+  // LUE et loguée (elle était ignorée — un échec passait inaperçu).
+  const { error: advanceErr } = await supabase
     .from("orders")
     .update({ status: "processing" })
     .eq("id", result.orderId)
-    .in("status", ["pending", "confirmed"]);
+    .in("status", ["pending", "pending_confirmation", "confirmed"]);
+  if (advanceErr) console.error("[scan] advance→processing failed:", advanceErr.message);
 
   // Flatten client fields so the mobile Order type (buyer_name, buyer_phone, etc.) is populated.
   const client = order.client

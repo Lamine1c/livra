@@ -2,6 +2,7 @@ import { NextRequest, after } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasActiveBuyerOtp, handleDriverInboundRegistration } from "@/lib/driver-registration";
 
 // Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
 // (à traiter), false si déjà vu (doublon / retry Meta → ignorer). Fail-open sur
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
   // Traitement DÉPORTÉ après la réponse. Le Realtime vendeur est déjà branché →
   // l'écran passe à « Confirmée » seul quand l'order est mis à jour.
   after(async () => {
+    const supabase = createAdminClient();
     for (const m of messages) {
       try {
         // Dédup : ignore un message déjà traité (retry Meta / double livraison).
@@ -171,6 +173,17 @@ export async function POST(req: NextRequest) {
             continue;
           }
         }
+
+        // N6 · WAME-INVERSE — préséance (décision Claudy) : un OTP ACHETEUR actif pour ce numéro
+        // gagne toujours (tunnel acheteur). Sinon on tente la branche INSCRIPTION LIVREUR (message
+        // « LIVRA <token> » → envoi du code). handled=true → traité côté livreur, on NE retombe PAS
+        // sur l'acheteur. handled=false → aucune inscription en attente → tunnel acheteur (no_pending
+        // géré là). N'ajoute aucune latence webhook (tout est déjà dans after()).
+        if (!(await hasActiveBuyerOtp(supabase, m.from))) {
+          const reg = await handleDriverInboundRegistration(supabase, m.from, m.body);
+          if (reg.handled) continue;
+        }
+
         const res = await handleInboundReply(m.from, m.body);
         // [LOT1][A3bis] handleInboundReply ne JETTE presque jamais : un échec DB de la
         // confirmation est RETOURNÉ (reason "db_error"), pas lancé → le catch A3 ne le
