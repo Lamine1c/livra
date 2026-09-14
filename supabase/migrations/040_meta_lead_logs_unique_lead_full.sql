@@ -1,0 +1,35 @@
+-- 040 — N10-1 · meta_lead_logs UNIQUE(lead_id) PLEIN (rendu SÛR par le passage à l'upsert)
+--
+-- CONTEXTE : le webhook meta/leads/webhook faisait un INSERT AVEUGLE 'received' → une re-livraison
+-- Meta d'un lead déjà 'error' créait un DOUBLON. N10-1 migre ce site vers un UPSERT onConflict(lead_id),
+-- qui RE-STAGE la même ligne au lieu d'en créer une seconde. Cet upsert EXIGE un index unique PLEIN
+-- sur lead_id (sans lui : « no unique or exclusion constraint matching the ON CONFLICT specification »).
+--
+-- Le UNIQUE(lead_id) plein était déconseillé en 038 UNIQUEMENT parce que le webhook faisait alors un
+-- insert aveugle (2e insert → 23505 → logId undefined → retraitement cassé). Avec l'upsert (N10-1) ce
+-- danger DISPARAÎT : l'upsert met à jour au lieu d'échouer → le plein devient correct ET requis.
+-- → 040 REMPLACE l'option pleine commentée de 038. L'index partiel `uq_meta_lead_logs_conversion` de
+--   038 (WHERE status='order_created') devient REDONDANT (le plein le subsume) : ne PAS appliquer 038,
+--   ou `DROP INDEX IF EXISTS uq_meta_lead_logs_conversion;` s'il a déjà été créé.
+--
+-- ⚠️ NE PAS appliquer via un outil — Lamine l'exécute dans le SQL Editor. À déployer AVEC le code N10-1
+--    (le code upsert échoue tant que la contrainte n'existe pas → ordre : dédup → index → deploy).
+--
+-- PHASE A — DÉDUP PRÉALABLE OBLIGATOIRE (des doublons existent probablement en prod, cf. RAPPORT W7).
+-- Lancer la détection, puis le DELETE de dédup, PUIS créer l'index :
+--   -- (1) détection (doit renvoyer 0 après dédup) :
+--   -- SELECT lead_id, COUNT(*) FROM public.meta_lead_logs GROUP BY lead_id HAVING COUNT(*) > 1;
+--   -- (2) dédup : garder la ligne la PLUS SIGNIFICATIVE par lead_id
+--   --     (order_created > received > error, puis la plus récente), supprimer les autres :
+--   -- WITH ranked AS (
+--   --   SELECT id, ROW_NUMBER() OVER (
+--   --     PARTITION BY lead_id
+--   --     ORDER BY (status = 'order_created') DESC, (status = 'received') DESC, created_at DESC
+--   --   ) AS rn
+--   --   FROM public.meta_lead_logs
+--   -- )
+--   -- DELETE FROM public.meta_lead_logs m USING ranked r WHERE m.id = r.id AND r.rn > 1;
+--   -- ⚠️ ne supprime AUCUN order : la ligne 'order_created' conservée garde son order_id.
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_meta_lead_logs_lead_id
+  ON public.meta_lead_logs (lead_id);
