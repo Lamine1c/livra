@@ -145,8 +145,11 @@ export async function createInboundOrder(
     .insert(items.map((it) => ({ order_id: order.id, ...it })));
   if (itemsError) throw new Error(`Order items insert failed: ${itemsError.message}`);
 
-  // 6) Push vendeur — même bloc que Meta (message inboundOrder() en attendant un message
-  //    dédié « commande API », à noter au RAPPORT). Best-effort via after().
+  // 6) Push vendeur — message inboundOrder() (« commande boutique », MÊME sémantique que la
+  //    porte email ; PAS le placeholder metaLead(), réservé désormais au seul webhook Meta Ads).
+  //    [N10-2] C'est le message dédié voulu — pas de nouveau template. Le `type:"meta_lead"` est
+  //    conservé : c'est le contrat de routage du push côté mobile (le changer = coordination mobile).
+  //    Best-effort via after().
   const { data: profile } = await supabase
     .from("profiles")
     .select("expo_push_token, locale")
