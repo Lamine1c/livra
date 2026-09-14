@@ -14,7 +14,8 @@ export default function BillingSuccessPage() {
     <>
       <main
         style={{
-          background: "var(--onyx)",
+          // N9 — aligné sur le patron bounce (/scan, /livreur, meta-callback) : fond charbon.
+          background: "#1C1E21",
           flex: 1,
           display: "flex",
           alignItems: "center",
@@ -27,7 +28,8 @@ export default function BillingSuccessPage() {
             maxWidth: "480px",
             width: "100%",
             textAlign: "center",
-            background: "var(--surface)",
+            // N9 — carte au fond #232629 des pages bounce.
+            background: "#232629",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "24px",
             padding: "clamp(36px,5vw,56px) clamp(24px,4vw,40px)",
@@ -71,18 +73,23 @@ export default function BillingSuccessPage() {
           </p>
           {/* N7.1 — deeplink vers l'app (livramobile://) ; fallback /telecharger si non installée
               (patron oauth/meta-callback). Le scheme app est un <a> (pas une route interne). */}
+          {/* N9 — même OUTLINE terracotta que « Ouvrir LIVRA » des pages bounce (valeurs
+              exactes de scan/client.tsx après revert N8) : outline, pas plein. */}
           <a
             href="livramobile://"
             style={{
-              display: "inline-block",
+              display: "block",
               marginTop: "28px",
-              padding: "12px 28px",
-              borderRadius: "999px",
-              background: "var(--terracotta)",
-              color: "var(--onyx)",
+              backgroundColor: "#232629",
+              color: "#E0764E",
               fontWeight: 700,
-              fontSize: "14px",
+              fontSize: "15px",
+              letterSpacing: "0.3px",
+              padding: "14px 28px",
+              borderRadius: "28px",
+              border: "1px solid rgba(199,91,57,0.35)",
               textDecoration: "none",
+              boxShadow: "4px 4px 12px #0A0B0C, -4px -4px 12px #2C3035",
             }}
           >
             Retourner dans l&apos;app
