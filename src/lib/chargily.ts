@@ -1,10 +1,12 @@
-// Chargily Pay v2 — MODE TEST.
+// Chargily Pay v2.
 // Doc : https://dev.chargily.com/pay-v2/api-reference/introduction
 //   Test : https://pay.chargily.net/test/api/v2
-//   Live : https://pay.chargily.net/api/v2 (bascule = changer URL + clés)
+//   Live : https://pay.chargily.net/api/v2 (bascule = env CHARGILY_API_BASE + clés live)
 // Auth : Authorization: Bearer <CHARGILY_SECRET> (clé secrète, Developers Corner).
 // Webhook : header `signature` = HMAC-SHA256 hex du corps BRUT, clé = CHARGILY_SECRET.
-export const CHARGILY_API_BASE = "https://pay.chargily.net/test/api/v2";
+// [N11] URL par env : défaut = TEST (safe en local) ; la prod passe l'URL live via Vercel.
+export const CHARGILY_API_BASE =
+  process.env.CHARGILY_API_BASE ?? "https://pay.chargily.net/test/api/v2";
 
 // Clés lues au runtime uniquement (jamais au module level — cf. CLAUDE.md).
 // CHARGILY_SECRET  : clé secrète (Bearer + HMAC webhook) — OBLIGATOIRE.

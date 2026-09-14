@@ -60,10 +60,27 @@ export async function POST(req: NextRequest) {
 
       if (alreadyProcessed) continue;
 
-      // Log reception
+      // Log réception — UPSERT onConflict(lead_id) (N10-1). Une re-livraison Meta d'un lead
+      // déjà en 'received'/'error' RE-STAGE la MÊME ligne (status→'received', on efface l'état
+      // d'erreur/order précédent) au lieu de créer un DOUBLON (l'ancien insert aveugle en créait
+      // un à chaque retry après 'error'). L'idempotence reste garantie par le court-circuit
+      // 'order_created' ci-dessus : un lead déjà converti n'est jamais ré-écrasé. Le retraitement
+      // après 'error' est PRÉSERVÉ (même ligne re-traitée, même logId).
+      // 🔴 Requiert un index UNIQUE(lead_id) plein — migration 040 (à déployer AVEC ce code).
       const { data: log } = await supabase
         .from("meta_lead_logs")
-        .insert({ lead_id: leadgenId, page_id: pageId, form_id: formId, raw_payload: change.value, status: "received" })
+        .upsert(
+          {
+            lead_id: leadgenId,
+            page_id: pageId,
+            form_id: formId,
+            raw_payload: change.value,
+            status: "received",
+            error_message: null,
+            order_id: null,
+          },
+          { onConflict: "lead_id" }
+        )
         .select("id")
         .single();
       const logId = log?.id;
