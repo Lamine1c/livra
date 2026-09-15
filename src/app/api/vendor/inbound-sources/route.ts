@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifySupabaseJwt } from "@/lib/meta";
+import { addressOf, domainBodySchema, domainValidationFields } from "@/lib/inbound/vendor-source";
 
 // LOT 13 · Porte n°0 — API vendeur « Connecter ma boutique » (self-serve).
 //
@@ -17,23 +17,7 @@ import { verifySupabaseJwt } from "@/lib/meta";
 // est filtrée par CE user ; jamais de service_role sans filtre user.
 export const runtime = "nodejs";
 
-// L'adresse de réception (035_inbound_sources.email_slug est l'identité de la porte email).
-const ORDERS_DOMAIN = "orders.golivra.app";
-
-// ─── Validation du domaine expéditeur ────────────────────────────────────────
-// Domaine nu, lowercase, ≥1 point, TLD alphabétique ≥2 (donc PAS une IP), sans
-// schéma/chemin/port/@ (rejetés par le regex : ni « / » ni « : » ni « @ » admis).
-// Sous-domaines autorisés (ex. mail.boutique-dz.com) — l'expéditeur peut en être un.
-const DOMAIN_RE =
-  /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
-
-const bodySchema = z.object({
-  expected_sender_domain: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .refine((s) => DOMAIN_RE.test(s), { message: "invalid domain" }),
-});
+// Validation de domaine + `addressOf` sont PARTAGÉS avec le PATCH/DELETE (lib/inbound/vendor-source).
 
 // ─── Génération du slug : base courte lisible + suffixe aléatoire (≥4) ────────
 const SUFFIX_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -57,10 +41,6 @@ function slugBase(storeName: string | null | undefined): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 20);
   return base || "boutik";
-}
-
-function addressOf(slug: string): string {
-  return `${slug}@${ORDERS_DOMAIN}`;
 }
 
 // ─── GET : les sources email du vendeur ──────────────────────────────────────
@@ -111,13 +91,10 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "validation", fields: ["(invalid json)"] }, { status: 422 });
   }
-  const parsed = bodySchema.safeParse(raw);
+  const parsed = domainBodySchema.safeParse(raw);
   if (!parsed.success) {
-    const fields = Array.from(
-      new Set(parsed.error.issues.map((i) => i.path.map(String).join(".")).filter(Boolean))
-    );
     return NextResponse.json(
-      { error: "validation", fields: fields.length ? fields : ["expected_sender_domain"] },
+      { error: "validation", fields: domainValidationFields(parsed.error) },
       { status: 422 }
     );
   }
