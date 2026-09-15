@@ -8,11 +8,11 @@ import {
 } from "./whatsapp-templates";
 
 // Transport WhatsApp = Meta Cloud API (Meta Step 2 terminé).
-// Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
+// Graph API version alignée sur lib/meta.ts (v26.0). PHONE_NUMBER_ID = env
 // WHATSAPP_PHONE_NUMBER_ID, source UNIQUE : pas de fallback hardcodé (un id figé
 // a déjà bité — id périmé). Absent/vide → on ne construit pas d'URL et l'envoi
 // échoue proprement, plutôt que d'envoyer vers un id erroné en silence.
-const GRAPH_VERSION = "v23.0";
+const GRAPH_VERSION = "v26.0";
 
 function graphMessagesUrl(): string | null {
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
