@@ -134,7 +134,11 @@ On attend votre code 🙂`,
   order_cancel_reasons: {
     name: "order_cancel_reasons",
     category: "UTILITY",
-    language: "fr",
+    // [N12-2] SEULE variante approuvée par Meta = "ar" (le fr a été refusé : boutons darija
+    // sur corps FR). `buildTemplatePayload` envoie `language:{code: template.language}` → le repli
+    // hors fenêtre partira donc en 'ar'. Le corps ci-dessous reste bilingue pour le rendu texte-libre
+    // in-window (renderTemplateText n'utilise pas .language).
+    language: "ar",
     variables: [],
     buttons: [
       { type: "QUICK_REPLY", id: "not_available", text: "ماشي اليوم" },
