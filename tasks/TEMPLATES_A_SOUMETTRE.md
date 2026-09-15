@@ -1,5 +1,28 @@
 # TEMPLATES_A_SOUMETTRE.md — templates WhatsApp à créer côté Meta (Lamine soumet)
 
+## 🟢 ÉTAT FINAL DES SOUMISSIONS — 16 sept 2026 (N12-3)
+
+Les templates du tunnel ont été soumis à Meta le 15 sept, en variantes **MONOLINGUES** (leçon : Meta
+rejette les corps bilingues) et plusieurs corps ont été **reformulés** à la soumission (anti-classifieur).
+Le corps qui part hors fenêtre 24h = **celui stocké CHEZ META**, PAS le body bilingue du code
+(`whatsapp-templates.ts`, qui ne sert qu'au rendu texte-libre in-window). Aucun impact d'ENVOI
+(`buildTemplatePayload` n'envoie que les variables `{{n}}` + `name`/`language`).
+
+| Template | Langues soumises | Catégorie | Divergence vs corps bilingue du code |
+|---|---|---|---|
+| `order_confirmed_verified` | fr **et** ar | UTILITY | corps soumis **SANS** « servis en priorité » |
+| `order_otp_wrong_code` | fr **et** ar | UTILITY | — (reformulation mineure possible) |
+| `order_reschedule_request` | fr **et** ar | UTILITY | corps soumis avec « pour votre livraison » |
+| `order_cancelled_mind_changed` | fr **et** ar | UTILITY | pur constat d'annulation : « votre commande chez {{2}} est bien annulée. Vous n'avez rien à payer. » — variables {{1}}+{{2}} |
+| `order_cancel_reasons` | **ar UNIQUEMENT** | UTILITY | fr **REFUSÉ** (boutons darija sur corps FR). `code.language` mis à `"ar"` (N12-2). |
+| `order_objection_cheaper` | (approuvé) | **MARKETING** (assumé) | catégorie MARKETING, pas UTILITY |
+| `order_otp_code` | **NON soumis** | (Authentication forcée) | Meta force la catégorie Authentication → voir « order_otp_code v2 » en fin de fichier (N12-4) |
+
+⚠️ **Conséquence code** : ne PAS supposer que `TEMPLATES.<name>.body` == le corps délivré hors fenêtre.
+Pour toute vérif de copy hors fenêtre, se référer au **Meta Business Manager** (source de vérité des corps soumis).
+
+---
+
 > Écrit par cc (N1.2). **cc ne soumet RIEN à Meta** (interdit). Ce fichier = la spec de
 > soumission. Le **corps exact (verbatim, AR-d'abord/FR-après ━━━) est la source de vérité
 > dans `src/lib/whatsapp-templates.ts`** — copie-le tel quel à la soumission (n'y retape pas

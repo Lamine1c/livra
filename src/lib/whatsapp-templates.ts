@@ -7,6 +7,13 @@
 //   - Jamais "livreur LIVRA" / "notre livreur" → toujours "le livreur de {{boutique}}".
 //   - Variables Meta = {{1}}, {{2}}… dans l'ordre d'apparition dans le corps.
 // NE PAS retoucher / traduire la darija : copie verbatim de la source.
+//
+// 🔴 [N12-3] DIVERGENCE CODE ↔ META — LIRE. Ces `body` bilingues servent au rendu TEXTE-LIBRE
+// in-window (renderTemplateText). Les templates SOUMIS à Meta (16 sept) sont MONOLINGUES (Meta
+// rejette les corps bilingues) et plusieurs ont été REFORMULÉS à la soumission (anti-classifieur) :
+// le corps qui part hors fenêtre = celui stocké CHEZ META, PAS celui ci-dessous. `buildTemplatePayload`
+// n'envoie que les variables {{n}} + le `name`/`language` → le texte ci-dessous n'est jamais transmis
+// en mode template. État final des soumissions (langues/catégorie/divergences) : tasks/TEMPLATES_A_SOUMETTRE.md.
 
 export type WhatsAppTemplate = {
   name: string;
