@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { rateLimit } from "@/lib/rate-limit";
 import { verifySupabaseJwt } from "@/lib/meta";
 import { addressOf, domainBodySchema, domainValidationFields } from "@/lib/inbound/vendor-source";
 
@@ -58,6 +59,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const userId = await verifySupabaseJwt(req.headers.get("authorization"));
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // [W12 c2] Rate-limit — même mécanique que le POST (le PATCH ne doit pas être un canal de spam).
+  if (!rateLimit(`vendor:inbound-source:patch:${userId}`, 5, 60 * 60_000)) {
+    return NextResponse.json({ error: "rate_limited", retry_after: 60 }, { status: 429 });
   }
 
   let raw: unknown;
