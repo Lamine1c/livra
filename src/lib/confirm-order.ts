@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordRefusInsight } from "@/lib/delivery-insight";
-import { normalizePhoneNumber, sendTunnelMessage } from "@/lib/whatsapp";
+import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPush } from "@/lib/expo-push";
 import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
@@ -234,12 +234,13 @@ export async function handleInboundReply(
     // [LOT1][A2] MSG 2 = le code OTP. Seul message du tunnel dont l'absence tue la
     // commande → on lit .success ET on réessaie UNE fois (1,5 s) avant d'abandonner.
     // On ne change NI le flux NI la valeur de retour : le webhook répond toujours 200.
-    // sendTunnelMessage : fenêtre 24h (texte) puis repli template order_otp_code hors fenêtre.
-    let r = await sendTunnelMessage(phone, TEMPLATES.order_otp_code, [order.otp_code]);
+    // [N12-4] sendOtpTunnelMessage : fenêtre 24h (texte libre) ; hors fenêtre → template
+    // AUTHENTICATION Meta SI AUTH_OTP_TEMPLATE_READY==="true", sinon repli classique (défaut, actuel).
+    let r = await sendOtpTunnelMessage(phone, order.otp_code);
     if (!r.success) {
       console.error(`[LOT1][A2] from=${masked} MSG2 (code) échec 1/2:`, r.error);
       await new Promise((s) => setTimeout(s, 1500));
-      r = await sendTunnelMessage(phone, TEMPLATES.order_otp_code, [order.otp_code]);
+      r = await sendOtpTunnelMessage(phone, order.otp_code);
     }
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG2 (code) ÉCHEC DÉFINITIF order=${order.id}:`, r.error);
     console.log(`[whatsapp/inbound] from=${masked} OUI → MSG 2 (code) envoyé pour order ${order.id}`);

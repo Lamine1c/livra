@@ -115,3 +115,27 @@ statut/priorité du client sans chiffre ni promesse de délai — rien à re-val
 score évolue. Si un jour D4 est tranchée « prix séparé », alors seulement : remplacer la ligne
 `💰 {{4}}` par 3 lignes (produit `{{4}}` / livraison `{{5}}` / total `{{6}}`) et re-décaler les
 variables — **hors périmètre tant que D4 n'est pas décidée**.
+
+---
+
+## order_otp_code v2 — template AUTHENTICATION (à soumettre — N12-4)
+
+Meta **force la catégorie Authentication** pour les OTP → `order_otp_code` ne peut PAS être soumis
+en UTILITY. Le code est prêt (helper `sendWhatsAppAuthTemplate` + `sendOtpTunnelMessage`), **derrière
+le flag env `AUTH_OTP_TEMPLATE_READY` (défaut `false`)** → aucun changement de comportement tant que
+Lamine ne l'active pas.
+
+**À soumettre côté Meta (Lamine)** :
+- **Catégorie** : `AUTHENTICATION`.
+- **Langue(s)** : `fr` (et `ar` si souhaité — poser `WHATSAPP_OTP_AUTH_TEMPLATE_LANG`).
+- **Corps** : texte Authentication standard Meta avec le **code en `{{1}}`** (Meta impose sa propre
+  structure de sécurité — pas de copy libre ; suivre l'assistant « Authentication » du Business Manager).
+- **Bouton** : type **One-time password → « Copy code »** (le code est auto-rempli).
+- **Nom** : `order_otp_code` (ou un autre → poser `WHATSAPP_OTP_AUTH_TEMPLATE_NAME`).
+
+**⚠️ À confirmer à la soumission** : la forme EXACTE du composant bouton dans le payload d'envoi
+(`buildAuthTemplatePayload` dans `src/lib/whatsapp.ts` utilise `sub_type:"url"` + code en paramètre ;
+selon le type de bouton approuvé — copy_code vs one-tap — il faudra peut-être ajuster `sub_type`).
+
+**Activation (une fois approuvé)** : env Vercel `AUTH_OTP_TEMPLATE_READY=true` (+ nom/langue si
+différents du défaut). Le repli MSG 2 hors fenêtre partira alors via le template Auth au lieu d'échouer.
