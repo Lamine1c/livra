@@ -109,6 +109,26 @@ export function buyerLocationConfirmed(
   };
 }
 
+// ── Vendeur — le client a MIS À JOUR sa position (2e+ confirmation, N12-5) ──
+// Libellé DISTINCT de la 1re confirmation (buyerLocationConfirmed) pour que le vendeur
+// sache que la position a bougé (le livreur doit re-viser le point à jour).
+export function buyerLocationUpdated(
+  locale: string | null | undefined,
+  vars: { reference: string }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return {
+      title: "📍 الزبون حدّث موقعه",
+      body: `الزبون حدّث موقعه للطلب رقم ${vars.reference}.`,
+    };
+  }
+  return {
+    title: "📍 Position mise à jour",
+    body: `#${vars.reference} : le client a mis à jour sa position.`,
+  };
+}
+
 // ── Vendeur — commande annulée par le client (confirm-order, "changé d'avis") ──
 export function orderCancelled(
   locale: string | null | undefined,
