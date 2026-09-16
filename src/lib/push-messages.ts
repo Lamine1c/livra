@@ -129,6 +129,33 @@ export function buyerLocationUpdated(
   };
 }
 
+// ── LIVREUR — l'acheteur a CHANGÉ son adresse pendant une course active (N14) ──
+// Libellé FORT : le livreur navigue dans Google Maps EXTERNE → il ne voit PAS le
+// changement in-app. Il doit relancer l'itinéraire depuis LIVRA (coords à jour).
+export function buyerLocationUpdatedDriver(
+  locale: string | null | undefined
+): PushMessage {
+  // Locale livreur si dispo (fr/ar) ; sinon BILINGUE (drivers.locale peut être null).
+  if (locale === "ar") {
+    return {
+      title: "⚠️ الزبون بدّل العنوان",
+      body: "الزبون بدّل عنوانه. عاود ابدأ المسار من داخل LIVRA.",
+    };
+  }
+  if (locale === "fr") {
+    return {
+      title: "⚠️ Le client a changé son adresse",
+      body: "Le client a changé son adresse. Relance l'itinéraire dans LIVRA.",
+    };
+  }
+  return {
+    title: "⚠️ Le client a changé son adresse",
+    body:
+      "Le client a changé son adresse. Relance l'itinéraire dans LIVRA.\n" +
+      "الزبون بدّل عنوانه. عاود ابدأ المسار من داخل LIVRA.",
+  };
+}
+
 // ── Vendeur — commande annulée par le client (confirm-order, "changé d'avis") ──
 export function orderCancelled(
   locale: string | null | undefined,

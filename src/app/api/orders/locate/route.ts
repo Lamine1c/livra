@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPush } from "@/lib/expo-push";
-import { buyerLocationConfirmed, buyerLocationUpdated } from "@/lib/push-messages";
+import { buyerLocationConfirmed, buyerLocationUpdated, buyerLocationUpdatedDriver } from "@/lib/push-messages";
 
 export async function GET(req: NextRequest) {
   const t = req.nextUrl.searchParams.get("t");
@@ -126,6 +126,41 @@ export async function POST(req: NextRequest) {
       });
       if (!pushResult.success) {
         console.error("[locate] expo push failed:", pushResult.error);
+      }
+    }
+  }
+
+  // [N14] ALERTE LIVREUR — sur une RE-confirmation (le client a bougé), si la commande a une COURSE
+  // ACTIVE, prévenir aussi le livreur assigné : il navigue dans Google Maps EXTERNE (comgooglemaps://)
+  // et ne voit PAS le changement in-app → il doit relancer l'itinéraire depuis LIVRA (coords à jour).
+  // Même anti-spam que le vendeur (≥10 min via buyer_location_at → updateTooRecent). 1re confirmation :
+  // pas d'alerte (rien n'a « changé »). Aucune course active / pas de livreur → seul le vendeur reçoit.
+  // Best-effort STRICT : échec loggé, ne bloque NI la réponse NI l'enregistrement déjà fait.
+  if (wasAlreadyLocated && !updateTooRecent) {
+    // Course active liée à la commande + livreur assigné (deliveries.status='active', driver_id non null).
+    const { data: activeDelivery } = await supabase
+      .from("deliveries")
+      .select("driver_id")
+      .eq("order_id", result.orderId)
+      .eq("status", "active")
+      .not("driver_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+
+    if (activeDelivery?.driver_id) {
+      const { data: driver } = await supabase
+        .from("drivers")
+        .select("expo_push_token, locale")
+        .eq("id", activeDelivery.driver_id)
+        .maybeSingle();
+
+      if (driver?.expo_push_token) {
+        const { title, body } = buyerLocationUpdatedDriver(driver.locale as string | null);
+        const r = await sendExpoPush(driver.expo_push_token, title, body, {
+          orderId: result.orderId,
+          type: "buyer_location_updated_driver",
+        });
+        if (!r.success) console.error("[locate] driver alert push failed:", r.error);
       }
     }
   }
