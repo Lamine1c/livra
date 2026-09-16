@@ -152,10 +152,13 @@ ces 2 templates sont **EXCLUS de la signature LIVRA** (SIGNATURE_EXCLUDE) → pa
 
 | Template | Langue | Catégorie | Variables | Corps à soumettre (verbatim) |
 |---|---|---|---|---|
-| `order_carrier_changed` | fr | UTILITY | `{{1}}`=référence | Votre commande {{1}} : le mode de livraison a changé. Elle est de nouveau en cours d'organisation. |
-| `order_carrier_changed` | ar | UTILITY | `{{1}}`=référence | طلبك رقم {{1}} : تبدّلت طريقة التوصيل. الطلب راه قيد التنظيم من جديد. |
+| `order_carrier_changed` | fr | UTILITY | **aucune** | Le mode de livraison de votre commande a été modifié. La boutique va le reconfigurer et revenir vers vous. |
+| `order_carrier_changed` | ar | UTILITY | **aucune** | تبدّل نمط التوصيل تاع الطلبية تاعك. المتجر رح يعاود يظبطو ويرجعلك. |
 | `order_delivery_cancelled` | fr | UTILITY | `{{1}}`=référence | Votre commande {{1}} a été annulée. La boutique vous recontactera. |
-| `order_delivery_cancelled` | ar | UTILITY | `{{1}}`=référence | تم إلغاء طلبك رقم {{1}}. سيتواصل معك المتجر قريباً. |
+| `order_delivery_cancelled` | ar | UTILITY | `{{1}}`=référence | الطلبية تاعك {{1}} تلغات. المتجر رح يتواصل معاك. |
+
+> **COPY FIGÉE par Claudy (16 sept 13h)** — noms + corps ci-dessus utilisés VERBATIM dans le code, non
+> reformulés. ⚠️ `order_carrier_changed` = **AUCUNE variable** (exemple `order_delivery_cancelled` : réf `LV-2K8F`).
 
 Exemple (référence = `LV-AB12CD`) : « Votre commande LV-AB12CD a été annulée. La boutique vous recontactera. »
 

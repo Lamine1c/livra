@@ -328,25 +328,25 @@ Contactez {{1}} pour reprogrammer votre livraison.`,
   },
 
   // ─── [N13] Transporteur annulé → mode de livraison à re-choisir (acheteur) ───
-  // {{1}} = référence. Corps bilingue pour le rendu texte-libre in-window ; variantes
-  // MONOLINGUES à soumettre = tasks/TEMPLATES_A_SOUMETTRE.md § N13 (UTILITY, 100% transactionnel,
-  // ancré « votre commande », zéro promesse → EXCLU de la signature LIVRA, cf. SIGNATURE_EXCLUDE).
+  // COPY FIGÉE par Claudy (16 sept), verbatim, NON reformulée. AUCUNE variable. UTILITY, transactionnel,
+  // zéro promesse → EXCLU de la signature LIVRA (cf. SIGNATURE_EXCLUDE). Variantes MONOLINGUES à
+  // soumettre = tasks/TEMPLATES_A_SOUMETTRE.md § N13.
   order_carrier_changed: {
     name: "order_carrier_changed",
     category: "UTILITY",
     language: "fr",
-    variables: ["référence"],
+    variables: [],
     body: `message en français suit
 
-طلبك رقم {{1}} : تبدّلت طريقة التوصيل. الطلب راه قيد التنظيم من جديد.
+تبدّل نمط التوصيل تاع الطلبية تاعك. المتجر رح يعاود يظبطو ويرجعلك.
 
 ${SEP}
 
-Votre commande {{1}} : le mode de livraison a changé. Elle est de nouveau en cours d'organisation.`,
+Le mode de livraison de votre commande a été modifié. La boutique va le reconfigurer et revenir vers vous.`,
   },
 
   // ─── [N13] Livraison annulée par le livreur → la boutique recontacte (acheteur) ───
-  // {{1}} = référence. Reprend le sens du texte actuel de cancel-delivery, sans promesse.
+  // COPY FIGÉE par Claudy (16 sept), verbatim. {{1}} = référence. UTILITY, zéro promesse (SIGNATURE_EXCLUDE).
   order_delivery_cancelled: {
     name: "order_delivery_cancelled",
     category: "UTILITY",
@@ -354,7 +354,7 @@ Votre commande {{1}} : le mode de livraison a changé. Elle est de nouveau en co
     variables: ["référence"],
     body: `message en français suit
 
-تم إلغاء طلبك رقم {{1}}. سيتواصل معك المتجر قريباً.
+الطلبية تاعك {{1}} تلغات. المتجر رح يتواصل معاك.
 
 ${SEP}
 
