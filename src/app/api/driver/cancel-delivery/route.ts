@@ -2,7 +2,8 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendExpoPush } from "@/lib/expo-push";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { sendTunnelMessage } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { driverCancelledDelivery, refusalReasonLabel } from "@/lib/push-messages";
 import { recordMotoInsight } from "@/lib/delivery-insight";
 
@@ -151,17 +152,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // WhatsApp acheteur : sa commande était en route, elle est annulée → il DOIT le
-  // savoir. Best-effort (fenêtre 24h Meta ; échec silencieux si fermée). Bilingue
-  // FR/AR — la locale acheteur n'est pas stockée.
+  // WhatsApp acheteur : sa commande était en route, elle est annulée → il DOIT le savoir.
+  // [N13] Même mécanique que le tunnel : fenêtre 24h (texte libre bilingue) puis repli template
+  // order_delivery_cancelled ({{1}}=référence) hors fenêtre. Best-effort (échec propre loggé).
   if (client?.phone) {
     const reference = order?.reference ?? orderId.slice(0, 8).toUpperCase();
-    const msg =
-      `Bonjour, votre commande ${reference} a été annulée. La boutique vous recontactera.\n` +
-      `تم إلغاء طلبك ${reference}. سيتواصل معك المتجر قريباً.`;
-    const waRes = await sendWhatsAppNotification(client.phone, msg);
-    if (!waRes.success) {
-      console.error("[cancel-delivery] buyer WhatsApp failed:", waRes.error);
+    const r = await sendTunnelMessage(client.phone, TEMPLATES.order_delivery_cancelled, [reference]);
+    if (!r.success) {
+      console.error("[cancel-delivery] buyer WhatsApp failed:", r.error);
     }
   }
 
