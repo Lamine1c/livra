@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { deleteEcotrackOrder } from "@/lib/ecotrack";
 import { deleteYalidineParcel } from "@/lib/yalidine";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { sendTunnelMessage } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 
 // Annule le bon transporteur (Yalidine / DHD / Anderson) pour permettre au vendeur
 // de re-choisir un mode SANS re-créer la commande. Livreur perso n'est PAS géré ici.
@@ -73,11 +74,15 @@ export async function POST(
     return NextResponse.json({ error: "Erreur lors du rollback de la commande." }, { status: 500 });
   }
 
-  // 3) Notifier l'acheteur (best-effort).
+  // 3) Notifier l'acheteur (best-effort). [N13] Même mécanique que le tunnel : fenêtre 24h
+  //    (texte libre) puis repli template order_carrier_changed hors fenêtre (échec propre loggé,
+  //    ne bloque NI la réponse NI le rollback DB déjà fait ci-dessus).
   try {
     const clientData = Array.isArray(order.client) ? order.client[0] : order.client;
     if (clientData?.phone) {
-      await sendWhatsAppNotification(clientData.phone, "Le mode de livraison de votre commande a été modifié.");
+      const reference = (order.reference as string | null) ?? id.slice(0, 8).toUpperCase();
+      const r = await sendTunnelMessage(clientData.phone, TEMPLATES.order_carrier_changed, [reference]);
+      if (!r.success) console.error("[cancel-carrier] buyer WA failed:", r.error);
     }
   } catch (err) {
     console.error("[cancel-carrier] buyer WA failed:", err);
