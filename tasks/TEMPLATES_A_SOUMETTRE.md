@@ -133,9 +133,9 @@ Lamine ne l'active pas.
 - **Bouton** : type **One-time password → « Copy code »** (le code est auto-rempli).
 - **Nom** : `order_otp_code` (ou un autre → poser `WHATSAPP_OTP_AUTH_TEMPLATE_NAME`).
 
-**⚠️ À confirmer à la soumission** : la forme EXACTE du composant bouton dans le payload d'envoi
-(`buildAuthTemplatePayload` dans `src/lib/whatsapp.ts` utilise `sub_type:"url"` + code en paramètre ;
-selon le type de bouton approuvé — copy_code vs one-tap — il faudra peut-être ajuster `sub_type`).
+**✅ [N13-bis] CONFIRMÉ (Claudy, 16 sept)** : bouton **« Copy code »** (l'acheteur n'a pas l'app LIVRA
+→ il recopie le code par WhatsApp ; ni one-tap ni zero-tap). `buildAuthTemplatePayload` (`src/lib/whatsapp.ts`)
+envoie donc le composant bouton en **`sub_type:"copy_code"`** (index 0), param `coupon_code` = le code (≠ `"url"`).
 
 **Activation (une fois approuvé)** : env Vercel `AUTH_OTP_TEMPLATE_READY=true` (+ nom/langue si
 différents du défaut). Le repli MSG 2 hors fenêtre partira alors via le template Auth au lieu d'échouer.

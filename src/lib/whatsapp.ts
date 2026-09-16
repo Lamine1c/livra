@@ -224,9 +224,8 @@ export async function sendTunnelMessage(
 // ─── [N12-4] order_otp_code v2 — template Meta AUTHENTICATION (préparation, NON soumis) ──
 // Meta force la catégorie Authentication pour les OTP → order_otp_code ne peut PAS partir en
 // UTILITY. Ce helper construit le payload d'un template Authentication (composant body + bouton
-// one-time-password « copy code », le code répété en paramètre). Nom + langue du template = env.
-// ⚠️ La forme EXACTE du bouton (sub_type) est à CONFIRMER contre le template approuvé à la
-// soumission (cf. tasks/TEMPLATES_A_SOUMETTRE.md). Jamais appelé tant que AUTH_OTP_TEMPLATE_READY !== "true".
+// OTP « Copy code », cf. finding N13-bis ci-dessous). Nom + langue du template = env.
+// Jamais appelé tant que AUTH_OTP_TEMPLATE_READY !== "true" (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
 const AUTH_OTP_TEMPLATE_NAME = process.env.WHATSAPP_OTP_AUTH_TEMPLATE_NAME ?? "order_otp_code";
 const AUTH_OTP_TEMPLATE_LANG = process.env.WHATSAPP_OTP_AUTH_TEMPLATE_LANG ?? "fr";
 
@@ -240,8 +239,10 @@ function buildAuthTemplatePayload(to: string, code: string) {
       language: { code: AUTH_OTP_TEMPLATE_LANG },
       components: [
         { type: "body", parameters: [{ type: "text", text: code }] },
-        // Bouton one-time-password (copy code) : le code est répété comme paramètre du bouton.
-        { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: code }] },
+        // [N13-bis] FINDING SOUMISSION CONFIRMÉ (Claudy, 16 sept) : bouton « Copy code » (l'acheteur
+        // n'a PAS l'app LIVRA → il recopie le code par WhatsApp, PAS de one-tap/zero-tap) → le composant
+        // bouton d'envoi est sub_type "copy_code" (index 0), param = coupon_code portant le code. (≠ "url".)
+        { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: code }] },
       ],
     },
   };
