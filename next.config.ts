@@ -8,7 +8,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // n'est destinée à être framée ; /track, /locate et les pages bounce s'ouvrent en direct → DENY OK).
 // La CSP est en REPORT-ONLY UNIQUEMENT (Next injecte des scripts/styles inline → l'enforcer casserait ;
 // on observe d'abord les violations, puis on durcira). Baseline permissive à raffiner sur les rapports
-// réels ; idéalement ajouter un endpoint report-to/report-uri pour collecter (TODO, hors périmètre).
+// réels. [N17] `report-uri /api/csp-report` collecte les violations (endpoint 204, console.warn structuré,
+// sans PII) — ferme la dette N10. Reste en Report-Only (aucune bascule enforce).
 const CSP_REPORT_ONLY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next inline/hydration — assoupli en report-only
@@ -19,6 +20,7 @@ const CSP_REPORT_ONLY = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "report-uri /api/csp-report", // [N17] endpoint de collecte (report-uri : large support navigateurs)
 ].join("; ");
 
 const SECURITY_HEADERS = [
