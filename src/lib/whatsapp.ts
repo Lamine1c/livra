@@ -3,15 +3,16 @@ import {
   buildTemplatePayload,
   buildInteractiveButtonsPayload,
   renderTemplateText,
+  TEMPLATES,
   type WhatsAppTemplate,
 } from "./whatsapp-templates";
 
 // Transport WhatsApp = Meta Cloud API (Meta Step 2 terminé).
-// Graph API version alignée sur lib/meta.ts (v23.0). PHONE_NUMBER_ID = env
+// Graph API version alignée sur lib/meta.ts (v26.0). PHONE_NUMBER_ID = env
 // WHATSAPP_PHONE_NUMBER_ID, source UNIQUE : pas de fallback hardcodé (un id figé
 // a déjà bité — id périmé). Absent/vide → on ne construit pas d'URL et l'envoi
 // échoue proprement, plutôt que d'envoyer vers un id erroné en silence.
-const GRAPH_VERSION = "v23.0";
+const GRAPH_VERSION = "v26.0";
 
 function graphMessagesUrl(): string | null {
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -216,6 +217,62 @@ export async function sendTunnelMessage(
   if (isOutOfWindow(windowResult.code)) {
     const t = await sendWhatsAppTemplate(phone, template, variables);
     return { success: t.success, error: t.error, viaTemplate: true };
+  }
+  return { success: false, error: windowResult.error };
+}
+
+// ─── [N12-4] order_otp_code v2 — template Meta AUTHENTICATION (préparation, NON soumis) ──
+// Meta force la catégorie Authentication pour les OTP → order_otp_code ne peut PAS partir en
+// UTILITY. Ce helper construit le payload d'un template Authentication (composant body + bouton
+// OTP « Copy code », cf. finding N13-bis ci-dessous). Nom + langue du template = env.
+// Jamais appelé tant que AUTH_OTP_TEMPLATE_READY !== "true" (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
+const AUTH_OTP_TEMPLATE_NAME = process.env.WHATSAPP_OTP_AUTH_TEMPLATE_NAME ?? "order_otp_code";
+const AUTH_OTP_TEMPLATE_LANG = process.env.WHATSAPP_OTP_AUTH_TEMPLATE_LANG ?? "fr";
+
+function buildAuthTemplatePayload(to: string, code: string) {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: {
+      name: AUTH_OTP_TEMPLATE_NAME,
+      language: { code: AUTH_OTP_TEMPLATE_LANG },
+      components: [
+        { type: "body", parameters: [{ type: "text", text: code }] },
+        // [N13-bis] FINDING SOUMISSION CONFIRMÉ (Claudy, 16 sept) : bouton « Copy code » (l'acheteur
+        // n'a PAS l'app LIVRA → il recopie le code par WhatsApp, PAS de one-tap/zero-tap) → le composant
+        // bouton d'envoi est sub_type "copy_code" (index 0), param = coupon_code portant le code. (≠ "url".)
+        { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: code }] },
+      ],
+    },
+  };
+}
+
+export async function sendWhatsAppAuthTemplate(
+  phone: string,
+  code: string
+): Promise<{ success: boolean; error?: string; code?: number }> {
+  const to = normalizePhoneNumber(phone);
+  const result = await postToMeta(buildAuthTemplatePayload(to, code), `auth-template:${AUTH_OTP_TEMPLATE_NAME}`);
+  return { success: result.ok, error: result.error, code: result.code };
+}
+
+// MSG 2 (code OTP) — fenêtre 24h → texte libre (order_otp_code bilingue). Hors fenêtre → repli :
+// SI env AUTH_OTP_TEMPLATE_READY==="true" → template AUTHENTICATION (sendWhatsAppAuthTemplate) ;
+// SINON → template classique (échoue tant que non approuvé = comportement ACTUEL, DÉFAUT texte-libre).
+export async function sendOtpTunnelMessage(
+  phone: string,
+  code: string
+): Promise<{ success: boolean; error?: string; viaAuthTemplate?: boolean }> {
+  const windowResult = await sendWhatsAppNotification(phone, renderTemplateText(TEMPLATES.order_otp_code, [code]));
+  if (windowResult.success) return { success: true };
+  if (isOutOfWindow(windowResult.code)) {
+    if (process.env.AUTH_OTP_TEMPLATE_READY === "true") {
+      const t = await sendWhatsAppAuthTemplate(phone, code);
+      return { success: t.success, error: t.error, viaAuthTemplate: true };
+    }
+    const t = await sendWhatsAppTemplate(phone, TEMPLATES.order_otp_code, [code]);
+    return { success: t.success, error: t.error };
   }
   return { success: false, error: windowResult.error };
 }

@@ -1,5 +1,28 @@
 # TEMPLATES_A_SOUMETTRE.md — templates WhatsApp à créer côté Meta (Lamine soumet)
 
+## 🟢 ÉTAT FINAL DES SOUMISSIONS — 16 sept 2026 (N12-3)
+
+Les templates du tunnel ont été soumis à Meta le 15 sept, en variantes **MONOLINGUES** (leçon : Meta
+rejette les corps bilingues) et plusieurs corps ont été **reformulés** à la soumission (anti-classifieur).
+Le corps qui part hors fenêtre 24h = **celui stocké CHEZ META**, PAS le body bilingue du code
+(`whatsapp-templates.ts`, qui ne sert qu'au rendu texte-libre in-window). Aucun impact d'ENVOI
+(`buildTemplatePayload` n'envoie que les variables `{{n}}` + `name`/`language`).
+
+| Template | Langues soumises | Catégorie | Divergence vs corps bilingue du code |
+|---|---|---|---|
+| `order_confirmed_verified` | fr **et** ar | UTILITY | corps soumis **SANS** « servis en priorité » |
+| `order_otp_wrong_code` | fr **et** ar | UTILITY | — (reformulation mineure possible) |
+| `order_reschedule_request` | fr **et** ar | UTILITY | corps soumis avec « pour votre livraison » |
+| `order_cancelled_mind_changed` | fr **et** ar | UTILITY | pur constat d'annulation : « votre commande chez {{2}} est bien annulée. Vous n'avez rien à payer. » — variables {{1}}+{{2}} |
+| `order_cancel_reasons` | **ar UNIQUEMENT** | UTILITY | fr **REFUSÉ** (boutons darija sur corps FR). `code.language` mis à `"ar"` (N12-2). |
+| `order_objection_cheaper` | (approuvé) | **MARKETING** (assumé) | catégorie MARKETING, pas UTILITY |
+| `order_otp_code` | **NON soumis** | (Authentication forcée) | Meta force la catégorie Authentication → voir « order_otp_code v2 » en fin de fichier (N12-4) |
+
+⚠️ **Conséquence code** : ne PAS supposer que `TEMPLATES.<name>.body` == le corps délivré hors fenêtre.
+Pour toute vérif de copy hors fenêtre, se référer au **Meta Business Manager** (source de vérité des corps soumis).
+
+---
+
 > Écrit par cc (N1.2). **cc ne soumet RIEN à Meta** (interdit). Ce fichier = la spec de
 > soumission. Le **corps exact (verbatim, AR-d'abord/FR-après ━━━) est la source de vérité
 > dans `src/lib/whatsapp-templates.ts`** — copie-le tel quel à la soumission (n'y retape pas
@@ -92,3 +115,53 @@ statut/priorité du client sans chiffre ni promesse de délai — rien à re-val
 score évolue. Si un jour D4 est tranchée « prix séparé », alors seulement : remplacer la ligne
 `💰 {{4}}` par 3 lignes (produit `{{4}}` / livraison `{{5}}` / total `{{6}}`) et re-décaler les
 variables — **hors périmètre tant que D4 n'est pas décidée**.
+
+---
+
+## order_otp_code v2 — template AUTHENTICATION (à soumettre — N12-4)
+
+Meta **force la catégorie Authentication** pour les OTP → `order_otp_code` ne peut PAS être soumis
+en UTILITY. Le code est prêt (helper `sendWhatsAppAuthTemplate` + `sendOtpTunnelMessage`), **derrière
+le flag env `AUTH_OTP_TEMPLATE_READY` (défaut `false`)** → aucun changement de comportement tant que
+Lamine ne l'active pas.
+
+**À soumettre côté Meta (Lamine)** :
+- **Catégorie** : `AUTHENTICATION`.
+- **Langue(s)** : `fr` (et `ar` si souhaité — poser `WHATSAPP_OTP_AUTH_TEMPLATE_LANG`).
+- **Corps** : texte Authentication standard Meta avec le **code en `{{1}}`** (Meta impose sa propre
+  structure de sécurité — pas de copy libre ; suivre l'assistant « Authentication » du Business Manager).
+- **Bouton** : type **One-time password → « Copy code »** (le code est auto-rempli).
+- **Nom** : `order_otp_code` (ou un autre → poser `WHATSAPP_OTP_AUTH_TEMPLATE_NAME`).
+
+**✅ [N13-bis] CONFIRMÉ (Claudy, 16 sept)** : bouton **« Copy code »** (l'acheteur n'a pas l'app LIVRA
+→ il recopie le code par WhatsApp ; ni one-tap ni zero-tap). `buildAuthTemplatePayload` (`src/lib/whatsapp.ts`)
+envoie donc le composant bouton en **`sub_type:"copy_code"`** (index 0), param `coupon_code` = le code (≠ `"url"`).
+
+**Activation (une fois approuvé)** : env Vercel `AUTH_OTP_TEMPLATE_READY=true` (+ nom/langue si
+différents du défaut). Le repli MSG 2 hors fenêtre partira alors via le template Auth au lieu d'échouer.
+
+---
+
+## N13 — à soumettre (2 templates livreur→acheteur hors fenêtre)
+
+Repli hors fenêtre 24h pour les 2 messages business-initiated de `cancel-carrier` et
+`cancel-delivery`. Leçon Meta du 15 : **1 template = 1 langue · corps 100% transactionnel ancré
+« votre commande » (UTILITY) · aucune promesse**. Soumettre CHAQUE ligne comme un template séparé
+(fr ET ar). Le corps du code (`whatsapp-templates.ts`) est bilingue (rendu texte-libre in-window) et
+ces 2 templates sont **EXCLUS de la signature LIVRA** (SIGNATURE_EXCLUDE) → pas de promesse.
+
+| Template | Langue | Catégorie | Variables | Corps à soumettre (verbatim) |
+|---|---|---|---|---|
+| `order_carrier_changed` | fr | UTILITY | **aucune** | Le mode de livraison de votre commande a été modifié. La boutique va le reconfigurer et revenir vers vous. |
+| `order_carrier_changed` | ar | UTILITY | **aucune** | تبدّل نمط التوصيل تاع الطلبية تاعك. المتجر رح يعاود يظبطو ويرجعلك. |
+| `order_delivery_cancelled` | fr | UTILITY | `{{1}}`=référence | Votre commande {{1}} a été annulée. La boutique vous recontactera. |
+| `order_delivery_cancelled` | ar | UTILITY | `{{1}}`=référence | الطلبية تاعك {{1}} تلغات. المتجر رح يتواصل معاك. |
+
+> **COPY FIGÉE par Claudy (16 sept 13h)** — noms + corps ci-dessus utilisés VERBATIM dans le code, non
+> reformulés. ⚠️ `order_carrier_changed` = **AUCUNE variable** (exemple `order_delivery_cancelled` : réf `LV-2K8F`).
+
+Exemple (référence = `LV-AB12CD`) : « Votre commande LV-AB12CD a été annulée. La boutique vous recontactera. »
+
+**Note code** : `.language="fr"` → le repli hors fenêtre demande la variante **fr** (locale acheteur non
+stockée) ; soumettre l'ar permet un futur switch. Tant que non approuvés : repli = échec propre hors
+fenêtre (comportement actuel), zéro régression.

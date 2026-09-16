@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const GRAPH_API = "https://graph.facebook.com/v23.0";
+const GRAPH_API = "https://graph.facebook.com/v26.0";
 
 export async function graphFetch(
   path: string,

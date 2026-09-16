@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPush } from "@/lib/expo-push";
-import { buyerLocationConfirmed } from "@/lib/push-messages";
+import { buyerLocationConfirmed, buyerLocationUpdated } from "@/lib/push-messages";
 
 export async function GET(req: NextRequest) {
   const t = req.nextUrl.searchParams.get("t");
@@ -75,14 +75,16 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Idempotence check: fetch order before update to detect first-time location confirmation
+  // Idempotence check: fetch order before update to detect first-time location confirmation.
+  // [N12-5] On lit AUSSI buyer_location_at (timestamp de la confirmation PRÉCÉDENTE) pour l'anti-spam.
   const { data: orderBefore } = await supabase
     .from("orders")
-    .select("buyer_lat, user_id")
+    .select("buyer_lat, buyer_location_at, user_id")
     .eq("id", result.orderId)
     .single();
 
   const wasAlreadyLocated = orderBefore?.buyer_lat != null;
+  const prevLocatedAt = orderBefore?.buyer_location_at as string | null | undefined;
 
   const { error } = await supabase
     .from("orders")
@@ -97,8 +99,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur lors de l'enregistrement" }, { status: 500 });
   }
 
-  // Push notif to vendor — only on first location confirmation
-  if (!wasAlreadyLocated && orderBefore?.user_id) {
+  // Push vendeur. 1re confirmation → « position confirmée ». Confirmations SUIVANTES → libellé
+  // DISTINCT « position mise à jour » (le point a bougé, le livreur doit re-viser).
+  // [N12-5] Anti-spam DURABLE via la colonne EXISTANTE buyer_location_at (aucun état mémoire, survit
+  // au serverless, pas de migration) : on ne pousse la « mise à jour » que si la confirmation
+  // PRÉCÉDENTE date de ≥ 10 min → au plus ~1 push « mise à jour » par commande / 10 min.
+  const TEN_MIN_MS = 10 * 60 * 1000;
+  const updateTooRecent =
+    wasAlreadyLocated && !!prevLocatedAt && Date.now() - new Date(prevLocatedAt).getTime() < TEN_MIN_MS;
+
+  if (orderBefore?.user_id && (!wasAlreadyLocated || !updateTooRecent)) {
     const { data: vendor } = await supabase
       .from("profiles")
       .select("expo_push_token, locale")
@@ -106,15 +116,14 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (vendor?.expo_push_token) {
-      const { title, body } = buyerLocationConfirmed(vendor.locale, {
-        reference: result.orderId.slice(0, 8).toUpperCase(),
+      const reference = result.orderId.slice(0, 8).toUpperCase();
+      const { title, body } = wasAlreadyLocated
+        ? buyerLocationUpdated(vendor.locale, { reference })
+        : buyerLocationConfirmed(vendor.locale, { reference });
+      const pushResult = await sendExpoPush(vendor.expo_push_token, title, body, {
+        orderId: result.orderId,
+        type: wasAlreadyLocated ? "buyer_location_updated" : "buyer_location_confirmed",
       });
-      const pushResult = await sendExpoPush(
-        vendor.expo_push_token,
-        title,
-        body,
-        { orderId: result.orderId, type: "buyer_location_confirmed" }
-      );
       if (!pushResult.success) {
         console.error("[locate] expo push failed:", pushResult.error);
       }

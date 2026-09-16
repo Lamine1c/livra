@@ -7,6 +7,13 @@
 //   - Jamais "livreur LIVRA" / "notre livreur" → toujours "le livreur de {{boutique}}".
 //   - Variables Meta = {{1}}, {{2}}… dans l'ordre d'apparition dans le corps.
 // NE PAS retoucher / traduire la darija : copie verbatim de la source.
+//
+// 🔴 [N12-3] DIVERGENCE CODE ↔ META — LIRE. Ces `body` bilingues servent au rendu TEXTE-LIBRE
+// in-window (renderTemplateText). Les templates SOUMIS à Meta (16 sept) sont MONOLINGUES (Meta
+// rejette les corps bilingues) et plusieurs ont été REFORMULÉS à la soumission (anti-classifieur) :
+// le corps qui part hors fenêtre = celui stocké CHEZ META, PAS celui ci-dessous. `buildTemplatePayload`
+// n'envoie que les variables {{n}} + le `name`/`language` → le texte ci-dessous n'est jamais transmis
+// en mode template. État final des soumissions (langues/catégorie/divergences) : tasks/TEMPLATES_A_SOUMETTRE.md.
 
 export type WhatsAppTemplate = {
   name: string;
@@ -134,7 +141,11 @@ On attend votre code 🙂`,
   order_cancel_reasons: {
     name: "order_cancel_reasons",
     category: "UTILITY",
-    language: "fr",
+    // [N12-2] SEULE variante approuvée par Meta = "ar" (le fr a été refusé : boutons darija
+    // sur corps FR). `buildTemplatePayload` envoie `language:{code: template.language}` → le repli
+    // hors fenêtre partira donc en 'ar'. Le corps ci-dessous reste bilingue pour le rendu texte-libre
+    // in-window (renderTemplateText n'utilise pas .language).
+    language: "ar",
     variables: [],
     buttons: [
       { type: "QUICK_REPLY", id: "not_available", text: "ماشي اليوم" },
@@ -315,6 +326,40 @@ ${SEP}
 ⚠️ Le livreur n'a pas pu vous joindre.
 Contactez {{1}} pour reprogrammer votre livraison.`,
   },
+
+  // ─── [N13] Transporteur annulé → mode de livraison à re-choisir (acheteur) ───
+  // COPY FIGÉE par Claudy (16 sept), verbatim, NON reformulée. AUCUNE variable. UTILITY, transactionnel,
+  // zéro promesse → EXCLU de la signature LIVRA (cf. SIGNATURE_EXCLUDE). Variantes MONOLINGUES à
+  // soumettre = tasks/TEMPLATES_A_SOUMETTRE.md § N13.
+  order_carrier_changed: {
+    name: "order_carrier_changed",
+    category: "UTILITY",
+    language: "fr",
+    variables: [],
+    body: `message en français suit
+
+تبدّل نمط التوصيل تاع الطلبية تاعك. المتجر رح يعاود يظبطو ويرجعلك.
+
+${SEP}
+
+Le mode de livraison de votre commande a été modifié. La boutique va le reconfigurer et revenir vers vous.`,
+  },
+
+  // ─── [N13] Livraison annulée par le livreur → la boutique recontacte (acheteur) ───
+  // COPY FIGÉE par Claudy (16 sept), verbatim. {{1}} = référence. UTILITY, zéro promesse (SIGNATURE_EXCLUDE).
+  order_delivery_cancelled: {
+    name: "order_delivery_cancelled",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["référence"],
+    body: `message en français suit
+
+الطلبية تاعك {{1}} تلغات. المتجر رح يتواصل معاك.
+
+${SEP}
+
+Votre commande {{1}} a été annulée. La boutique vous recontactera.`,
+  },
 } satisfies Record<string, WhatsAppTemplate>;
 
 // ─── Signature LIVRA en pied de chaque message ACHETEUR (FR+AR) ───────────────
@@ -324,7 +369,13 @@ Contactez {{1}} pour reprogrammer votre livraison.`,
 // n'est pas dans TEMPLATES (fonction vendeur) → naturellement hors signature acheteur.
 // Rappel : pour les envois en TEMPLATE (delivery_*, repli tunnel), Meta délivre SA copy approuvée
 // — la signature ci-dessous ne s'affiche qu'après re-soumission (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
-const SIGNATURE_EXCLUDE = new Set<string>(["order_confirmation_request"]);
+// [N13] order_carrier_changed / order_delivery_cancelled : corps 100% transactionnel (UTILITY),
+// « pas de promesse » → PAS de signature LIVRA (qui est un slot Trust Layer = promesse).
+const SIGNATURE_EXCLUDE = new Set<string>([
+  "order_confirmation_request",
+  "order_carrier_changed",
+  "order_delivery_cancelled",
+]);
 
 function appendSignature(body: string): string {
   const marker = `\n\n${SEP}\n\n`;
