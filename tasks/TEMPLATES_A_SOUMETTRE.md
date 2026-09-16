@@ -139,3 +139,26 @@ selon le type de bouton approuvé — copy_code vs one-tap — il faudra peut-ê
 
 **Activation (une fois approuvé)** : env Vercel `AUTH_OTP_TEMPLATE_READY=true` (+ nom/langue si
 différents du défaut). Le repli MSG 2 hors fenêtre partira alors via le template Auth au lieu d'échouer.
+
+---
+
+## N13 — à soumettre (2 templates livreur→acheteur hors fenêtre)
+
+Repli hors fenêtre 24h pour les 2 messages business-initiated de `cancel-carrier` et
+`cancel-delivery`. Leçon Meta du 15 : **1 template = 1 langue · corps 100% transactionnel ancré
+« votre commande » (UTILITY) · aucune promesse**. Soumettre CHAQUE ligne comme un template séparé
+(fr ET ar). Le corps du code (`whatsapp-templates.ts`) est bilingue (rendu texte-libre in-window) et
+ces 2 templates sont **EXCLUS de la signature LIVRA** (SIGNATURE_EXCLUDE) → pas de promesse.
+
+| Template | Langue | Catégorie | Variables | Corps à soumettre (verbatim) |
+|---|---|---|---|---|
+| `order_carrier_changed` | fr | UTILITY | `{{1}}`=référence | Votre commande {{1}} : le mode de livraison a changé. Elle est de nouveau en cours d'organisation. |
+| `order_carrier_changed` | ar | UTILITY | `{{1}}`=référence | طلبك رقم {{1}} : تبدّلت طريقة التوصيل. الطلب راه قيد التنظيم من جديد. |
+| `order_delivery_cancelled` | fr | UTILITY | `{{1}}`=référence | Votre commande {{1}} a été annulée. La boutique vous recontactera. |
+| `order_delivery_cancelled` | ar | UTILITY | `{{1}}`=référence | تم إلغاء طلبك رقم {{1}}. سيتواصل معك المتجر قريباً. |
+
+Exemple (référence = `LV-AB12CD`) : « Votre commande LV-AB12CD a été annulée. La boutique vous recontactera. »
+
+**Note code** : `.language="fr"` → le repli hors fenêtre demande la variante **fr** (locale acheteur non
+stockée) ; soumettre l'ar permet un futur switch. Tant que non approuvés : repli = échec propre hors
+fenêtre (comportement actuel), zéro régression.

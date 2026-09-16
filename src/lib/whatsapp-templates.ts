@@ -326,6 +326,40 @@ ${SEP}
 ⚠️ Le livreur n'a pas pu vous joindre.
 Contactez {{1}} pour reprogrammer votre livraison.`,
   },
+
+  // ─── [N13] Transporteur annulé → mode de livraison à re-choisir (acheteur) ───
+  // {{1}} = référence. Corps bilingue pour le rendu texte-libre in-window ; variantes
+  // MONOLINGUES à soumettre = tasks/TEMPLATES_A_SOUMETTRE.md § N13 (UTILITY, 100% transactionnel,
+  // ancré « votre commande », zéro promesse → EXCLU de la signature LIVRA, cf. SIGNATURE_EXCLUDE).
+  order_carrier_changed: {
+    name: "order_carrier_changed",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["référence"],
+    body: `message en français suit
+
+طلبك رقم {{1}} : تبدّلت طريقة التوصيل. الطلب راه قيد التنظيم من جديد.
+
+${SEP}
+
+Votre commande {{1}} : le mode de livraison a changé. Elle est de nouveau en cours d'organisation.`,
+  },
+
+  // ─── [N13] Livraison annulée par le livreur → la boutique recontacte (acheteur) ───
+  // {{1}} = référence. Reprend le sens du texte actuel de cancel-delivery, sans promesse.
+  order_delivery_cancelled: {
+    name: "order_delivery_cancelled",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["référence"],
+    body: `message en français suit
+
+تم إلغاء طلبك رقم {{1}}. سيتواصل معك المتجر قريباً.
+
+${SEP}
+
+Votre commande {{1}} a été annulée. La boutique vous recontactera.`,
+  },
 } satisfies Record<string, WhatsAppTemplate>;
 
 // ─── Signature LIVRA en pied de chaque message ACHETEUR (FR+AR) ───────────────
@@ -335,7 +369,13 @@ Contactez {{1}} pour reprogrammer votre livraison.`,
 // n'est pas dans TEMPLATES (fonction vendeur) → naturellement hors signature acheteur.
 // Rappel : pour les envois en TEMPLATE (delivery_*, repli tunnel), Meta délivre SA copy approuvée
 // — la signature ci-dessous ne s'affiche qu'après re-soumission (cf. tasks/TEMPLATES_A_SOUMETTRE.md).
-const SIGNATURE_EXCLUDE = new Set<string>(["order_confirmation_request"]);
+// [N13] order_carrier_changed / order_delivery_cancelled : corps 100% transactionnel (UTILITY),
+// « pas de promesse » → PAS de signature LIVRA (qui est un slot Trust Layer = promesse).
+const SIGNATURE_EXCLUDE = new Set<string>([
+  "order_confirmation_request",
+  "order_carrier_changed",
+  "order_delivery_cancelled",
+]);
 
 function appendSignature(body: string): string {
   const marker = `\n\n${SEP}\n\n`;
