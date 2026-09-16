@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { rateLimit } from "@/lib/rate-limit";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 import { generateDriverToken } from "@/lib/qr-token";
 
@@ -28,6 +29,17 @@ export async function POST(req: NextRequest) {
 
   // 2. Normaliser le numéro
   const normalizedPhone = normalizePhoneNumber(whatsapp);
+
+  // [N21.3] Anti-brute-force : l'OTP livreur fait 6 chiffres et cet endpoint n'est PAS authentifié
+  // → sans limite, il est énumérable. On borne à 10 essais / 10 min par numéro (tout essai compte :
+  // bon code, mauvais code, numéro inconnu → pas d'oracle sur l'existence). Mécanique rateLimit du repo
+  // (best-effort mémoire). Un livreur légitime qui se trompe reste très en dessous du seuil.
+  if (!rateLimit(`driver:verify-otp:${normalizedPhone}`, 10, 10 * 60_000)) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessaie dans quelques minutes.", code: "OTP_VERIFY_RATE_LIMIT" },
+      { status: 429 }
+    );
+  }
 
   const supabase = createServiceClient();
 
