@@ -80,8 +80,8 @@ export async function POST(
   try {
     const clientData = Array.isArray(order.client) ? order.client[0] : order.client;
     if (clientData?.phone) {
-      const reference = (order.reference as string | null) ?? id.slice(0, 8).toUpperCase();
-      const r = await sendTunnelMessage(clientData.phone, TEMPLATES.order_carrier_changed, [reference]);
+      // order_carrier_changed = AUCUNE variable (copy figée Claudy) → aucun paramètre.
+      const r = await sendTunnelMessage(clientData.phone, TEMPLATES.order_carrier_changed, []);
       if (!r.success) console.error("[cancel-carrier] buyer WA failed:", r.error);
     }
   } catch (err) {
