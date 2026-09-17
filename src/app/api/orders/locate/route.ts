@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPush } from "@/lib/expo-push";
@@ -47,16 +48,31 @@ export async function GET(req: NextRequest) {
   });
 }
 
+// [N23.2] Validation Zod du body — route PUBLIQUE non authentifiée (surface d'attaque) : parse
+// strict + 400 propre. Mêmes contraintes qu'avant (token non vide, lat/lng bornées) ; logique
+// métier inchangée (verifyLocateToken reste le contrôle de sécurité du lien).
+const locateBodySchema = z.object({
+  token: z.string().min(1),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
 export async function POST(req: NextRequest) {
-  let body: { token?: string; lat?: number; lng?: number };
+  let raw: unknown;
   try {
-    body = await req.json() as { token?: string; lat?: number; lng?: number };
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
   }
 
-  const { token, lat, lng } = body;
-  if (!token) return NextResponse.json({ error: "Token manquant" }, { status: 400 });
+  const parsed = locateBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    const fields = Array.from(
+      new Set(parsed.error.issues.map((i) => i.path.map(String).join(".")).filter(Boolean))
+    );
+    return NextResponse.json({ error: "validation", fields }, { status: 400 });
+  }
+  const { token, lat, lng } = parsed.data;
 
   const result = verifyLocateToken(token);
   if (!result.valid) {
@@ -64,13 +80,6 @@ export async function POST(req: NextRequest) {
       { error: result.expired ? "Lien expiré" : "Lien invalide" },
       { status: result.expired ? 410 : 401 }
     );
-  }
-
-  if (typeof lat !== "number" || typeof lng !== "number") {
-    return NextResponse.json({ error: "Coordonnées manquantes" }, { status: 400 });
-  }
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    return NextResponse.json({ error: "Coordonnées invalides" }, { status: 400 });
   }
 
   const supabase = createServiceClient();
