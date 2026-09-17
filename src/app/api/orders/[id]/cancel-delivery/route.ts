@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { deliveryCancelled } from "@/lib/push-messages";
+import { sendTunnelMessage } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 
 // F1 — Cascade d'annulation vendeur → livraison "Livreur perso" (moto_perso).
 //
@@ -27,7 +29,7 @@ export async function POST(
   // Ownership : la commande doit appartenir au vendeur authentifié.
   const { data: order, error: fetchError } = await supabase
     .from("orders")
-    .select("id, reference")
+    .select("id, reference, client_id")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -84,6 +86,27 @@ export async function POST(
     );
     if (!pushResult.success) {
       console.error("[orders/cancel-delivery] expo push failed:", pushResult.error);
+    }
+  }
+
+  // [N33W.2 · B2] WhatsApp ACHETEUR : sa commande était EN ROUTE (delivery active) et le vendeur
+  // vient de l'annuler → il DOIT être prévenu (avant, silence total côté acheteur). Même mécanique
+  // que driver/cancel-delivery : fenêtre 24h (texte libre) puis repli template order_delivery_cancelled
+  // ({{1}}=référence) hors fenêtre — AUCUN nouveau template. Best-effort (échec propre loggé), ne bloque
+  // pas la cascade. Idempotent : ne part que sur la transition active→cancelled (2e appel = pas de
+  // delivery active → early-return plus haut, donc pas de 2e envoi).
+  if (order.client_id) {
+    const { data: buyer } = await service
+      .from("clients")
+      .select("phone")
+      .eq("id", order.client_id)
+      .maybeSingle();
+    if (buyer?.phone) {
+      const reference = order.reference ?? `#${id.slice(0, 8).toUpperCase()}`;
+      const r = await sendTunnelMessage(buyer.phone, TEMPLATES.order_delivery_cancelled, [reference]);
+      if (!r.success) {
+        console.error("[orders/cancel-delivery] buyer WhatsApp failed:", r.error);
+      }
     }
   }
 
