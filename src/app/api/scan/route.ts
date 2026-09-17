@@ -120,6 +120,15 @@ export async function GET(req: NextRequest) {
     ? (Array.isArray(order.client) ? order.client[0] : order.client)
     : null;
 
+  // [N30W.2] Historique des statuts (dates de la timeline) — champ ADDITIF, best-effort.
+  // Si la migration 041 n'est PAS encore appliquée, la table n'existe pas → Supabase renvoie une
+  // ERREUR (pas un throw) → data null → `status_history: []`. Zéro breaking tant que non appliqué.
+  const { data: statusHistory } = await supabase
+    .from("order_status_history")
+    .select("status, created_at")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
+
   return NextResponse.json({
     ok: true,
     orderId: order.id,
@@ -130,6 +139,7 @@ export async function GET(req: NextRequest) {
       buyer_address: client?.address ?? null,
       buyer_wilaya: client?.wilaya ?? null,
     },
+    status_history: statusHistory ?? [],
     vendorName: vendor?.store_name ?? vendor?.full_name ?? "Vendeur LIVRA",
     expiresIn: 24 * 3600,
     deviceToken,
