@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken, generateBuyerToken } from "@/lib/qr-token";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { deliveryStarted } from "@/lib/push-messages";
 
 export async function POST(req: NextRequest) {
@@ -160,11 +160,9 @@ export async function POST(req: NextRequest) {
         driverName: driverPrenom,
         reference: orderId.slice(0, 8).toUpperCase(),
       });
-      const pushResult = await sendExpoPush(
-        vendorPush.expo_push_token,
-        title,
-        body,
-        { orderId, type: "delivery_started" }
+      const pushResult = await sendExpoPushToOwner(
+        { type: "profile", id: order.user_id, fallbackToken: vendorPush.expo_push_token },
+        title, body, { orderId, type: "delivery_started" }
       );
       if (!pushResult.success) {
         console.error("[start-delivery] expo push failed:", pushResult.error);

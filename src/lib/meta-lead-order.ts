@@ -2,7 +2,7 @@ import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLeadData } from "@/lib/meta";
 import { decryptToken } from "@/lib/crypto";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { metaLead } from "@/lib/push-messages";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 
@@ -80,7 +80,10 @@ export async function createOrderFromLead(
     const pushToken = profile.expo_push_token;
     const orderId = order.id;
     after(async () => {
-      const r = await sendExpoPush(pushToken, title, body, { orderId, type: "meta_lead" });
+      const r = await sendExpoPushToOwner(
+        { type: "profile", id: userId, fallbackToken: pushToken },
+        title, body, { orderId, type: "meta_lead" }
+      );
       if (!r.success) console.error("[LOT1][A4] meta/leads/webhook sendExpoPush:", r.error);
     });
   }

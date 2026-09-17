@@ -1,6 +1,8 @@
 // Helper to send push notifications via Expo Push API.
 // Docs: https://docs.expo.dev/push-notifications/sending-notifications/
 
+import { createServiceClient } from "@/lib/supabase/service";
+
 type PushPayload = {
   to: string;
   title: string;
@@ -12,7 +14,9 @@ type PushPayload = {
   channelId?: string;
 };
 
-type PushResult = { success: boolean; error?: string };
+// `expoError` = code technique renvoyé par Expo dans le ticket (ex. "DeviceNotRegistered")
+// — sert au nettoyage des tokens morts côté multi-device. `error` reste le message humain.
+type PushResult = { success: boolean; error?: string; expoError?: string };
 
 export async function sendExpoPush(
   token: string | null | undefined,
@@ -76,7 +80,7 @@ export async function sendExpoPush(
       console.error(
         `[expo-push] type=${kind} REJETÉ par Expo en ${elapsed}ms: ${ticket.message} (${ticket.details?.error ?? "?"})`
       );
-      return { success: false, error: ticket.message ?? "Expo push error" };
+      return { success: false, error: ticket.message ?? "Expo push error", expoError: ticket.details?.error };
     }
 
     // Accepté : ticket=<id> à donner à l'API receipts si besoin de tracer la
@@ -90,4 +94,63 @@ export async function sendExpoPush(
     console.error(`[expo-push] type=${kind} exception en ${Date.now() - startedAt}ms:`, e);
     return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
   }
+}
+
+// ─── [N32W.2] ENVOI MULTI-DEVICE ──────────────────────────────────────────────
+// Envoie à TOUS les tokens d'un owner (table push_tokens, migration 043).
+// FALLBACK zéro-régression : tant que 043 n'est pas appliquée (table absente) OU qu'aucun
+// token n'y est enregistré, on retombe sur `fallbackToken` (colonne unique legacy
+// profiles/drivers.expo_push_token) → comportement identique à l'actuel.
+// Nettoyage best-effort des tokens morts (DeviceNotRegistered) dans push_tokens.
+export type PushOwner = { type: "profile" | "driver"; id: string; fallbackToken?: string | null };
+
+// Erreurs Postgres/PostgREST « table absente » (043 non appliquée) → on ne bruite pas les logs.
+const TABLE_ABSENT_RE = /42P01|PGRST205|relation .* does not exist|Could not find the table/i;
+
+export async function sendExpoPushToOwner(
+  owner: PushOwner,
+  title: string,
+  body: string,
+  data: Record<string, unknown> = {}
+): Promise<{ success: boolean; sent: number; error?: string }> {
+  const supabase = createServiceClient();
+
+  let tokens: string[] = [];
+  const { data: rows, error } = await supabase
+    .from("push_tokens")
+    .select("token")
+    .eq("owner_type", owner.type)
+    .eq("owner_id", owner.id);
+
+  if (error) {
+    if (!TABLE_ABSENT_RE.test(`${error.code ?? ""} ${error.message ?? ""}`)) {
+      console.error("[expo-push] lecture push_tokens échouée:", error.message);
+    }
+  } else if (rows) {
+    tokens = rows.map((r) => (r as { token: string }).token).filter(Boolean);
+  }
+
+  // Fallback legacy : aucun token multi-device → colonne unique.
+  if (tokens.length === 0 && owner.fallbackToken) tokens = [owner.fallbackToken];
+  // Dédup (le legacy peut aussi être présent dans push_tokens une fois 043 appliquée).
+  tokens = Array.from(new Set(tokens));
+  if (tokens.length === 0) return { success: false, sent: 0, error: "No push token" };
+
+  let sent = 0;
+  const dead: string[] = [];
+  for (const t of tokens) {
+    const r = await sendExpoPush(t, title, body, data);
+    if (r.success) sent++;
+    else if (r.expoError === "DeviceNotRegistered") dead.push(t);
+  }
+
+  // Purge best-effort des tokens morts (ne bloque jamais l'appelant).
+  if (dead.length > 0) {
+    const { error: delErr } = await supabase.from("push_tokens").delete().in("token", dead);
+    if (delErr && !TABLE_ABSENT_RE.test(`${delErr.code ?? ""} ${delErr.message ?? ""}`)) {
+      console.error("[expo-push] purge tokens morts échouée:", delErr.message);
+    }
+  }
+
+  return { success: sent > 0, sent };
 }

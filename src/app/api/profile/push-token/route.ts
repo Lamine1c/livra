@@ -31,5 +31,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 
+  // [N32W.2] Multi-device : upsert dans push_tokens (best-effort, non bloquant). Tant que la
+  // migration 043 n'est pas appliquée (table absente), on ignore l'erreur → la colonne unique
+  // ci-dessus reste la source (fallback). token=null (désinscription) → rien à upsert.
+  if (token) {
+    const { error: ptErr } = await supabase
+      .from("push_tokens")
+      .upsert(
+        { owner_type: "profile", owner_id: user.id, token, updated_at: new Date().toISOString() },
+        { onConflict: "token" }
+      );
+    if (ptErr && !/42P01|PGRST205|does not exist|Could not find the table/i.test(`${ptErr.code ?? ""} ${ptErr.message ?? ""}`)) {
+      console.error("[push-token] upsert push_tokens:", ptErr.message);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

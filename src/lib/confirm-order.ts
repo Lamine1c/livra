@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { recordRefusInsight } from "@/lib/delivery-insight";
 import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
@@ -152,10 +152,10 @@ export async function confirmOrderByInboundCode(
     const { title, body: pushBody } = orderConfirmed(vendor.locale, {
       reference: match.id.slice(0, 8).toUpperCase(),
     });
-    const pushResult = await sendExpoPush(vendor.expo_push_token, title, pushBody, {
-      orderId: match.id,
-      type: "order_confirmed",
-    });
+    const pushResult = await sendExpoPushToOwner(
+      { type: "profile", id: match.user_id, fallbackToken: vendor.expo_push_token },
+      title, pushBody, { orderId: match.id, type: "order_confirmed" }
+    );
     if (!pushResult.success) console.error(`[whatsapp/inbound] from=${masked} push vendeur (confirmed) failed:`, pushResult.error);
   }
 
@@ -333,11 +333,9 @@ export async function handleInboundReply(
       const { title, body } = orderCancelled(vendor.locale, {
         reference: order.id.slice(0, 8).toUpperCase(),
       });
-      const pushResult = await sendExpoPush(
-        vendor.expo_push_token,
-        title,
-        body,
-        { orderId: order.id, type: "order_cancelled" }
+      const pushResult = await sendExpoPushToOwner(
+        { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
+        title, body, { orderId: order.id, type: "order_cancelled" }
       );
       if (!pushResult.success) console.error("[whatsapp/inbound] expo push (cancel) failed:", pushResult.error);
     }

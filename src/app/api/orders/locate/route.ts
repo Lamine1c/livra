@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyLocateToken } from "@/lib/qr-token";
 import { createServiceClient } from "@/lib/supabase/service";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { buyerLocationConfirmed, buyerLocationUpdated, buyerLocationUpdatedDriver } from "@/lib/push-messages";
 
 export async function GET(req: NextRequest) {
@@ -129,10 +129,13 @@ export async function POST(req: NextRequest) {
       const { title, body } = wasAlreadyLocated
         ? buyerLocationUpdated(vendor.locale, { reference })
         : buyerLocationConfirmed(vendor.locale, { reference });
-      const pushResult = await sendExpoPush(vendor.expo_push_token, title, body, {
-        orderId: result.orderId,
-        type: wasAlreadyLocated ? "buyer_location_updated" : "buyer_location_confirmed",
-      });
+      const pushResult = await sendExpoPushToOwner(
+        { type: "profile", id: orderBefore.user_id, fallbackToken: vendor.expo_push_token },
+        title, body, {
+          orderId: result.orderId,
+          type: wasAlreadyLocated ? "buyer_location_updated" : "buyer_location_confirmed",
+        }
+      );
       if (!pushResult.success) {
         console.error("[locate] expo push failed:", pushResult.error);
       }
@@ -165,10 +168,13 @@ export async function POST(req: NextRequest) {
 
       if (driver?.expo_push_token) {
         const { title, body } = buyerLocationUpdatedDriver(driver.locale as string | null);
-        const r = await sendExpoPush(driver.expo_push_token, title, body, {
-          orderId: result.orderId,
-          type: "buyer_location_updated_driver",
-        });
+        const r = await sendExpoPushToOwner(
+          { type: "driver", id: activeDelivery.driver_id, fallbackToken: driver.expo_push_token },
+          title, body, {
+            orderId: result.orderId,
+            type: "buyer_location_updated_driver",
+          }
+        );
         if (!r.success) console.error("[locate] driver alert push failed:", r.error);
       }
     }

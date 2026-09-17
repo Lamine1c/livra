@@ -3,7 +3,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/rate-limit";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { normalizePushLocale } from "@/lib/push-messages";
 import { parseOrderEmail } from "@/lib/inbound/email-parser";
 import { createInboundOrder, logInboundEvent } from "@/lib/inbound/create-order";
@@ -223,7 +223,10 @@ async function handleEmailReceived(
           l === "ar"
             ? `${senderDomain} — أكّد المصدر في الإعدادات`
             : `Boutique détectée : ${senderDomain} — confirme dans Réglages`;
-        const r = await sendExpoPush(token, title, body, { type: "inbound_pairing" });
+        const r = await sendExpoPushToOwner(
+          { type: "profile", id: userId, fallbackToken: token },
+          title, body, { type: "inbound_pairing" }
+        );
         if (!r.success) console.error("[inbound/email] pairing push:", r.error);
       });
     }

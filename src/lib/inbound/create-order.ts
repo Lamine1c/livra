@@ -2,7 +2,7 @@ import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 import { inboundOrder } from "@/lib/push-messages";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import type { InboundOrderInput } from "./schema";
 
 // LOT 13 · Porte n°1 — création d'une commande depuis l'API. Reproduit la séquence du
@@ -162,7 +162,10 @@ export async function createInboundOrder(
     const pushToken = profile.expo_push_token as string;
     const orderId = order.id as string;
     after(async () => {
-      const r = await sendExpoPush(pushToken, title, body, { orderId, type: "inbound_order" });
+      const r = await sendExpoPushToOwner(
+        { type: "profile", id: userId, fallbackToken: pushToken },
+        title, body, { orderId, type: "inbound_order" }
+      );
       if (!r.success) console.error("[inbound/orders] sendExpoPush:", r.error);
     });
   }

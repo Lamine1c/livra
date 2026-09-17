@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { deliveryCancelled } from "@/lib/push-messages";
 
 // F1 — Cascade d'annulation vendeur → livraison "Livreur perso" (moto_perso).
@@ -78,11 +78,9 @@ export async function POST(
   if (driver?.expo_push_token) {
     const reference = order.reference ?? `#${id.slice(0, 8).toUpperCase()}`;
     const { title, body } = deliveryCancelled(driver.locale, { reference });
-    const pushResult = await sendExpoPush(
-      driver.expo_push_token,
-      title,
-      body,
-      { orderId: id, deliveryId: delivery.id, type: "delivery_cancelled" }
+    const pushResult = await sendExpoPushToOwner(
+      { type: "driver", id: delivery.driver_id, fallbackToken: driver.expo_push_token },
+      title, body, { orderId: id, deliveryId: delivery.id, type: "delivery_cancelled" }
     );
     if (!pushResult.success) {
       console.error("[orders/cancel-delivery] expo push failed:", pushResult.error);

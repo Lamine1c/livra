@@ -46,5 +46,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 
+  // [N32W.2] Multi-device : upsert dans push_tokens (best-effort, non bloquant). Table absente
+  // (migration 043 non appliquée) → ignoré, la colonne unique ci-dessus reste la source (fallback).
+  const { error: ptErr } = await supabase
+    .from("push_tokens")
+    .upsert(
+      { owner_type: "driver", owner_id: driverId, token, updated_at: new Date().toISOString() },
+      { onConflict: "token" }
+    );
+  if (ptErr && !/42P01|PGRST205|does not exist|Could not find the table/i.test(`${ptErr.code ?? ""} ${ptErr.message ?? ""}`)) {
+    console.error("[driver/push-token] upsert push_tokens:", ptErr.message);
+  }
+
   return NextResponse.json({ ok: true });
 }

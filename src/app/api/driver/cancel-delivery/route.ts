@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { sendTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { driverCancelledDelivery, refusalReasonLabel } from "@/lib/push-messages";
@@ -142,9 +142,9 @@ export async function POST(req: NextRequest) {
         reference,
         reasonLabel: refusalReasonLabel(vendorPush.locale, reason),
       });
-      const pushResult = await sendExpoPush(
-        vendorPush.expo_push_token, title, pushBody,
-        { orderId, type: "delivery_cancelled_by_driver" }
+      const pushResult = await sendExpoPushToOwner(
+        { type: "profile", id: order.user_id, fallbackToken: vendorPush.expo_push_token },
+        title, pushBody, { orderId, type: "delivery_cancelled_by_driver" }
       );
       if (!pushResult.success) {
         console.error("[cancel-delivery] expo push failed:", pushResult.error);

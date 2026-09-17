@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
 import { sendWhatsAppTemplate, maskPhoneForLog } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
-import { sendExpoPush } from "@/lib/expo-push";
+import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderDelivered } from "@/lib/push-messages";
 import { recordMotoInsight } from "@/lib/delivery-insight";
 
@@ -163,11 +163,9 @@ export async function POST(req: NextRequest) {
       const { title, body } = orderDelivered(vendor.locale, {
         reference: orderId.slice(0, 8).toUpperCase(),
       });
-      const pushResult = await sendExpoPush(
-        vendor.expo_push_token,
-        title,
-        body,
-        { orderId, type: "delivery_completed" }
+      const pushResult = await sendExpoPushToOwner(
+        { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
+        title, body, { orderId, type: "delivery_completed" }
       );
       if (!pushResult.success) {
         console.error("[complete-delivery] expo push failed:", pushResult.error);
