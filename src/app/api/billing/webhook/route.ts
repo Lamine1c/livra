@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getChargilySecret } from "@/lib/chargily";
+import { replayBlockedLeads } from "@/lib/meta-lead-order";
 
 // POST /api/billing/webhook — webhook Chargily Pay v2.
 // Doc (https://dev.chargily.com/pay-v2/webhooks) : header `signature` =
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
   // Retrouve le vendeur : vendor_id du metadata en priorité, sinon email.
   let vendorQuery = supabase
     .from("vendors_waitlist")
-    .select("id, paid_until")
+    .select("id, paid_until, email")
     .limit(1);
   if (meta.vendor_id) {
     vendorQuery = vendorQuery.eq("id", meta.vendor_id);
@@ -135,6 +136,22 @@ export async function POST(req: NextRequest) {
       console.error("[billing/webhook] rollback billing_events failed:", rollbackError);
     }
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+
+  // [N28W.1] Réactivation réussie → REPLAY best-effort ISOLÉ des leads Meta bloqués pendant l'expiration.
+  // Via after() (ne bloque JAMAIS le 200 Chargily) ; replayBlockedLeads ne throw jamais (garde-fou 2).
+  // L'idempotence billing_events (l.104) → un seul replay par paiement. userId auth = profiles.id
+  // (le webhook n'a que vendors_waitlist ; on le résout par email).
+  const vendorEmail = (vendor as { email?: string | null }).email ?? meta.email ?? null;
+  if (vendorEmail) {
+    after(async () => {
+      try {
+        const { data: prof } = await supabase.from("profiles").select("id").eq("email", vendorEmail).maybeSingle();
+        if (prof?.id) await replayBlockedLeads(supabase, prof.id as string);
+      } catch (e) {
+        console.error("[billing/webhook] replay leads bloqués échoué (best-effort):", e instanceof Error ? e.message : "?");
+      }
+    });
   }
 
   return NextResponse.json({ received: true });
