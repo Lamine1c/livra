@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
+import { sendTunnelMessage } from "@/lib/whatsapp";
+import { TEMPLATES } from "@/lib/whatsapp-templates";
 
 export async function POST(
   req: NextRequest,
@@ -27,7 +29,7 @@ export async function POST(
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
-    .select("id, otp_code, otp_expires_at, otp_verified_at")
+    .select("id, otp_code, otp_expires_at, otp_verified_at, client:clients(phone)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -68,6 +70,17 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+  }
+
+  // [N28W.2] Accusé ACHETEUR « commande confirmée ». Le chemin WhatsApp (confirm-order.ts) l'envoie
+  // déjà, mais la vérif OTP DIRECTE (le vendeur saisit le code dans l'app) ne le faisait pas → l'acheteur
+  // n'était jamais accusé. Même patron `sendTunnelMessage` (copy figée `order_confirmed_verified`, fenêtre
+  // 24h → repli template). Best-effort STRICT : un échec d'envoi ne casse PAS la confirmation déjà persistée.
+  const client = Array.isArray(order.client) ? order.client[0] : order.client;
+  const buyerPhone = (client as { phone?: string } | null)?.phone;
+  if (buyerPhone) {
+    const r = await sendTunnelMessage(buyerPhone, TEMPLATES.order_confirmed_verified, []);
+    if (!r.success) console.error(`[orders/verify-otp] accusé order_confirmed_verified échec order=${id}:`, r.error);
   }
 
   return NextResponse.json({ success: true });
