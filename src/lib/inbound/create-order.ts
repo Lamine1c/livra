@@ -147,8 +147,10 @@ export async function createInboundOrder(
 
   // 6) Push vendeur — message inboundOrder() (« commande boutique », MÊME sémantique que la
   //    porte email ; PAS le placeholder metaLead(), réservé désormais au seul webhook Meta Ads).
-  //    [N10-2] C'est le message dédié voulu — pas de nouveau template. Le `type:"meta_lead"` est
-  //    conservé : c'est le contrat de routage du push côté mobile (le changer = coordination mobile).
+  //    [N24.1] `type` DÉDIÉ `"inbound_order"` (email + API) au lieu du placeholder `"meta_lead"` :
+  //    une commande ingérée n'est PAS un lead Meta, la source ne doit plus être confondue.
+  //    ⚠️ Coordination mobile : l'app doit router `inbound_order` (au tap) comme une commande
+  //    (fallback : type inconnu → ouverture par défaut, aucune régression sur les AUTRES types).
   //    Best-effort via after().
   const { data: profile } = await supabase
     .from("profiles")
@@ -160,7 +162,7 @@ export async function createInboundOrder(
     const pushToken = profile.expo_push_token as string;
     const orderId = order.id as string;
     after(async () => {
-      const r = await sendExpoPush(pushToken, title, body, { orderId, type: "meta_lead" });
+      const r = await sendExpoPush(pushToken, title, body, { orderId, type: "inbound_order" });
       if (!r.success) console.error("[inbound/orders] sendExpoPush:", r.error);
     });
   }
