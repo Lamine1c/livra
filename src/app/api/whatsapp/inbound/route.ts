@@ -2,7 +2,7 @@ import { NextRequest, after } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { hasActiveBuyerOtp, handleDriverInboundRegistration } from "@/lib/driver-registration";
+import { hasActiveBuyerOtp, handleDriverInboundRegistration, isKnownDriver } from "@/lib/driver-registration";
 
 // Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
 // (à traiter), false si déjà vu (doublon / retry Meta → ignorer). Fail-open sur
@@ -182,6 +182,16 @@ export async function POST(req: NextRequest) {
         if (!(await hasActiveBuyerOtp(supabase, m.from))) {
           const reg = await handleDriverInboundRegistration(supabase, m.from, m.body);
           if (reg.handled) continue;
+
+          // [N27W.1] « Le numéro entrant fait foi » : si l'expéditeur est un LIVREUR VÉRIFIÉ (table
+          // drivers) qui n'a NI OTP acheteur actif NI inscription en attente, son message ne doit
+          // JAMAIS tomber dans le tunnel ACHETEUR (il y recevrait un template destiné aux clients).
+          // On le consomme (log, pas de template acheteur). Aucun impact sur le NON-livreur (ci-dessous
+          // inchangé) ni sur le livreur-aussi-acheteur (préséance OTP ci-dessus le renvoie au tunnel).
+          if (await isKnownDriver(supabase, m.from)) {
+            console.log(`[whatsapp/inbound] expéditeur = livreur vérifié → hors tunnel acheteur (message ignoré)`);
+            continue;
+          }
         }
 
         const res = await handleInboundReply(m.from, m.body);

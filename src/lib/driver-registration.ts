@@ -61,6 +61,21 @@ export async function hasActiveBuyerOtp(supabase: SupabaseClient, fromPhone: str
   });
 }
 
+// [N27W.1] Le numéro entrant appartient-il à un LIVREUR VÉRIFIÉ (table drivers) ? « Le numéro
+// entrant fait foi » : si oui, ses messages ne doivent JAMAIS tomber dans le tunnel ACHETEUR.
+// Lookup par whatsapp normalisé + whatsapp_verified (l'identité stable du livreur). Best-effort.
+export async function isKnownDriver(supabase: SupabaseClient, fromPhone: string): Promise<boolean> {
+  const phoneNorm = normalizePhoneNumber(fromPhone);
+  const { data } = await supabase
+    .from("drivers")
+    .select("id")
+    .eq("whatsapp", phoneNorm)
+    .eq("whatsapp_verified", true)
+    .limit(1)
+    .maybeSingle();
+  return !!data?.id;
+}
+
 type PendingReg = {
   id: string;
   prenom: string;
