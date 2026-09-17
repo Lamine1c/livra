@@ -68,6 +68,48 @@ Bonne nouvelle : votre commande chez {{2}} est réservée à votre nom.
 Voulez-vous procéder à la livraison ?`,
   },
 
+  // ─── MSG 1 (variante D4 — PRIX SÉPARÉ) — order_confirmation_request_split ───
+  // [N32W.1] D4 tranché par Lamine : prix produit + frais de livraison sur DEUX lignes.
+  // Variante 5-variables du template ci-dessus. N'est utilisée QUE si delivery_fee > 0 ET
+  // env MSG1_SPLIT_TEMPLATE_READY==="true" (send-otp) — sinon on reste sur le template 4-var
+  // approuvé (repli total seul, jamais une ligne « Livraison : 0 » mensongère).
+  // ⚠️ À SOUMETTRE par Lamine (verbatim FR+AR dans tasks/TEMPLATES_A_SOUMETTRE.md) : tant que Meta
+  // ne l'a pas approuvée, le flag reste false → aucun envoi sur ce nom → zéro régression prod.
+  // {{4}} = prix produit (order.total_amount, déjà hors frais) · {{5}} = frais de livraison.
+  order_confirmation_request_split: {
+    name: "order_confirmation_request_split",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["prénom", "boutique", "produit", "prix_produit", "frais_livraison"],
+    buttons: [
+      { type: "QUICK_REPLY", text: "✅ إيه / OUI" },
+      { type: "QUICK_REPLY", text: "❌ لا / NON" },
+    ],
+    body: `message en français suit
+
+سلام {{1}} 👋
+كوموند تاعك عند {{2}} محجوزة باسمك.
+
+🛍️ {{3}}
+💰 المنتج : ‪{{4}}‬ دج
+🚚 التوصيل : ‪{{5}}‬ دج
+📦 الخلاص عند التوصيل · ما تخلص والو دروك
+
+تحب نبداو التوصيل ؟
+
+${SEP}
+
+Bonjour {{1}} 👋
+Bonne nouvelle : votre commande chez {{2}} est réservée à votre nom.
+
+🛍️ {{3}}
+💰 Produit : {{4}} DA
+🚚 Livraison : {{5}} DA
+📦 Paiement à la livraison · rien à payer maintenant
+
+Voulez-vous procéder à la livraison ?`,
+  },
+
   // ─── MSG 2 — Demande du code (après OUI) ───
   order_otp_code: {
     name: "order_otp_code",
@@ -373,6 +415,7 @@ Votre commande {{1}} a été annulée. La boutique vous recontactera.`,
 // « pas de promesse » → PAS de signature LIVRA (qui est un slot Trust Layer = promesse).
 const SIGNATURE_EXCLUDE = new Set<string>([
   "order_confirmation_request",
+  "order_confirmation_request_split", // [N32W.1] MSG 1 (variante prix séparé) : même exclusion que MSG 1.
   "order_carrier_changed",
   "order_delivery_cancelled",
 ]);

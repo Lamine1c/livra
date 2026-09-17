@@ -165,3 +165,56 @@ Exemple (référence = `LV-AB12CD`) : « Votre commande LV-AB12CD a été annul�
 **Note code** : `.language="fr"` → le repli hors fenêtre demande la variante **fr** (locale acheteur non
 stockée) ; soumettre l'ar permet un futur switch. Tant que non approuvés : repli = échec propre hors
 fenêtre (comportement actuel), zéro régression.
+
+---
+
+## 🆕 N32W.1 — À SOUMETTRE : `order_confirmation_request_split` (MSG 1 variante D4 « prix séparé »)
+
+**D4 tranché par Lamine (17 sept)** : MSG 1 affiche le **prix produit** ET les **frais de livraison** sur
+deux lignes distinctes (transparence acheteur DZ). Variante **5 variables** du template MSG 1 approuvé
+`order_confirmation_request` (qui reste INCHANGÉ = repli total seul). Le code envoie cette variante
+**uniquement** si `delivery_fee > 0` **et** env `MSG1_SPLIT_TEMPLATE_READY==="true"` (défaut false).
+
+| Champ | Valeur |
+|---|---|
+| **Nom** | `order_confirmation_request_split` |
+| **Catégorie** | UTILITY |
+| **Langue** | fr (corps bilingue AR-d'abord / FR-après ━━━, comme MSG 1) |
+| **Variables** | `{{1}}`=prénom · `{{2}}`=boutique · `{{3}}`=produit · `{{4}}`=**prix produit** (DA) · `{{5}}`=**frais livraison** (DA) |
+| **Boutons** | QUICK_REPLY `✅ إيه / OUI` · QUICK_REPLY `❌ لا / NON` (identiques à MSG 1) |
+
+**Corps VERBATIM (source de vérité = `src/lib/whatsapp-templates.ts` › `order_confirmation_request_split` — copie-le tel quel, ne retape pas la darija) :**
+
+```
+message en français suit
+
+سلام {{1}} 👋
+كوموند تاعك عند {{2}} محجوزة باسمك.
+
+🛍️ {{3}}
+💰 المنتج : ‪{{4}}‬ دج
+🚚 التوصيل : ‪{{5}}‬ دج
+📦 الخلاص عند التوصيل · ما تخلص والو دروك
+
+تحب نبداو التوصيل ؟
+
+━━━━━━━━━━━━━━
+
+Bonjour {{1}} 👋
+Bonne nouvelle : votre commande chez {{2}} est réservée à votre nom.
+
+🛍️ {{3}}
+💰 Produit : {{4}} DA
+🚚 Livraison : {{5}} DA
+📦 Paiement à la livraison · rien à payer maintenant
+
+Voulez-vous procéder à la livraison ?
+```
+
+Exemples de variables : `{{1}}`=Yacine · `{{2}}`=Boutique Dz · `{{3}}`=Sneakers Air · `{{4}}`=3,300 · `{{5}}`=400.
+
+**Slots Trust Layer** : MSG 1 n'a **pas** de signature LIVRA (exclu, comme le MSG 1 original) — corps
+100% transactionnel (UTILITY), aucune promesse. Pas de slot neutre à ajouter ici.
+
+**Activation (une fois approuvé)** : env Vercel `MSG1_SPLIT_TEMPLATE_READY=true`. Tant que non approuvé :
+flag false → MSG 1 continue de partir sur `order_confirmation_request` (4-var, total seul) → **zéro régression**.

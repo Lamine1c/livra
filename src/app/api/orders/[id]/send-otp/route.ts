@@ -22,7 +22,7 @@ export async function POST(
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
-    .select("id, user_id, status, otp_verified_at, otp_sent_at, otp_code, otp_expires_at, total_amount, client:clients(full_name, phone), items:order_items(product_name)")
+    .select("id, user_id, status, otp_verified_at, otp_sent_at, otp_code, otp_expires_at, total_amount, delivery_fee, client:clients(full_name, phone), items:order_items(product_name)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -104,14 +104,32 @@ export async function POST(
   const totalTxt = new Intl.NumberFormat("en-US").format(Math.round(order.total_amount));
   const produitTxt = produit ?? "";
 
-  // MSG 1 = TEMPLATE approuvé order_confirmation_request. Business-initiated,
-  // hors fenêtre 24h → DOIT partir en template (le texte libre serait rejeté).
-  const result = await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request, [
-    prenom,
-    boutique,
-    produitTxt,
-    totalTxt,
-  ]);
+  // [N32W.1] D4 tranché = PRIX SÉPARÉ (produit + frais de livraison) dans MSG 1.
+  // On n'utilise la variante 5-var QUE si (a) le template est approuvé côté Meta
+  // (flag MSG1_SPLIT_TEMPLATE_READY, défaut false → comportement actuel intact) ET
+  // (b) des frais de livraison existent réellement (> 0). Sinon repli sur le template
+  // 4-var approuvé (total seul) — JAMAIS une ligne « Livraison : 0 » mensongère.
+  // total_amount = prix produit (hors frais, cf. create-order.ts) ; on ajoute juste la
+  // ligne frais, sans recalcul, donc zéro risque arithmétique.
+  const deliveryFee = (order as { delivery_fee?: number | null }).delivery_fee ?? 0;
+  const splitReady = process.env.MSG1_SPLIT_TEMPLATE_READY === "true" && deliveryFee > 0;
+
+  // MSG 1 = TEMPLATE approuvé. Business-initiated, hors fenêtre 24h → DOIT partir en
+  // template (le texte libre serait rejeté).
+  const result = splitReady
+    ? await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request_split, [
+        prenom,
+        boutique,
+        produitTxt,
+        totalTxt, // {{4}} = prix produit
+        new Intl.NumberFormat("en-US").format(Math.round(deliveryFee)), // {{5}} = frais livraison
+      ])
+    : await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request, [
+        prenom,
+        boutique,
+        produitTxt,
+        totalTxt,
+      ]);
 
   if (!result.success) {
     return NextResponse.json(
