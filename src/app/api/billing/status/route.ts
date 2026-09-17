@@ -69,10 +69,32 @@ export async function GET(req: NextRequest) {
     days_left = wholeDaysLeft(vendor.paid_until);
   }
 
+  // [N27W.2b] Compteur de leads Meta BLOQUÉS pendant l'expiration (écran OrderBlocked mobile).
+  // Attribution : meta_lead_logs n'a PAS de user_id → join par page_id via meta_page_subscriptions.
+  // `error_message='subscription_inactive'` = le marqueur posé par l'enforcement N3.3. Borné à 90 j
+  // (rétention). Additif au contrat (le mobile ignore un champ inconnu). Best-effort : 0 sur erreur.
+  let blocked_leads_count = 0;
+  const { data: pages } = await supabase
+    .from("meta_page_subscriptions")
+    .select("page_id")
+    .eq("user_id", user.id);
+  const pageIds = (pages ?? []).map((p) => p.page_id as string).filter(Boolean);
+  if (pageIds.length > 0) {
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("meta_lead_logs")
+      .select("id", { count: "exact", head: true })
+      .in("page_id", pageIds)
+      .eq("error_message", "subscription_inactive")
+      .gte("created_at", since);
+    blocked_leads_count = count ?? 0;
+  }
+
   return NextResponse.json({
     status,
     days_left,
     amount: vendor.founder_index !== null ? 499 : 999,
     checkout_url_endpoint: "/api/billing/checkout",
+    blocked_leads_count,
   });
 }
