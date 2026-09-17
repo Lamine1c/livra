@@ -21,13 +21,16 @@ export async function OPTIONS() {
   return new Response(null, { status: 200, headers: CORS_HEADERS });
 }
 
-// Nom 2..120. WhatsApp : espaces retirés puis format DZ local 0[567]xxxxxxxx.
+// Nom 2..120. WhatsApp : espaces retirés puis union d'indicatifs [N33W.1].
+//  - DZ (+213) : format DZ-local 0[567]xxxxxxxx — INCHANGÉ (chemin octet-identique à l'historique,
+//    le client envoie 05XXXXXXXX tel quel, on stocke tel quel : zéro changement vendeurs DZ existants).
+//  - FR (+33) / US-CA (+1) : E.164 international complet composé côté client (+33[67]xxxxxxxx / +1xxxxxxxxxx).
 const bodySchema = z.object({
   full_name: z.string().trim().min(2).max(120),
   whatsapp: z
     .string()
     .transform((v) => v.replace(/\s+/g, ""))
-    .pipe(z.string().regex(/^0[567]\d{8}$/)),
+    .pipe(z.string().regex(/^(0[567]\d{8}|\+33[67]\d{8}|\+1\d{10})$/)),
 });
 
 export async function POST(req: NextRequest) {

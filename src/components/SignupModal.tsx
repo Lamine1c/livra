@@ -13,9 +13,38 @@ interface WaitlistModalProps {
   onClose: () => void;
 }
 
-// Format DZ local : 0 + [567] + 8 chiffres (espaces retirés avant test).
-const WHATSAPP_RE = /^0[567]\d{8}$/;
-const WHATSAPP_ERR = "Numéro WhatsApp invalide (ex. 05 XX XX XX XX)";
+// [N33W.1] Indicatifs supportés. GARDE-FOU DUR : le chemin +213 (défaut) reste OCTET-IDENTIQUE
+// à l'historique — on envoie le numéro DZ-local tel quel (05XXXXXXXX), validé ^0[567]\d{8}$ comme
+// avant, stocké tel quel. Les autres indicatifs composent l'E.164 international complet (+33…/+1…).
+const DIAL_DEFAULT = "+213";
+const INDICATIFS: { code: string; flag: string; placeholder: string }[] = [
+  { code: "+213", flag: "🇩🇿", placeholder: "05 XX XX XX XX" },
+  { code: "+33", flag: "🇫🇷", placeholder: "06 XX XX XX XX" },
+  { code: "+1", flag: "🇺🇸", placeholder: "XXX XXX XXXX" },
+];
+const WHATSAPP_ERR = "Numéro WhatsApp invalide";
+
+// Compose la valeur envoyée à /api/waitlist selon l'indicatif choisi.
+//  +213 → DZ-local INCHANGÉ (05XXXXXXXX) : même validation, même octet qu'avant N33W.1.
+//  +33/+1 → E.164 (+33…/+1…), le 0 de tête retiré. Le serveur (Zod waitlist) accepte cette union.
+export function composeWhatsapp(dialCode: string, raw: string): { value: string | null; error?: string } {
+  const stripped = raw.replace(/\s+/g, "");
+  if (dialCode === "+213") {
+    if (!/^0[567]\d{8}$/.test(stripped)) return { value: null, error: "Numéro DZ invalide (ex. 05 XX XX XX XX)" };
+    return { value: stripped };
+  }
+  if (dialCode === "+33") {
+    const local = stripped.replace(/^0/, "");
+    if (!/^[67]\d{8}$/.test(local)) return { value: null, error: "Numéro FR invalide (ex. 06 XX XX XX XX)" };
+    return { value: `+33${local}` };
+  }
+  if (dialCode === "+1") {
+    const digits = stripped.replace(/\D/g, "");
+    if (!/^\d{10}$/.test(digits)) return { value: null, error: "Numéro US/CA invalide (10 chiffres)" };
+    return { value: `+1${digits}` };
+  }
+  return { value: null, error: WHATSAPP_ERR };
+}
 
 const CARD_SHADOW_LG = "0 1px 0 rgba(255,255,255,0.05) inset, 0 30px 70px -34px rgba(0,0,0,0.85)";
 const BTN_SHADOW = "0 1px 0 rgba(255,255,255,0.12) inset, 0 4px 12px rgba(168,71,43,0.25)";
@@ -44,6 +73,7 @@ const labelStyle: React.CSSProperties = {
 export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
   const [fullName, setFullName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [dialCode, setDialCode] = useState(DIAL_DEFAULT);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ fullName?: string; whatsapp?: string; form?: string }>({});
   const [submitted, setSubmitted] = useState(false);
@@ -54,22 +84,19 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire du formulaire à chaque ouverture.
       setFullName("");
       setWhatsapp("");
+      setDialCode(DIAL_DEFAULT);
       setErrors({});
       setSubmitted(false);
       setLoading(false);
     }
   }, [isOpen]);
 
-  const validate = (): { fullName?: string; whatsapp?: string } => {
+  const handleSubmit = async () => {
     const errs: { fullName?: string; whatsapp?: string } = {};
     const name = fullName.trim();
     if (name.length < 2 || name.length > 120) errs.fullName = "Nom complet requis";
-    if (!WHATSAPP_RE.test(whatsapp.replace(/\s+/g, ""))) errs.whatsapp = WHATSAPP_ERR;
-    return errs;
-  };
-
-  const handleSubmit = async () => {
-    const errs = validate();
+    const composed = composeWhatsapp(dialCode, whatsapp);
+    if (!composed.value) errs.whatsapp = composed.error ?? WHATSAPP_ERR;
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
     setLoading(true);
@@ -79,7 +106,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: fullName.trim(),
-          whatsapp: whatsapp.replace(/\s+/g, ""),
+          whatsapp: composed.value,
         }),
       });
 
@@ -184,17 +211,31 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               {/* WhatsApp */}
               <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
                 <label style={labelStyle}>Numéro WhatsApp</label>
-                <input
-                  className="su-input"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  maxLength={16}
-                  placeholder="05 XX XX XX XX"
-                  value={whatsapp}
-                  onChange={(e) => { setWhatsapp(e.target.value); if (errors.whatsapp) setErrors((p) => ({ ...p, whatsapp: undefined })); }}
-                  style={{ ...inputStyle, letterSpacing: "0.04em" }}
-                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <select
+                    aria-label="Indicatif pays"
+                    value={dialCode}
+                    onChange={(e) => { setDialCode(e.target.value); if (errors.whatsapp) setErrors((p) => ({ ...p, whatsapp: undefined })); }}
+                    style={{ ...inputStyle, width: "auto", flexShrink: 0, cursor: "pointer", paddingRight: "10px" }}
+                  >
+                    {INDICATIFS.map((ind) => (
+                      <option key={ind.code} value={ind.code} style={{ background: "#161618", color: "#F5F0E8" }}>
+                        {ind.flag} {ind.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="su-input"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    maxLength={16}
+                    placeholder={INDICATIFS.find((i) => i.code === dialCode)?.placeholder ?? "05 XX XX XX XX"}
+                    value={whatsapp}
+                    onChange={(e) => { setWhatsapp(e.target.value); if (errors.whatsapp) setErrors((p) => ({ ...p, whatsapp: undefined })); }}
+                    style={{ ...inputStyle, letterSpacing: "0.04em" }}
+                  />
+                </div>
                 {errors.whatsapp && <span className="text-xs text-red-400">{errors.whatsapp}</span>}
               </div>
 
