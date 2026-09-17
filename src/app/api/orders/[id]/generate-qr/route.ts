@@ -21,7 +21,11 @@ export async function POST(
     return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
   }
 
-  if (order.delivery_mode === "yalidine") {
+  // [N31W.1] Élargi : bloque TOUT mode transporteur déjà posé (yalidine/dhd/anderson), pas seulement
+  // yalidine — sinon un generate-qr écraserait un bon Ecotrack (dhd/anderson) en moto_perso (incohérence
+  // N30W.1). `moto_perso` (QR déjà généré) reste autorisé à re-générer un token ; `null` (1re fois) aussi.
+  // Même forme d'erreur (400, même message) que la garde yalidine d'origine → cohérence API.
+  if (order.delivery_mode && order.delivery_mode !== "moto_perso") {
     return NextResponse.json({ error: "Mode de livraison déjà défini" }, { status: 400 });
   }
 
