@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/billing-guard";
 import { sendTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   req: NextRequest,
@@ -25,6 +26,19 @@ export async function POST(
 
   if (!code || !/^\d{6}$/.test(code)) {
     return NextResponse.json({ error: "Code invalide" }, { status: 400 });
+  }
+
+  // [N35W] Anti-brute-force (note low-sev de l'audit N34W) : le code fait 6 chiffres (10^6) et
+  // aucun compteur n'existait ici. Route authentifiée + scopée à la commande DU vendeur (pas
+  // d'énumération tierce), mais un vendeur pouvait forger une confirmation acheteur en tentant le
+  // code. On borne à 10 essais / 10 min par (vendeur, commande) — cohérent avec drivers/verify-otp
+  // (N21.3) et bien au-dessus d'un usage légitime (l'acheteur dicte le code une fois). L'expiry 10 min
+  // de l'OTP (send-otp) rend alors le brute-force infaisable.
+  if (!rateLimit(`order:verify-otp:${user.id}:${id}`, 10, 10 * 60_000)) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessaie dans quelques minutes." },
+      { status: 429 }
+    );
   }
 
   const { data: order, error: fetchError } = await supabase
