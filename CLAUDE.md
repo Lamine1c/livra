@@ -197,7 +197,11 @@ Quand un bundle CD est livré dans `~/Downloads/design_handoff_*` :
   (`supabase/migrations/XXX_*.sql`). Appliquées via SQL Editor
   Supabase manuellement, pas via Studio UI ad-hoc.
 - **CORS strict** sur les routes auth/signup : origine `golivra.app`,
-  pas `*`.
+  pas `*`. ⚠️ **HÉRITAGE (périmé 18 sept 2026, N35W.2)** : le tunnel
+  `/api/auth/{signup,verify-otp,set-password}` est **NEUTRALISÉ (404)** —
+  signup vendeur = waitlist (web) + Supabase direct (mobile). Ces routes
+  ne sont plus une responsabilité web active ; règle CORS gardée pour
+  mémoire au cas où un flux auth web renaîtrait.
 
 ## FRONT-END
 

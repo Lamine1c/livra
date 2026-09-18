@@ -99,7 +99,7 @@
 | `src/app/api/orders/[id]/send-otp/route.ts` | POST — Génère OTP + envoi WhatsApp acheteur (Twilio ou Meta) | API | À CLARIFIER |
 | `src/app/api/orders/[id]/verify-otp/route.ts` | POST — Vérifie OTP, passe commande en `confirmed` | API | À CLARIFIER |
 | `src/app/api/orders/[id]/yalidine/route.ts` | POST — Crée bon Yalidine + passe commande en `shipped` | API | ACTIF (sera appelé par mobile) |
-| `src/app/api/auth/` | Répertoire vide | — | VIDE |
+| `src/app/api/auth/` | signup/verify-otp/set-password — **NEUTRALISÉES 404** (N35W.2, 18 sept 2026 ; NON vide, contrairement à cette ligne d'origine) | API | HÉRITAGE / DORMANT |
 
 ---
 
@@ -325,7 +325,7 @@ Ce composant est obsolète (remplacé par `DeliveryModeSection` qui utilise le Q
 | 13 | `src/components/ui/` (6 fichiers) | VENDEUR | Primitives UI utilisées uniquement par le dashboard |
 | 14 | `src/lib/supabase/middleware.ts` | VENDEUR | Redirection auth → dashboard web (ne sert que pour `/dashboard`) |
 | 15 | `src/middleware.ts` | VENDEUR | Dépend de `lib/supabase/middleware.ts` pour protéger `/dashboard` |
-| 16 | `src/app/api/auth/` | VIDE | Répertoire vide |
+| 16 | `src/app/api/auth/` | HÉRITAGE | signup/verify-otp/set-password **NEUTRALISÉES 404** (N35W.2, 18 sept 2026) — PAS vide |
 | 17 | `posthog-setup-report.md` | OUTIL | Rapport de setup PostHog, pas du code |
 | 18 | `.claude/skills/` | OUTIL | Skills Claude Code, pas du code produit |
 
