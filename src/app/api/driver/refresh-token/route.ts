@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { generateDriverToken, verifyDriverTokenAllowExpired } from "@/lib/qr-token";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   // 1. Bearer obligatoire (même expiré)
@@ -21,6 +23,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/refresh-token", z.object({ deviceId: z.string() }).passthrough(), body);
   const { deviceId } = body;
   if (typeof deviceId !== "string" || !deviceId) {
     return NextResponse.json({ error: "Missing deviceId" }, { status: 400 });

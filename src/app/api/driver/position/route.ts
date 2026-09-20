@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -21,6 +23,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/position", z.object({ deliveryId: z.string(), lat: z.number(), lng: z.number(), accuracy: z.number().optional(), speed: z.number().optional() }).passthrough(), body);
 
   const { deliveryId, lat, lng, accuracy, speed } = body;
 

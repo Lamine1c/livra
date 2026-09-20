@@ -6,6 +6,8 @@ import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderDelivered } from "@/lib/push-messages";
 import { recordMotoInsight } from "@/lib/delivery-insight";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   let body: { deviceToken?: unknown; deliveryId?: unknown; orderId?: unknown };
@@ -14,6 +16,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/complete-delivery", z.object({ deviceToken: z.string(), deliveryId: z.string(), orderId: z.string() }).passthrough(), body);
 
   const { deviceToken, deliveryId, orderId } = body;
 

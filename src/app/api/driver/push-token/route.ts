@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
+import { observeBody } from "@/lib/zod-observe";
 
 // Enregistre le token Expo Push du livreur (drivers.expo_push_token).
 // Auth : Bearer deviceToken HMAC — même pattern que /api/driver/position.
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/push-token", z.object({ expoPushToken: z.string() }).passthrough(), body);
 
   const token =
     typeof body.expoPushToken === "string" ? body.expoPushToken.trim() : null;

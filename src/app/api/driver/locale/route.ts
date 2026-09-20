@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyDriverToken } from "@/lib/qr-token";
+import { observeBody } from "@/lib/zod-observe";
 
 // Persiste la langue du livreur (drivers.locale, 'fr' | 'ar') — choisie via le
 // sélecteur du hub driver mobile. Consommée par le futur envoi de notifications
@@ -27,6 +29,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/locale", z.object({ locale: z.enum(["fr", "ar"]) }).passthrough(), body);
 
   const locale = body.locale === "fr" || body.locale === "ar" ? body.locale : null;
   if (!locale) {

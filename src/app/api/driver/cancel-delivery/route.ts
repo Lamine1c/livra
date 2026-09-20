@@ -6,6 +6,8 @@ import { sendTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { driverCancelledDelivery, refusalReasonLabel } from "@/lib/push-messages";
 import { recordMotoInsight } from "@/lib/delivery-insight";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 // Motifs valides pour une ANNULATION (livraison en cours). Contrat avec le mobile
 // (delivery.cancelReasons). Slug hors liste → 'other' (l'action reste enregistrée).
@@ -20,6 +22,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/cancel-delivery", z.object({ deviceToken: z.string(), deliveryId: z.string(), orderId: z.string(), reason: z.string().optional() }).passthrough(), body);
 
   const { deviceToken, deliveryId, orderId } = body;
 

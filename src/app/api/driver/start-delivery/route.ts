@@ -5,6 +5,8 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { deliveryStarted } from "@/lib/push-messages";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -23,6 +25,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("driver/start-delivery", z.object({ orderId: z.string() }).passthrough(), body);
 
   const { orderId } = body;
   if (typeof orderId !== "string" || !orderId) {
