@@ -494,9 +494,12 @@ export function buildTemplatePayload(
       type: "button",
       sub_type: "quick_reply",
       index: String(index),
-      // [N38W] payload = `id` s'il existe (routage inbound stable, ex. WINBACK_*), sinon le libellé
-      // (comportement historique inchangé : aucun template hors winback ne définit `id`). Aligné sur
-      // buildInteractiveButtonsPayload qui utilise déjà `btn.id ?? btn.text`.
+      // [N38W · corrigé N40W] payload = `id` s'il existe (routage inbound stable, ex. WINBACK_*), sinon
+      // le libellé. Templates qui définissent `id` : `order_winback_offer` (WINBACK_YES/NO) ET
+      // `order_cancel_reasons` (not_available/changed_mind/found_cheaper, l.198-200) — mais l'`id` de
+      // cancel_reasons n'est PAS lu au routage : le tri des motifs se fait par regex sur le LIBELLÉ
+      // (NOT_AVAIL_RE… dans confirm-order) via messageBody qui PRÉFÈRE `button.text`. Ce changement
+      // aligne juste le payload template sur buildInteractiveButtonsPayload (déjà en `btn.id ?? btn.text`).
       parameters: [{ type: "payload", payload: btn.id ?? btn.text }],
     });
   });
