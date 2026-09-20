@@ -28,6 +28,11 @@ export type WhatsAppTemplate = {
 
 const SEP = "━━━━━━━━━━━━━━";
 
+// [N38W] Payloads DISTINCTS des quick-reply de l'offre winback → routage inbound dédié (le webhook
+// les matche AVANT YES_RE/NO_RE, pour qu'une réponse à l'offre ne tombe jamais dans le tunnel OUI/NON).
+export const WINBACK_YES_PAYLOAD = "WINBACK_YES";
+export const WINBACK_NO_PAYLOAD = "WINBACK_NO";
+
 // ─── Signature LIVRA (bas de CHAQUE message acheteur, FR+AR) ──────────────────
 // Ajoutée en pied de bloc AR et de bloc FR par appendSignature() plus bas, à TOUS les
 // templates SAUF order_confirmation_request (déjà approuvé en prod — on n'y touche pas).
@@ -415,8 +420,8 @@ Votre commande {{1}} a été annulée. La boutique vous recontactera.`,
     language: "fr",
     variables: ["prénom", "boutique", "offre", "date_limite"],
     buttons: [
-      { type: "QUICK_REPLY", text: "إيه نأكد" },
-      { type: "QUICK_REPLY", text: "لا شكرا" },
+      { type: "QUICK_REPLY", text: "إيه نأكد", id: WINBACK_YES_PAYLOAD },
+      { type: "QUICK_REPLY", text: "لا شكرا", id: WINBACK_NO_PAYLOAD },
     ],
     body: `message en français suit
 
@@ -489,7 +494,10 @@ export function buildTemplatePayload(
       type: "button",
       sub_type: "quick_reply",
       index: String(index),
-      parameters: [{ type: "payload", payload: btn.text }],
+      // [N38W] payload = `id` s'il existe (routage inbound stable, ex. WINBACK_*), sinon le libellé
+      // (comportement historique inchangé : aucun template hors winback ne définit `id`). Aligné sur
+      // buildInteractiveButtonsPayload qui utilise déjà `btn.id ?? btn.text`.
+      parameters: [{ type: "payload", payload: btn.id ?? btn.text }],
     });
   });
 

@@ -3,6 +3,8 @@ import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasActiveBuyerOtp, handleDriverInboundRegistration, isKnownDriver } from "@/lib/driver-registration";
+import { normalizePhoneNumber } from "@/lib/whatsapp";
+import { WINBACK_YES_PAYLOAD, WINBACK_NO_PAYLOAD } from "@/lib/whatsapp-templates";
 
 // Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
 // (à traiter), false si déjà vu (doublon / retry Meta → ignorer). Fail-open sur
@@ -118,15 +120,26 @@ function messageBody(m: CloudMessage): string | null {
   return null;
 }
 
+// [N38W] Payload de ROUTAGE d'une réponse à bouton (distinct du libellé affiché) : quick-reply de
+// template → button.payload ; bouton interactif in-window → button_reply.id. Sert à isoler les
+// réponses à l'offre winback (WINBACK_*) AVANT le tunnel OUI/NON. null si le message n'a pas de payload.
+function messagePayload(m: CloudMessage): string | null {
+  if (m.type === "button") return m.button?.payload ?? null;
+  if (m.type === "interactive" && m.interactive?.type === "button_reply") {
+    return m.interactive.button_reply?.id ?? null;
+  }
+  return null;
+}
+
 function extractMessages(
   payload: CloudInboundPayload
-): Array<{ from: string; body: string; wamid: string | null }> {
-  const out: Array<{ from: string; body: string; wamid: string | null }> = [];
+): Array<{ from: string; body: string; wamid: string | null; payload: string | null }> {
+  const out: Array<{ from: string; body: string; wamid: string | null; payload: string | null }> = [];
   for (const entry of payload.entry ?? []) {
     for (const change of entry.changes ?? []) {
       for (const m of change.value?.messages ?? []) {
         const body = messageBody(m);
-        if (m.from && body) out.push({ from: m.from, body, wamid: m.id ?? null });
+        if (m.from && body) out.push({ from: m.from, body, wamid: m.id ?? null, payload: messagePayload(m) });
       }
     }
   }
@@ -172,6 +185,36 @@ export async function POST(req: NextRequest) {
             console.log(`[whatsapp/inbound] wamid ${m.wamid} déjà traité → ignoré (doublon/retry Meta)`);
             continue;
           }
+        }
+
+        // [N38W] Réponse à l'OFFRE WINBACK : payload DISTINCT (WINBACK_*) → routage dédié AVANT le
+        // tunnel OUI/NON (sinon « إيه نأكد »/« لا شكرا » seraient avalés par YES_RE/NO_RE, cf. RAPPORT
+        // N36W pt 4). No-op JOURNALISÉ pour l'instant : AUCUNE logique de relance dans ce lot ; pas de
+        // colonne winback_replied_at (pas de migration) → log seul. Le tunnel classique est intact pour
+        // TOUT message sans payload winback (la grande majorité : texte, OTP, OUI/NON sans payload).
+        if (m.payload === WINBACK_YES_PAYLOAD || m.payload === WINBACK_NO_PAYLOAD) {
+          const response = m.payload === WINBACK_YES_PAYLOAD ? "yes" : "no";
+          const masked = `${m.from.slice(0, 5)}…${m.from.slice(-2)}`;
+          // orderId best-effort (la commande winbackée la plus récente de ce numéro). Guardé : si la
+          // colonne winback_sent_at n'existe pas (migration 045 non appliquée), la requête n'aboutit
+          // pas → orderId reste "?", sans casser le traitement.
+          let orderId = "?";
+          const norm = normalizePhoneNumber(m.from);
+          const { data: clientRows } = await supabase.from("clients").select("id").eq("phone_normalized", norm);
+          const clientIds = (clientRows ?? []).map((c) => c.id as string);
+          if (clientIds.length > 0) {
+            const { data: ord } = await supabase
+              .from("orders")
+              .select("id")
+              .in("client_id", clientIds)
+              .not("winback_sent_at", "is", null)
+              .order("winback_sent_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (ord?.id) orderId = ord.id as string;
+          }
+          console.log(`[whatsapp/inbound] winback_reply_received from=${masked} response=${response} orderId=${orderId}`);
+          continue; // le tunnel classique NE voit jamais cette réponse
         }
 
         // N6 · WAME-INVERSE — préséance (décision Claudy) : un OTP ACHETEUR actif pour ce numéro
