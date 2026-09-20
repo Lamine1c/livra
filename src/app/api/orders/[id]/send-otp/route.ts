@@ -116,8 +116,15 @@ export async function POST(
 
   // MSG 1 = TEMPLATE approuvé. Business-initiated, hors fenêtre 24h → DOIT partir en
   // template (le texte libre serait rejeté).
+  // [N37W] Le NOM du template split (côté Meta) est pilotable par env sans commit : deux variantes
+  // APPROVED existent (`..._split` et `..._split_v2`, catégorie en contestation). On surcharge juste
+  // le `name` du payload ; variables/langue/boutons inchangés. Gate MSG1_SPLIT_TEMPLATE_READY inchangé.
+  const splitTemplate = {
+    ...TEMPLATES.order_confirmation_request_split,
+    name: process.env.MSG1_SPLIT_TEMPLATE_NAME ?? "order_confirmation_request_split",
+  };
   const result = splitReady
-    ? await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request_split, [
+    ? await sendWhatsAppTemplate(client.phone, splitTemplate, [
         prenom,
         boutique,
         produitTxt,
