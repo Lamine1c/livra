@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 import { observeBuyerScoreLookup } from "@/lib/buyer-score-audit";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 // Score de fiabilité d'un acheteur, CROSS-VENDEURS (réseau LIVRA entier), pour UN numéro
 // fourni en input. Vie privée : on ne retourne un score que pour le numéro donné (jamais
@@ -16,6 +18,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
+  if (body) observeBody("orders/buyer-score", z.object({ whatsapp: z.string() }).passthrough(), body);
   const whatsapp = (body as { whatsapp?: unknown } | null)?.whatsapp;
   if (typeof whatsapp !== "string" || !whatsapp.trim()) {
     return NextResponse.json({ error: "whatsapp requis" }, { status: 400 });

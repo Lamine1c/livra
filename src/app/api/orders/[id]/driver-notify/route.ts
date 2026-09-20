@@ -3,6 +3,8 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(
   req: NextRequest,
@@ -15,7 +17,9 @@ export async function POST(
     return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
   }
 
-  const { driverName } = await req.json();
+  const body = await req.json();
+  observeBody("orders/[id]/driver-notify", z.object({ driverName: z.string() }).passthrough(), body);
+  const { driverName } = body as { driverName?: unknown };
   if (typeof driverName !== "string" || !driverName.trim()) {
     return NextResponse.json({ error: "driverName requis" }, { status: 400 });
   }

@@ -8,6 +8,8 @@ import {
   graphFetch,
   verifySupabaseJwt,
 } from "@/lib/meta";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 // The redirect URI must match exactly what the mobile app sends.
 // Scheme "livramobile" is declared in app.json.
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("meta/auth/exchange", z.object({ code: z.string() }).passthrough(), body);
 
   const { code } = body;
   if (typeof code !== "string" || !code) {

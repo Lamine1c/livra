@@ -5,6 +5,8 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { generateBuyerToken } from "@/lib/qr-token";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(
   req: NextRequest,
@@ -15,6 +17,7 @@ export async function POST(
   if (!user || !supabase) return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
+  observeBody("orders/[id]/yalidine", z.object({ stopDesk: z.boolean().optional() }).passthrough(), body);
   const stopDesk = (body as { stopDesk?: boolean })?.stopDesk === true;
 
   const { data: order, error: fetchError } = await supabase

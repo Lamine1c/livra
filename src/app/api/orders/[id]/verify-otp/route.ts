@@ -4,6 +4,8 @@ import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/bil
 import { sendTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(
   req: NextRequest,
@@ -22,6 +24,7 @@ export async function POST(
   }
 
   const body = await req.json();
+  observeBody("orders/[id]/verify-otp", z.object({ code: z.string() }).passthrough(), body);
   const { code } = body as { code: string };
 
   if (!code || !/^\d{6}$/.test(code)) {
