@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await getAuthenticatedUser(req);
@@ -14,6 +16,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  observeBody("profile/push-token", z.object({ token: z.string().nullable().optional() }).passthrough(), body);
 
   const token = typeof body.token === "string" ? body.token.trim() : null;
   if (body.token !== null && !token) {

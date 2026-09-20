@@ -4,6 +4,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizePhoneNumber } from "@/lib/whatsapp";
 import { generateDriverToken } from "@/lib/qr-token";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
@@ -12,6 +14,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
+  observeBody("drivers/verify-otp", z.object({ whatsapp: z.string(), otp: z.string(), device_id: z.string() }).passthrough(), body);
 
   const { whatsapp, otp, device_id } = body as {
     whatsapp?: string;

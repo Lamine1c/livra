@@ -2,6 +2,8 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { generateOTP, sendOtpWhatsApp } from "@/lib/whatsapp";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 // Renvoi d'OTP par device_id SEUL, pour un livreur déjà inscrit qui a perdu sa session
 // (logout : device_id conservé, token effacé). On reconnaît le device en DB et on renvoie
@@ -17,6 +19,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
+  observeBody("drivers/resend-otp", z.object({ device_id: z.string() }).passthrough(), body);
 
   const { device_id } = body;
   if (!device_id?.trim()) {

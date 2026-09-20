@@ -7,6 +7,8 @@ import {
   sendOtpWhatsApp,
 } from "@/lib/whatsapp";
 import { generateWaToken, waTokenExpiry, waLink } from "@/lib/driver-registration";
+import { z } from "zod";
+import { observeBody } from "@/lib/zod-observe";
 
 // Versions légales acceptées par le livreur, ENVOYÉES PAR L'APP (seule elle sait quel
 // texte elle a affiché — une app pas à jour peut montrer la v3 quand le serveur est en
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
+  observeBody("drivers/register", z.object({ prenom: z.string(), whatsapp: z.string(), wilaya: z.string(), couleur: z.string(), device_id: z.string(), terms_version: z.string().optional(), privacy_version: z.string().optional(), wa_flow: z.boolean().optional() }).passthrough(), body);
 
   const { prenom, whatsapp, wilaya, couleur, device_id, terms_version, privacy_version, wa_flow } = body as {
     prenom?: string;
