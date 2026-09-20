@@ -402,6 +402,40 @@ ${SEP}
 
 Votre commande {{1}} a été annulée. La boutique vous recontactera.`,
   },
+
+  // ─── [N36W] Rattrapage de vente — order_winback_offer (MARKETING) ───
+  // Envoyé APRÈS un refus récupérable (branche A `not_available` / C `found_cheaper`) via
+  // sendWinbackOffer() (src/lib/winback.ts), gaté WINBACK_SEND_READY. Variante ar approuvée chez
+  // Meta → sendWinbackOffer bascule `language:"ar"` si la locale acheteur est connue, sinon fr.
+  // {{3}}=offre (ex. « -15% ») · {{4}}=date limite (DD-MM-YYYY). Corps bilingue ci-dessous = rendu
+  // in-window seulement ; Meta délivre SA copy approuvée (seules les variables + name/language partent).
+  order_winback_offer: {
+    name: "order_winback_offer",
+    category: "MARKETING",
+    language: "fr",
+    variables: ["prénom", "boutique", "offre", "date_limite"],
+    buttons: [
+      { type: "QUICK_REPLY", text: "إيه نأكد" },
+      { type: "QUICK_REPLY", text: "لا شكرا" },
+    ],
+    body: `message en français suit
+
+سلام {{1}} 👋
+عندنا عرض خاص ليك من {{2}} :
+🎁 {{3}}
+صالح حتى {{4}}
+
+تحب تأكد الطلبية ؟
+
+${SEP}
+
+Bonjour {{1}} 👋
+{{2}} vous propose une offre spéciale :
+🎁 {{3}}
+valable jusqu'au {{4}}
+
+Voulez-vous confirmer la commande ?`,
+  },
 } satisfies Record<string, WhatsAppTemplate>;
 
 // ─── Signature LIVRA en pied de chaque message ACHETEUR (FR+AR) ───────────────
