@@ -89,7 +89,11 @@ export async function createYalidineParcel(
     firstname,
     familyname,
     contact_phone: order.client.phone,
-    address: `${order.client.address}, ${order.client.commune}`,
+    // [N48W] Adresse facultative : repli propre sur la commune si vide/null (jamais « null, commune »
+    // ni virgule orpheline). Le livreur se fait guider par téléphone — c'est la réalité DZ.
+    address: (order.client.address ?? "").trim()
+      ? `${(order.client.address ?? "").trim()}, ${order.client.commune}`
+      : order.client.commune,
     from_wilaya_name: FROM_WILAYA,
     to_wilaya_name: toWilaya,
     to_commune_name: order.client.commune,

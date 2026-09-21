@@ -131,7 +131,7 @@ export async function createEcotrackOrder(
     nom_client: order.client.full_name,
     telephone: order.client.phone,
     telephone_2: "",
-    adresse: order.client.address, // vraie adresse client (le mobile la garantit non vide en mode Domicile)
+    adresse: (order.client.address ?? "").trim() || order.client.commune, // [N48W] adresse facultative → repli commune si vide/null
     code_postal: "",
     commune: order.client.commune,
     code_wilaya: codeWilaya,
