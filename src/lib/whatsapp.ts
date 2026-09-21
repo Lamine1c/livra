@@ -88,7 +88,7 @@ async function postToMeta(payload: object, label: string): Promise<{ ok: boolean
 // (texte/interactif) est refusé, seul un TEMPLATE approuvé passe. 131047 = "Re-engagement
 // message" (canonique), 470 = variante legacy re-engagement.
 const OUT_OF_WINDOW_CODES = new Set([131047, 470]);
-function isOutOfWindow(code?: number): boolean {
+export function isOutOfWindow(code?: number): boolean {
   return code != null && OUT_OF_WINDOW_CODES.has(code);
 }
 

@@ -225,6 +225,30 @@ Pas de souci ! Quel jour vous arrange ?
 Répondez avec le jour qui vous convient 📅`,
   },
 
+  // ─── [N49W] Décision vendeur « pas dispo » → 3 créneaux INTERACTIFS ───
+  // Envoyé par l'endpoint de décision vendeur (POST /api/orders/[id]/decision, action="slots") via
+  // sendWhatsAppInteractiveButtons (message de SESSION, in-window uniquement — PAS de repli template :
+  // décision Lamine, hors fenêtre = on n'envoie rien). 3 boutons = limite WhatsApp (pile dessus).
+  // Les `id` sont des payloads de routage stables (traitement de la réponse acheteur = lot ultérieur).
+  order_reschedule_slots: {
+    name: "order_reschedule_slots",
+    category: "UTILITY",
+    language: "fr",
+    variables: [],
+    buttons: [
+      { type: "QUICK_REPLY", text: "غدوة", id: "SLOT_TOMORROW" },
+      { type: "QUICK_REPLY", text: "بعد غدوة", id: "SLOT_DAY_AFTER" },
+      { type: "QUICK_REPLY", text: "نتصل بالمتجر", id: "SLOT_CONTACT" },
+    ],
+    body: `message en français suit
+
+واش من نهار يناسبك للتوصيل ؟ اختار من تحت 📅
+
+${SEP}
+
+Quel jour vous arrange pour la livraison ? Choisissez ci-dessous 📅`,
+  },
+
   // ─── MSG 6 — Branche B · Changé d'avis ───
   order_cancelled_mind_changed: {
     name: "order_cancelled_mind_changed",
