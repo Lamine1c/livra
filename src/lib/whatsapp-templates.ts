@@ -36,8 +36,8 @@ export const WINBACK_NO_PAYLOAD = "WINBACK_NO";
 // ─── Signature LIVRA (bas de CHAQUE message acheteur, FR+AR) ──────────────────
 // Ajoutée en pied de bloc AR et de bloc FR par appendSignature() plus bas, à TOUS les
 // templates SAUF order_confirmation_request (déjà approuvé en prod — on n'y touche pas).
-const SIG_AR = "✓ LIVRA — مقامك الخاص بك يحميك و يعطيك الأولوية في جميع متاجر LIVRA";
-const SIG_FR = "✓ LIVRA — ton statut client te protege et te priorise dans toutes les boutiques LIVRA";
+const SIG_AR = "✓ LIVRA — خدمة تأكيد الطلبيات للبائع تاعك. مقامك كزبون موثوق يتبعك عند كل البائعين اللي يخدمو بـ LIVRA.";
+const SIG_FR = "✓ LIVRA — le service de confirmation de ton vendeur. Ton statut de client fiable te suit chez tous les vendeurs qui utilisent LIVRA.";
 
 export const TEMPLATES = {
   // ─── MSG 1 — Confirmation de commande (OUI/NON) ───
