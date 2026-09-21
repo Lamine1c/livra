@@ -3,8 +3,7 @@ import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasActiveBuyerOtp, handleDriverInboundRegistration, isKnownDriver } from "@/lib/driver-registration";
-import { normalizePhoneNumber } from "@/lib/whatsapp";
-import { WINBACK_YES_PAYLOAD, WINBACK_NO_PAYLOAD } from "@/lib/whatsapp-templates";
+import { isRefusalReplyPayload, handleRefusalReply } from "@/lib/refusal-reply";
 
 // Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
 // (à traiter), false si déjà vu (doublon / retry Meta → ignorer). Fail-open sur
@@ -187,33 +186,12 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // [N38W] Réponse à l'OFFRE WINBACK : payload DISTINCT (WINBACK_*) → routage dédié AVANT le
-        // tunnel OUI/NON (sinon « إيه نأكد »/« لا شكرا » seraient avalés par YES_RE/NO_RE, cf. RAPPORT
-        // N36W pt 4). No-op JOURNALISÉ pour l'instant : AUCUNE logique de relance dans ce lot ; pas de
-        // colonne winback_replied_at (pas de migration) → log seul. Le tunnel classique est intact pour
-        // TOUT message sans payload winback (la grande majorité : texte, OTP, OUI/NON sans payload).
-        if (m.payload === WINBACK_YES_PAYLOAD || m.payload === WINBACK_NO_PAYLOAD) {
-          const response = m.payload === WINBACK_YES_PAYLOAD ? "yes" : "no";
-          const masked = `${m.from.slice(0, 5)}…${m.from.slice(-2)}`;
-          // orderId best-effort (la commande winbackée la plus récente de ce numéro). Guardé : si la
-          // colonne winback_sent_at n'existe pas (migration 045 non appliquée), la requête n'aboutit
-          // pas → orderId reste "?", sans casser le traitement.
-          let orderId = "?";
-          const norm = normalizePhoneNumber(m.from);
-          const { data: clientRows } = await supabase.from("clients").select("id").eq("phone_normalized", norm);
-          const clientIds = (clientRows ?? []).map((c) => c.id as string);
-          if (clientIds.length > 0) {
-            const { data: ord } = await supabase
-              .from("orders")
-              .select("id")
-              .in("client_id", clientIds)
-              .not("winback_sent_at", "is", null)
-              .order("winback_sent_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (ord?.id) orderId = ord.id as string;
-          }
-          console.log(`[whatsapp/inbound] winback_reply_received from=${masked} response=${response} orderId=${orderId}`);
+        // [N50W] Réponse ACHETEUR à la relance (WINBACK_* / SLOT_*) → routage dédié AVANT le tunnel
+        // OUI/NON (sinon « إيه نأكد »/« غدوة » y seraient avalés par YES_RE/NO_RE). handleRefusalReply
+        // résout la commande relancée (winback_sent_at), applique l'issue de la boucle (repart / annule /
+        // en attente) et pousse le vendeur (orderId dans le payload). Best-effort (ne throw jamais).
+        if (isRefusalReplyPayload(m.payload)) {
+          await handleRefusalReply(supabase, m.from, m.payload as string);
           continue; // le tunnel classique NE voit jamais cette réponse
         }
 

@@ -195,6 +195,44 @@ export function orderDecisionNeeded(
   };
 }
 
+// ── [N50W] Vendeur — retour de l'acheteur APRÈS la relance (offre / créneaux) ──
+export function winbackAccepted(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "✅ الزبون قبل العرض", body: `الزبون قبل عرضك — الطلبية ${vars.reference} رجعت حيّة.` };
+  }
+  return { title: "✅ Offre acceptée", body: `Le client a accepté ton offre — commande #${vars.reference} relancée.` };
+}
+
+export function winbackDeclined(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "❌ الزبون رفض العرض", body: `الزبون رفض العرض — الطلبية ${vars.reference} تلغات.` };
+  }
+  return { title: "❌ Offre refusée", body: `Le client a refusé l'offre — commande #${vars.reference} annulée.` };
+}
+
+export function slotChosen(
+  locale: string | null | undefined,
+  vars: { reference: string; slot: "tomorrow" | "day_after" }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    const label = vars.slot === "tomorrow" ? "غدوة" : "بعد غدوة";
+    return { title: "📅 الزبون اختار موعد", body: `الزبون اختار : ${label} — الطلبية ${vars.reference}.` };
+  }
+  const label = vars.slot === "tomorrow" ? "Demain" : "Après-demain";
+  return { title: "📅 Créneau choisi", body: `Le client a choisi : ${label} — commande #${vars.reference}.` };
+}
+
+export function contactRequested(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "📞 الزبون يحب اتصال", body: `الزبون يحب المتجر يتصل بيه — الطلبية ${vars.reference}.` };
+  }
+  return { title: "📞 Le client veut être contacté", body: `Le client demande à être rappelé — commande #${vars.reference}.` };
+}
+
 // ── Vendeur — commande confirmée par le client (confirm-order, OTP WhatsApp) ──
 // LE moment où le vendeur doit agir : préparer le colis + expédier. Jusqu'ici il
 // n'était prévenu QUE d'une annulation, jamais d'une confirmation — asymétrie

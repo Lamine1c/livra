@@ -32,6 +32,10 @@ const SEP = "━━━━━━━━━━━━━━";
 // les matche AVANT YES_RE/NO_RE, pour qu'une réponse à l'offre ne tombe jamais dans le tunnel OUI/NON).
 export const WINBACK_YES_PAYLOAD = "WINBACK_YES";
 export const WINBACK_NO_PAYLOAD = "WINBACK_NO";
+// [N49W/N50W] Payloads des 3 créneaux « pas dispo » (order_reschedule_slots) — routés N50W.
+export const SLOT_TOMORROW_PAYLOAD = "SLOT_TOMORROW";
+export const SLOT_DAY_AFTER_PAYLOAD = "SLOT_DAY_AFTER";
+export const SLOT_CONTACT_PAYLOAD = "SLOT_CONTACT";
 
 // ─── Signature LIVRA (bas de CHAQUE message acheteur, FR+AR) ──────────────────
 // Ajoutée en pied de bloc AR et de bloc FR par appendSignature() plus bas, à TOUS les
@@ -236,9 +240,9 @@ Répondez avec le jour qui vous convient 📅`,
     language: "fr",
     variables: [],
     buttons: [
-      { type: "QUICK_REPLY", text: "غدوة", id: "SLOT_TOMORROW" },
-      { type: "QUICK_REPLY", text: "بعد غدوة", id: "SLOT_DAY_AFTER" },
-      { type: "QUICK_REPLY", text: "نتصل بالمتجر", id: "SLOT_CONTACT" },
+      { type: "QUICK_REPLY", text: "غدوة", id: SLOT_TOMORROW_PAYLOAD },
+      { type: "QUICK_REPLY", text: "بعد غدوة", id: SLOT_DAY_AFTER_PAYLOAD },
+      { type: "QUICK_REPLY", text: "نتصل بالمتجر", id: SLOT_CONTACT_PAYLOAD },
     ],
     body: `message en français suit
 
