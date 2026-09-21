@@ -119,13 +119,13 @@ export function buyerLocationUpdated(
   const l = normalizePushLocale(locale);
   if (l === "ar") {
     return {
-      title: "📍 الزبون حدّث موقعه",
-      body: `الزبون حدّث موقعه للطلب رقم ${vars.reference}.`,
+      title: "📍 تبدّلت نقطة التوصيل",
+      body: `الطلبية ${vars.reference} : الزبون بدّل عنوان التوصيل. نبّه السائق تاعك.`,
     };
   }
   return {
-    title: "📍 Position mise à jour",
-    body: `#${vars.reference} : le client a mis à jour sa position.`,
+    title: "📍 Point de livraison modifié",
+    body: `#${vars.reference} : le client a changé son adresse de livraison. Préviens ton livreur.`,
   };
 }
 
