@@ -174,6 +174,27 @@ export function orderCancelled(
   };
 }
 
+// ── Vendeur — l'acheteur a REFUSÉ, décision attendue (N45W) ──────────────────
+// Règle Lamine 21/09 : un refus acheteur n'annule PLUS la commande. Elle reste vivante,
+// en attente d'une décision du vendeur (relancer/winback OU annuler lui-même). Cette notif
+// remplace l'ancienne « commande annulée » sur la branche « changé d'avis ».
+export function orderDecisionNeeded(
+  locale: string | null | undefined,
+  vars: { reference: string }
+): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return {
+      title: "⏳ قرار مطلوب",
+      body: `الزبون متردّد على الطلبية رقم ${vars.reference}. عاود اتصل بيه (عرض) ولا ألغيها — القرار ليك.`,
+    };
+  }
+  return {
+    title: "⏳ À toi de décider",
+    body: `Le client hésite sur la commande #${vars.reference}. Relance-le (offre) ou annule — à toi de choisir.`,
+  };
+}
+
 // ── Vendeur — commande confirmée par le client (confirm-order, OTP WhatsApp) ──
 // LE moment où le vendeur doit agir : préparer le colis + expédier. Jusqu'ici il
 // n'était prévenu QUE d'une annulation, jamais d'une confirmation — asymétrie

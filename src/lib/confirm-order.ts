@@ -4,7 +4,7 @@ import { recordRefusInsight } from "@/lib/delivery-insight";
 import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
-import { orderCancelled, orderConfirmed } from "@/lib/push-messages";
+import { orderDecisionNeeded, orderConfirmed } from "@/lib/push-messages";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -284,7 +284,7 @@ export async function handleInboundReply(
     return { action: "reschedule", orderId: order.id };
   }
 
-  // ── Branche B · "Changé d'avis" → MSG 6 + status=cancelled + decline_reason=changed_mind ──
+  // ── Branche B · "Changé d'avis" → MSG 6 + decline_reason=changed_mind (N45W : commande NON annulée) ──
   if (MIND_CHANGED_RE.test(bodyTrim)) {
     const { orders, dbError } = await findPendingForPhone(phone);
     const order = orders[0];
@@ -308,20 +308,25 @@ export async function handleInboundReply(
     const r = await sendTunnelMessage(phone, TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
     if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG6 (annulation) failed:`, r.error);
 
+    // [N45W · décision Lamine] Un refus acheteur n'ANNULE PLUS la commande : on pose SEULEMENT
+    // decline_reason (statut INTACT → la commande reste vivante, en attente d'une décision VENDEUR :
+    // relancer/winback OU annuler lui-même). Le garde n'est plus sur la transition `cancelled`
+    // (disparue) mais sur `decline_reason` : l'update — donc l'insight D9 ET le push vendeur — ne
+    // s'exécute QUE la 1re fois (idempotence : un 2e « changé d'avis » ne re-déclenche rien).
     const { data: flipped, error: updErr } = await supabase
       .from("orders")
-      .update({ status: "cancelled", decline_reason: "changed_mind", updated_at: nowIso })
+      .update({ decline_reason: "changed_mind", updated_at: nowIso })
       .eq("id", order.id)
-      .neq("status", "cancelled")
+      .or("decline_reason.is.null,decline_reason.neq.changed_mind")
       .select("id");
     if (updErr) {
-      console.error(`[whatsapp/inbound] from=${masked} db-error (cancel changed_mind) order=${order.id}:`, updErr.message);
+      console.error(`[whatsapp/inbound] from=${masked} db-error (decline changed_mind) order=${order.id}:`, updErr.message);
     }
 
-    // Insight D9 (best-effort) : n'écrire QUE sur la vraie transition vers cancelled.
-    // findPendingForPhone (:175-181) ne filtre PAS sur status → un 2e « changé d'avis »
-    // dans la fenêtre OTP repasserait ici ; le garde .neq("status","cancelled") fait
-    // matcher 0 ligne → pas de doublon d'insight. L'échec de l'insight ne bloque rien.
+    // Insight D9 (best-effort) : écrit UNE SEULE FOIS par refus. findPendingForPhone (:175-181) ne
+    // filtre PAS sur decline_reason → un 2e « changé d'avis » dans la fenêtre OTP repasserait ici ;
+    // le garde .or(decline_reason.is.null,...neq.changed_mind) fait matcher 0 ligne la 2e fois →
+    // pas de doublon d'insight. L'échec de l'insight ne bloque rien.
     if (!updErr && flipped && flipped.length > 0) {
       // Best-effort POST-réponse via after() : ne jamais ajouter de latence au webhook
       // WhatsApp entrant (Meta retimeout ~20s → retry). recordRefusInsight ne throw
@@ -329,18 +334,20 @@ export async function handleInboundReply(
       after(() => recordRefusInsight(supabase, { orderId: order.id, motif: "changed_mind" }));
     }
 
-    if (vendor?.expo_push_token) {
-      const { title, body } = orderCancelled(vendor.locale, {
+    // Push vendeur « décision attendue » — UNE SEULE FOIS (gaté sur flipped, comme l'insight) :
+    // un re-clic acheteur ne re-spamme pas le vendeur.
+    if (vendor?.expo_push_token && flipped && flipped.length > 0) {
+      const { title, body } = orderDecisionNeeded(vendor.locale, {
         reference: order.id.slice(0, 8).toUpperCase(),
       });
       const pushResult = await sendExpoPushToOwner(
         { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
-        title, body, { orderId: order.id, type: "order_cancelled" }
+        title, body, { orderId: order.id, type: "order_decision_needed" }
       );
-      if (!pushResult.success) console.error("[whatsapp/inbound] expo push (cancel) failed:", pushResult.error);
+      if (!pushResult.success) console.error("[whatsapp/inbound] expo push (decision_needed) failed:", pushResult.error);
     }
 
-    console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" → MSG 6 + cancelled order=${order.id}`);
+    console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" → MSG 6 + decline_reason=changed_mind (commande vivante, décision vendeur) order=${order.id}`);
     return { action: "cancelled_mind", orderId: order.id };
   }
 
