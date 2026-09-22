@@ -1,5 +1,6 @@
 import { Order } from "@/types";
 import { WILAYAS } from "@/lib/utils";
+import { orderDeliveryAddress } from "@/lib/order-address";
 
 const YALIDINE_API = "https://api.yalidine.app/v1";
 const FROM_WILAYA = "Alger";
@@ -82,7 +83,9 @@ export async function createYalidineParcel(
   if (!order.client) throw new Error("Données client manquantes.");
 
   const { firstname, familyname } = splitName(order.client.full_name);
-  const toWilaya = WILAYAS[order.client.wilaya] ?? order.client.wilaya;
+  // [G8W-S3] Adresse qui FAIT FOI = snapshot commande (ship_*) sinon client (helper unique).
+  const dest = orderDeliveryAddress(order, order.client);
+  const toWilaya = WILAYAS[dest.wilaya ?? ""] ?? dest.wilaya;
 
   const payload = {
     order_id: order.reference,
@@ -91,12 +94,12 @@ export async function createYalidineParcel(
     contact_phone: order.client.phone,
     // [N48W] Adresse facultative : repli propre sur la commune si vide/null (jamais « null, commune »
     // ni virgule orpheline). Le livreur se fait guider par téléphone — c'est la réalité DZ.
-    address: (order.client.address ?? "").trim()
-      ? `${(order.client.address ?? "").trim()}, ${order.client.commune}`
-      : order.client.commune,
+    address: (dest.address ?? "").trim()
+      ? `${(dest.address ?? "").trim()}, ${dest.commune}`
+      : dest.commune,
     from_wilaya_name: FROM_WILAYA,
     to_wilaya_name: toWilaya,
-    to_commune_name: order.client.commune,
+    to_commune_name: dest.commune,
     price: order.total_amount,
     do_insurance: false,
     declared_value: 0,

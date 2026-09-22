@@ -1,4 +1,5 @@
 import { Order } from "@/types";
+import { orderDeliveryAddress } from "@/lib/order-address";
 
 // ─── ECOTRACK (famille : DHD, Anderson, …) ────────────────────
 // UNE lib paramétrée par slug → baseUrl. Auth = un seul header Bearer.
@@ -120,7 +121,9 @@ export async function createEcotrackOrder(
 ): Promise<EcotrackParcelResult> {
   if (!order.client) throw new Error("Données client manquantes.");
 
-  const codeWilaya = Number(order.client.wilaya);
+  // [G8W-S3] Adresse qui FAIT FOI = snapshot commande (ship_*) sinon client (helper unique).
+  const dest = orderDeliveryAddress(order, order.client);
+  const codeWilaya = Number(dest.wilaya);
   if (!codeWilaya || Number.isNaN(codeWilaya)) {
     throw new Error("Wilaya du client invalide (code_wilaya requis).");
   }
@@ -131,9 +134,9 @@ export async function createEcotrackOrder(
     nom_client: order.client.full_name,
     telephone: order.client.phone,
     telephone_2: "",
-    adresse: (order.client.address ?? "").trim() || order.client.commune, // [N48W] adresse facultative → repli commune si vide/null
+    adresse: (dest.address ?? "").trim() || dest.commune, // [N48W/G8W-S3] adresse facultative → repli commune
     code_postal: "",
-    commune: order.client.commune,
+    commune: dest.commune,
     code_wilaya: codeWilaya,
     montant: order.total_amount,
     remarque: "",
