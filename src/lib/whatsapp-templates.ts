@@ -290,6 +290,23 @@ ${SEP}
 Bonne nouvelle {{1}} 🎉 Votre offre chez {{2}} est confirmée. Nouveau montant à payer à la livraison : {{3}} DA.`,
   },
 
+  // ─── [G5W] Commande modifiée par le vendeur (négociation) → nouveau COD (message de SESSION) ───
+  // ⚠️ N'EST PAS un template Meta : texte libre (renderTemplateText + sendWhatsAppNotification), fenêtre
+  // ouverte par un échange récent. {{3}} = nouveau montant COD (DA). Neutre (pas « offre »/« annulé »), FR+AR.
+  order_amount_updated: {
+    name: "order_amount_updated",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["prénom", "boutique", "nouveau_prix"],
+    body: `message en français suit
+
+سلام {{1}} 👋 كوموند تاعك عند {{2}} تبدّلت. المبلغ الجديد اللي تخلص عند التوصيل : ‪{{3}}‬ دج.
+
+${SEP}
+
+Bonjour {{1}} 👋 Votre commande chez {{2}} a été mise à jour. Nouveau montant à payer à la livraison : {{3}} DA.`,
+  },
+
   // ─── MSG 6 — Branche B · Changé d'avis ───
   order_cancelled_mind_changed: {
     name: "order_cancelled_mind_changed",
