@@ -272,6 +272,24 @@ ${SEP}
 C'est noté {{1}} 🙏 Votre commande chez {{2}} reste ouverte — le vendeur revient vers vous.`,
   },
 
+  // ─── [G3W] Offre acceptée → confirmation du NOUVEAU prix (message de SESSION véridique) ───
+  // ⚠️ N'EST PAS un template Meta : rendu en TEXTE LIBRE (renderTemplateText + sendWhatsAppNotification),
+  // fenêtre ouverte par le « Oui » de l'acheteur. {{3}} = nouveau montant COD (déjà remisé, en DA).
+  // Jamais « annulé », pas de délai chiffré, FR+AR, signature standard (auto).
+  order_price_updated: {
+    name: "order_price_updated",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["prénom", "boutique", "nouveau_prix"],
+    body: `message en français suit
+
+مبروك يا {{1}} 🎉 قبلنا العرض تاعك عند {{2}}. الثمن الجديد اللي تخلص عند التوصيل : ‪{{3}}‬ دج.
+
+${SEP}
+
+Bonne nouvelle {{1}} 🎉 Votre offre chez {{2}} est confirmée. Nouveau montant à payer à la livraison : {{3}} DA.`,
+  },
+
   // ─── MSG 6 — Branche B · Changé d'avis ───
   order_cancelled_mind_changed: {
     name: "order_cancelled_mind_changed",

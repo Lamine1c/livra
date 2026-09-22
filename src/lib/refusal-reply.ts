@@ -1,14 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizePhoneNumber } from "@/lib/whatsapp";
+import { normalizePhoneNumber, sendWhatsAppNotification, isOutOfWindow } from "@/lib/whatsapp";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
-import { winbackAccepted, winbackDeclined, slotChosen, contactRequested } from "@/lib/push-messages";
+import { winbackAccepted, winbackAcceptedLate, winbackDeclined, slotChosen, contactRequested } from "@/lib/push-messages";
 import {
+  TEMPLATES,
+  renderTemplateText,
   WINBACK_YES_PAYLOAD,
   WINBACK_NO_PAYLOAD,
   SLOT_TOMORROW_PAYLOAD,
   SLOT_DAY_AFTER_PAYLOAD,
   SLOT_CONTACT_PAYLOAD,
 } from "@/lib/whatsapp-templates";
+
+// [G3W] Statuts où la commande n'est PAS encore partie chez le transporteur → seule fenêtre où l'on
+// peut modifier le COD sans créer d'écart avec le montant annoncé à Yalidine/Ecotrack (shipped+).
+const PRE_SHIP_STATUSES = ["pending", "pending_confirmation", "confirmed", "processing"];
 
 // ─── [N50W] Retour ACHETEUR après relance → notif vendeur + issue de la boucle ─────────────
 // Ferme la boucle du flow de refus (N45W/N49W) : la relance vendeur (order_winback_offer OU les 3
@@ -62,7 +68,7 @@ export async function handleRefusalReply(
     // La commande RELANCÉE (winback_sent_at posé) la plus récente de ce numéro.
     const { data: order } = await supabase
       .from("orders")
-      .select("id, reference, user_id, decline_reason")
+      .select("id, reference, user_id, decline_reason, status, total_amount, winback_discount_rate, original_total_amount, client:clients(full_name, phone)")
       .in("client_id", clientIds)
       .not("winback_sent_at", "is", null)
       .order("winback_sent_at", { ascending: false })
@@ -80,7 +86,7 @@ export async function handleRefusalReply(
 
     const { data: vendor } = await supabase
       .from("profiles")
-      .select("locale, expo_push_token")
+      .select("locale, expo_push_token, store_name, full_name")
       .eq("id", order.user_id)
       .maybeSingle();
     const locale = (vendor?.locale as string | null) ?? null;
@@ -88,17 +94,66 @@ export async function handleRefusalReply(
     let msg: { title: string; body: string };
     let outcome: string;
 
-    if (payload === WINBACK_YES_PAYLOAD || payload === SLOT_TOMORROW_PAYLOAD || payload === SLOT_DAY_AFTER_PAYLOAD) {
-      // La commande REPART : efface le marqueur de refus (statut intact).
-      await supabase.from("orders").update({ decline_reason: null, updated_at: nowIso }).eq("id", orderId);
-      if (payload === WINBACK_YES_PAYLOAD) {
-        msg = winbackAccepted(locale, { reference });
-        outcome = "winback_accepted";
-      } else {
-        const slot = payload === SLOT_TOMORROW_PAYLOAD ? "tomorrow" : "day_after";
-        msg = slotChosen(locale, { reference, slot });
-        outcome = `slot_${slot}`;
+    if (payload === WINBACK_YES_PAYLOAD) {
+      // [G3W] L'acheteur ACCEPTE l'offre → appliquer la remise GELÉE (winback_discount_rate) au COD,
+      // BORNÉ aux statuts pré-expédition (sinon écart avec le montant déjà annoncé au transporteur).
+      const rate = order.winback_discount_rate as number | null;
+      const status = order.status as string | null;
+      const total = Number(order.total_amount ?? 0);
+      const alreadyApplied = order.original_total_amount != null;
+      let applied = false;
+      let appliedDiscounted = 0;
+
+      if (rate != null && !alreadyApplied && status != null && PRE_SHIP_STATUSES.includes(status)) {
+        const discounted = Math.max(0, Math.round(total * (1 - rate / 100)));
+        // UPDATE atomique + BORNÉ : garde le COD d'origine (historique), applique le remisé, efface le
+        // refus. Le WHERE (statut pré-expédition + original_total_amount IS NULL) = idempotence + garde
+        // « jamais de remise après départ transporteur ».
+        const { data: rows } = await supabase
+          .from("orders")
+          .update({ original_total_amount: total, total_amount: discounted, decline_reason: null, updated_at: nowIso })
+          .eq("id", orderId)
+          .is("original_total_amount", null)
+          .in("status", PRE_SHIP_STATUSES)
+          .select("id");
+        applied = !!rows && rows.length > 0;
+
+        if (applied) {
+          appliedDiscounted = discounted;
+          // Prévenir l'ACHETEUR du NOUVEAU prix (session, fenêtre ouverte par son « Oui ») — texte libre,
+          // même patron que order_decision_pending. Hors fenêtre → rien (défensif), sinon loggé.
+          const client = (Array.isArray(order.client) ? order.client[0] : order.client) as { full_name?: string; phone?: string } | null;
+          if (client?.phone) {
+            const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+            const boutique = (vendor?.store_name as string | null) ?? (vendor?.full_name as string | null) ?? "votre vendeur";
+            const priceTxt = new Intl.NumberFormat("en-US").format(discounted);
+            const pr = await sendWhatsAppNotification(
+              client.phone,
+              renderTemplateText(TEMPLATES.order_price_updated, [prenom, boutique, priceTxt])
+            );
+            if (!pr.success && !isOutOfWindow(pr.code)) console.error("[refusal-reply] msg nouveau prix échec:", pr.error);
+          }
+        }
       }
+
+      if (applied) {
+        msg = winbackAccepted(locale, { reference });
+        outcome = `winback_accepted_discount_${rate}_total_${appliedDiscounted}`;
+      } else {
+        // Commande déjà partie (shipped+) OU déjà appliquée OU pas de taux gelé : la vente reprend
+        // (on efface le refus) MAIS on NE TOUCHE PAS au COD. Le vendeur est prévenu de régulariser
+        // (sinon écart COD annoncé/encaissé). On ne réécrase pas total_amount.
+        await supabase.from("orders").update({ decline_reason: null, updated_at: nowIso }).eq("id", orderId);
+        const shipped = status != null && !PRE_SHIP_STATUSES.includes(status);
+        msg = shipped ? winbackAcceptedLate(locale, { reference }) : winbackAccepted(locale, { reference });
+        outcome = shipped ? "winback_accepted_shipped_no_discount" : "winback_accepted_no_price_change";
+      }
+    } else if (payload === SLOT_TOMORROW_PAYLOAD || payload === SLOT_DAY_AFTER_PAYLOAD) {
+      // Créneau choisi (pas de remise) : la commande REPART, efface le refus (statut intact).
+      await supabase.from("orders").update({ decline_reason: null, updated_at: nowIso }).eq("id", orderId);
+      const slot = payload === SLOT_TOMORROW_PAYLOAD ? "tomorrow" : "day_after";
+      msg = slotChosen(locale, { reference, slot });
+      outcome = `slot_${slot}`;
     } else if (payload === WINBACK_NO_PAYLOAD) {
       // 2e refus → ANNULATION.
       await supabase.from("orders").update({ status: "cancelled", updated_at: nowIso }).eq("id", orderId);
