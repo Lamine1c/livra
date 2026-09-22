@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import {
   generateOTP,
   normalizePhoneNumber,
-  sendOtpWhatsApp,
+  sendDriverOtpWhatsApp,
 } from "@/lib/whatsapp";
 import { generateWaToken, waTokenExpiry, waLink } from "@/lib/driver-registration";
 import { z } from "zod";
@@ -170,8 +170,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 7. Envoyer l'OTP via WhatsApp
-  const result = await sendOtpWhatsApp(normalizedPhone, prenom.trim(), otp);
+  // 7. Envoyer l'OTP via WhatsApp — [G4W] copy DÉDIÉE livreur (jamais la copy acheteur).
+  const result = await sendDriverOtpWhatsApp(normalizedPhone, prenom.trim(), otp);
 
   // 8. Envoi WhatsApp (Meta) en erreur → supprimer le record et retourner 500
   if (!result.success) {
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
       .delete()
       .eq("whatsapp", normalizedPhone);
 
-    console.error("[register] sendOtpWhatsApp failed:", result.error);
+    console.error("[register] sendDriverOtpWhatsApp failed:", result.error);
     return NextResponse.json(
       { error: "Erreur envoi WhatsApp" },
       { status: 500 }

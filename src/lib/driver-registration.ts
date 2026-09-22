@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateOTP, normalizePhoneNumber, sendOtpWhatsApp } from "@/lib/whatsapp";
+import { generateOTP, normalizePhoneNumber, sendDriverOtpWhatsApp } from "@/lib/whatsapp";
 
 // N6 · WAME-INVERSE — inscription livreur par wa.me (le livreur écrit à LIVRA).
 // L'inscription en attente vit dans `driver_otps` (staging, onConflict whatsapp) + 4 colonnes
@@ -154,8 +154,8 @@ export async function handleDriverInboundRegistration(
   }
 
   // 4. Envoi de l'OTP en MESSAGE LIBRE (fenêtre 24h ouverte par le message entrant du livreur).
-  //    sendOtpWhatsApp = texte FR livreur (buildOtpMessage), JAMAIS le template acheteur order_otp_code.
-  const r = await sendOtpWhatsApp(incoming, reg.prenom, otp);
+  //    [G4W] sendDriverOtpWhatsApp = copy DÉDIÉE livreur (bilingue AR+FR), JAMAIS la copy acheteur.
+  const r = await sendDriverOtpWhatsApp(incoming, reg.prenom, otp);
   if (!r.success) console.error(`[driver-wame] envoi OTP ${mask(incoming)} échoué:`, r.error);
   return { handled: true };
 }
