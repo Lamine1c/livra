@@ -120,12 +120,12 @@ export function buyerLocationUpdated(
   if (l === "ar") {
     return {
       title: "📍 تبدّلت نقطة التوصيل",
-      body: `الطلبية ${vars.reference} : الزبون بدّل عنوان التوصيل. نبّه السائق تاعك.`,
+      body: `الطلبية ${vars.reference} : الزبون بدّل عنوان التوصيل. السائق تاعك تبلّغ.`,
     };
   }
   return {
     title: "📍 Point de livraison modifié",
-    body: `#${vars.reference} : le client a changé son adresse de livraison. Préviens ton livreur.`,
+    body: `#${vars.reference} : le client a changé son adresse de livraison. Ton livreur a été prévenu.`,
   };
 }
 
