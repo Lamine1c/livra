@@ -1,8 +1,8 @@
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordRefusInsight } from "@/lib/delivery-insight";
-import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage } from "@/lib/whatsapp";
-import { TEMPLATES } from "@/lib/whatsapp-templates";
+import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage, sendWhatsAppNotification, isOutOfWindow } from "@/lib/whatsapp";
+import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderDecisionNeeded, orderConfirmed } from "@/lib/push-messages";
 
@@ -305,8 +305,18 @@ export async function handleInboundReply(
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
     const prenom = (enrichedClient(order)?.full_name ?? "").split(" ")[0] ?? "";
 
-    const r = await sendTunnelMessage(phone, TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
-    if (!r.success) console.error(`[LOT1][A2] from=${masked} MSG6 (annulation) failed:`, r.error);
+    // [G2W] La commande N'EST PAS annulée (N45W) → on ne ment plus. On N'ENVOIE PLUS le template
+    // approuvé order_cancelled_mind_changed (« on annule ») — INTOUCHÉ mais plus appelé. À la place,
+    // l'acheteur vient de répondre → fenêtre 24h ouverte → message de SESSION véridique en TEXTE LIBRE
+    // (jamais « annulé », aucun délai chiffré). STOP fenêtre fermée : on n'envoie RIEN (pas de template faux).
+    const r = await sendWhatsAppNotification(phone, renderTemplateText(TEMPLATES.order_decision_pending, [prenom, boutique]));
+    if (!r.success) {
+      if (isOutOfWindow(r.code)) {
+        console.log(`[whatsapp/inbound] from=${masked} "changé d'avis" hors fenêtre → RIEN envoyé (pas de template faux)`);
+      } else {
+        console.error(`[G2W] from=${masked} message décision-en-attente failed:`, r.error);
+      }
+    }
 
     // [N45W · décision Lamine] Un refus acheteur n'ANNULE PLUS la commande : on pose SEULEMENT
     // decline_reason (statut INTACT → la commande reste vivante, en attente d'une décision VENDEUR :

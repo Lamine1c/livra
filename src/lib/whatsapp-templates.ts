@@ -253,6 +253,25 @@ ${SEP}
 Quel jour vous arrange pour la livraison ? Choisissez ci-dessous 📅`,
   },
 
+  // ─── [G2W] « Changé d'avis » → message de SESSION véridique (la commande N'EST PAS annulée) ───
+  // ⚠️ N'EST PAS un template Meta : rendu en TEXTE LIBRE via renderTemplateText + sendWhatsAppNotification
+  // (fenêtre 24h ouverte par le message entrant de l'acheteur). Remplace l'envoi de order_cancelled_mind_changed
+  // (approuvé, INTOUCHÉ) qui mentait (« on annule ») depuis N45W. Contraintes : jamais « annulé », aucun délai
+  // chiffré, FR+AR, signature standard (auto). ⚠️ COPY PROPOSÉE — Lamine tranche (texte libre = 0 resoumission).
+  order_decision_pending: {
+    name: "order_decision_pending",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["prénom", "boutique"],
+    body: `message en français suit
+
+تسجّل يا {{1}} 🙏 الطلبية تاعك عند {{2}} مازالت قايمة، البائع رح يشوف ويرجعلك.
+
+${SEP}
+
+C'est noté {{1}} 🙏 Votre commande chez {{2}} reste ouverte — le vendeur revient vers vous.`,
+  },
+
   // ─── MSG 6 — Branche B · Changé d'avis ───
   order_cancelled_mind_changed: {
     name: "order_cancelled_mind_changed",
