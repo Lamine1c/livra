@@ -120,12 +120,12 @@ export function buyerLocationUpdated(
   if (l === "ar") {
     return {
       title: "📍 تبدّلت نقطة التوصيل",
-      body: `الطلبية ${vars.reference} : الزبون بدّل عنوان التوصيل. نبّه السائق تاعك.`,
+      body: `الطلبية ${vars.reference} : الزبون بدّل عنوان التوصيل. السائق تاعك تبلّغ.`,
     };
   }
   return {
     title: "📍 Point de livraison modifié",
-    body: `#${vars.reference} : le client a changé son adresse de livraison. Préviens ton livreur.`,
+    body: `#${vars.reference} : le client a changé son adresse de livraison. Ton livreur a été prévenu.`,
   };
 }
 
@@ -202,6 +202,16 @@ export function winbackAccepted(locale: string | null | undefined, vars: { refer
     return { title: "✅ الزبون قبل العرض", body: `الزبون قبل عرضك — الطلبية ${vars.reference} رجعت حيّة.` };
   }
   return { title: "✅ Offre acceptée", body: `Le client a accepté ton offre — commande #${vars.reference} relancée.` };
+}
+
+// [G3W] Offre acceptée APRÈS expédition : la remise n'a pas pu toucher le COD déjà transmis au
+// transporteur → le vendeur doit régulariser à la livraison (sinon écart COD annoncé vs encaissé).
+export function winbackAcceptedLate(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "⚠️ العرض قبلو بعد الإرسال", body: `الزبون قبل العرض — الطلبية ${vars.reference} راهي فالطريق، التخفيض ما تطبقش على الـCOD. ظبطها في التوصيل.` };
+  }
+  return { title: "⚠️ Offre acceptée après expédition", body: `Commande #${vars.reference} déjà partie : la remise n'a pas pu être appliquée au COD. À régulariser à la livraison.` };
 }
 
 export function winbackDeclined(locale: string | null | undefined, vars: { reference: string }): PushMessage {

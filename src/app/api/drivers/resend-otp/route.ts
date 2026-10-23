@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { generateOTP, sendOtpWhatsApp } from "@/lib/whatsapp";
+import { generateOTP, sendDriverOtpWhatsApp } from "@/lib/whatsapp";
 import { z } from "zod";
 import { observeBody } from "@/lib/zod-observe";
 
@@ -93,10 +93,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur interne. Réessaie." }, { status: 500 });
   }
 
-  const result = await sendOtpWhatsApp(driver.whatsapp, driver.prenom, otp);
+  const result = await sendDriverOtpWhatsApp(driver.whatsapp, driver.prenom, otp);
   if (!result.success) {
     await supabase.from("driver_otps").delete().eq("whatsapp", driver.whatsapp);
-    console.error("[resend-otp] sendOtpWhatsApp failed:", result.error);
+    console.error("[resend-otp] sendDriverOtpWhatsApp failed:", result.error);
     return NextResponse.json({ error: "Erreur envoi WhatsApp" }, { status: 500 });
   }
 

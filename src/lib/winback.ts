@@ -99,10 +99,14 @@ export async function sendWinbackOffer(orderId: string): Promise<WinbackResult> 
   // Idempotence DURE : CLAIM winback_sent_at AVANT l'envoi (UPDATE ... WHERE winback_sent_at IS NULL).
   // 0 ligne mise à jour = un autre appel a déjà claimé → skip (jamais 2 envois). Un envoi raté APRÈS
   // le claim ne sera PAS re-tenté (best-effort assumé, anti-spam MARKETING).
+  // [G4W] GEL du taux dans le MÊME claim (cohérent avec l'endpoint décision N49W/G3W) : sinon, le jour
+  // où sendWinbackOffer serait branché, l'offre partirait SANS taux gelé → à l'acceptation rate==null →
+  // aucune remise appliquée alors que l'acheteur a vu un %. On gèle le taux effectivement offert (pr.discount_rate ;
+  // null si offre body-only sans %, ce qui est correct = pas de remise chiffrée à appliquer).
   const nowIso = new Date().toISOString();
   const { data: claimed, error: claimErr } = await supabase
     .from("orders")
-    .update({ winback_sent_at: nowIso })
+    .update({ winback_sent_at: nowIso, winback_discount_rate: pr.discount_rate ?? null })
     .eq("id", orderId)
     .is("winback_sent_at", null)
     .select("id");

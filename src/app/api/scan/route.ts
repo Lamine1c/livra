@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { verifyQrToken, generateDriverToken } from "@/lib/qr-token";
+import { orderDeliveryAddress } from "@/lib/order-address";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("t");
@@ -60,18 +61,10 @@ export async function GET(req: NextRequest) {
 
   const { data: order, error } = await supabase
     .from("orders")
+    // [G8W-S3] `*` (au lieu d'une liste explicite) → les colonnes ship_* du snapshot d'adresse
+    // apparaissent dès que 050 est appliquée, sans casser la requête tant qu'elle ne l'est pas (inerte).
     .select(`
-      id,
-      reference,
-      status,
-      delivery_mode,
-      qr_token,
-      total_amount,
-      delivery_fee,
-      notes,
-      created_at,
-      buyer_lat,
-      buyer_lng,
+      *,
       client:clients(full_name, phone, address, wilaya, commune),
       items:order_items(product_name, quantity, unit_price, total_price)
     `)
@@ -129,6 +122,12 @@ export async function GET(req: NextRequest) {
     .eq("order_id", order.id)
     .order("created_at", { ascending: true });
 
+  // [G8W-S3] adresse qui fait foi = snapshot commande (ship_*) sinon client (helper unique).
+  const dest = orderDeliveryAddress(
+    order as { ship_wilaya?: string | null; ship_commune?: string | null; ship_address?: string | null },
+    client
+  );
+
   return NextResponse.json({
     ok: true,
     orderId: order.id,
@@ -136,8 +135,8 @@ export async function GET(req: NextRequest) {
       ...order,
       buyer_name: client?.full_name ?? null,
       buyer_phone: client?.phone ?? null,
-      buyer_address: client?.address ?? null,
-      buyer_wilaya: client?.wilaya ?? null,
+      buyer_address: dest.address,
+      buyer_wilaya: dest.wilaya,
     },
     status_history: statusHistory ?? [],
     vendorName: vendor?.store_name ?? vendor?.full_name ?? "Vendeur LIVRA",

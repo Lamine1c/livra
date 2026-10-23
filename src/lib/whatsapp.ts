@@ -110,46 +110,37 @@ export async function sendWhatsAppTemplate(
   return { success: result.ok, error: result.error, wamid: result.wamid };
 }
 
-// ─── SEND OTP (message business-initiated → template requis hors fenêtre) ──
-export interface OtpMessageContext {
-  boutique?: string;
-  total?: number;
-  produit?: string | null;
-}
-
-export async function sendOtpWhatsApp(
+// ─── SEND OTP INSCRIPTION LIVREUR (message texte libre) ──
+// [G4W] Copy DÉDIÉE au livreur qui rejoint LIVRA — JAMAIS la copy ACHETEUR (prix, « commande »,
+// « paiement à la livraison »). C'était le bug du gate : les 3 chemins OTP livreur (drivers/register,
+// drivers/resend-otp, driver-registration wa.me) envoyaient une confirmation d'ACHAT à un motard.
+// L'ancienne buildOtpMessage/sendOtpWhatsApp (copy acheteur) est SUPPRIMÉE — le tunnel ACHETEUR passe
+// par sendOtpTunnelMessage (template order_otp_code / texte tunnel), INTOUCHÉ. Fenêtre 24h ouverte par
+// le message entrant du livreur. ⚠️ Signature acheteur (statut client) inadaptée à un livreur → branding
+// LIVRA porté par la salutation. Copy PROPOSÉE — Lamine tranche (texte libre, 0 soumission Meta).
+export async function sendDriverOtpWhatsApp(
   phone: string,
-  clientName: string,
-  otp: string,
-  ctx?: OtpMessageContext
+  prenom: string,
+  otp: string
 ): Promise<WhatsAppResult> {
   const to = normalizePhoneNumber(phone);
   const masked = maskedPhone(phone);
-  const message = buildOtpMessage(clientName, otp, ctx);
-
-  const result = await sendMetaText(to, message);
+  const result = await sendMetaText(to, buildDriverOtpMessage(prenom, otp));
   return { success: result.ok, maskedPhone: masked, error: result.error };
 }
 
-// Copy V1 — le client répond avec le code pour confirmer (flux conversationnel).
-function formatTotal(total?: number): string {
-  if (total == null || Number.isNaN(total)) return "";
-  return new Intl.NumberFormat("fr-FR").format(Math.round(total));
-}
-
-function buildOtpMessage(clientName: string, otp: string, ctx?: OtpMessageContext): string {
-  const boutique = ctx?.boutique?.trim() || "votre vendeur";
-  const totalTxt = formatTotal(ctx?.total);
-  const produit = ctx?.produit?.trim();
-  const ligneProduit = produit ? `${produit} — ${totalTxt} DA` : `${totalTxt} DA`;
+function buildDriverOtpMessage(prenom: string, otp: string): string {
+  const nom = prenom?.trim() || "";
   return (
-    `Bonjour ${clientName} 👋\n\n` +
-    `Votre commande chez ${boutique} est réservée à votre nom :\n` +
-    `${ligneProduit}\n` +
-    `Paiement à la livraison, rien à payer maintenant.\n\n` +
-    `Pour la confirmer et qu'on vous l'envoie, répondez à ce message avec ce code :\n\n` +
+    `سلام ${nom} 👋 هنا LIVRA.\n` +
+    `هذا الكود باش تكمّل تسجيلك كسائق مع LIVRA :\n\n` +
     `✅ ${otp}\n\n` +
-    `Sans ce code, on ne peut pas vous l'envoyer. On attend votre réponse 🙂`
+    `رد على هاد الرسالة بالكود باش تفعّل حسابك. الكود يصلح 10 دقايق برك.\n\n` +
+    `━━━━━━━━━━━━━━\n\n` +
+    `Bonjour ${nom} 👋 C'est LIVRA.\n` +
+    `Voici ton code pour finaliser ton inscription livreur :\n\n` +
+    `✅ ${otp}\n\n` +
+    `Réponds à ce message avec ce code pour activer ton compte. Le code expire dans 10 minutes.`
   );
 }
 

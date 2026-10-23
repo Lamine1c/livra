@@ -102,7 +102,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       console.error(`[orders/decision] offer send échec order=${id}:`, r.error);
       return NextResponse.json({ error: "Échec envoi WhatsApp", detail: r.error }, { status: 502 });
     }
-    await markSent();
+    // [G3W] GEL du taux OFFERT sur la commande, dans le MÊME UPDATE que winback_sent_at (une seule
+    // écriture atomique) : une édition ultérieure de prepared_responses ne changera plus le taux que
+    // l'acheteur a vu/accepté. C'est ce `winback_discount_rate` (pas prepared_responses) qui sera appliqué.
+    await supabase
+      .from("orders")
+      .update({ winback_sent_at: nowIso, winback_discount_rate: rate })
+      .eq("id", id)
+      .is("winback_sent_at", null);
     return NextResponse.json({ ok: true, decision: "offer_sent", offer: `-${rate}%`, deadline: dateLimite });
   }
 

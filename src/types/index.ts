@@ -66,6 +66,11 @@ export interface Order {
   delivery_fee: number;
   notes: string | null;
   tracking_number: string | null;
+  // [G8W-S3] Snapshot d'adresse PAR COMMANDE (migration 050) : null tant que non édité → repli client
+  // (helper orderDeliveryAddress). Optionnels : absents tant que 050 n'est pas appliquée.
+  ship_wilaya?: string | null;
+  ship_commune?: string | null;
+  ship_address?: string | null;
   carrier: string | null;
   otp_code: string | null;
   otp_expires_at: string | null;
