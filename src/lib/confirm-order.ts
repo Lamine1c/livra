@@ -5,6 +5,7 @@ import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage, sendWhat
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderDecisionNeeded, orderConfirmed } from "@/lib/push-messages";
+import { registerOtpAttempt } from "@/lib/otp-attempts";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -105,6 +106,15 @@ export async function confirmOrderByInboundCode(
   const match = sameNumber.find((o) => o.otp_code === code);
   if (!match) {
     console.log(`[whatsapp/inbound] from=${masked} no-match (code incorrect, ${sameNumber.length} order(s) en attente)`);
+    // [T0A-1] Plafond DURABLE : chaque mauvais code incrémente le compteur de la
+    // commande la plus récente du numéro (migration 052). Au-delà du plafond, on
+    // se TAIT (pas de reply) pour ne pas devenir un oracle / spammer le numéro.
+    // Repli gracieux si 052 non appliquée (ne verrouille jamais).
+    const attempt = await registerOtpAttempt(supabase, sameNumber[0].id);
+    if (attempt.locked) {
+      console.log(`[whatsapp/inbound] from=${masked} wrong_code → plafond d'essais atteint, silence`);
+      return { matched: false, reason: "wrong_code" };
+    }
     // Fix « OTP silencieux » : le numéro A une commande en attente → c'est un vrai
     // client qui se trompe d'un chiffre. On le prévient (best-effort, fenêtre 24 h
     // Meta) qu'il peut renvoyer le bon code — sinon la commande meurt en silence,
@@ -112,6 +122,16 @@ export async function confirmOrderByInboundCode(
     // muets). Un échec d'envoi ne doit PAS faire échouer le webhook (Meta rejouerait).
     const wr = await sendTunnelMessage(phone, TEMPLATES.order_otp_wrong_code, []);
     if (!wr.success) console.error(`[whatsapp/inbound] from=${masked} wrong_code reply failed:`, wr.error);
+    return { matched: false, reason: "wrong_code" };
+  }
+
+  // [T0A-1] Code correct mais la commande est-elle déjà verrouillée par un
+  // brute-force antérieur ? On compte aussi la tentative gagnante ; si le plafond
+  // est franchi (≥ 10 essais avant celui-ci), on refuse — l'acheteur renverra un
+  // nouveau code (send-otp remet le compteur à zéro). Repli gracieux si 052 absente.
+  const winAttempt = await registerOtpAttempt(supabase, match.id);
+  if (winAttempt.locked) {
+    console.log(`[whatsapp/inbound] from=${masked} bon code mais plafond d'essais atteint → refus order=${match.id}`);
     return { matched: false, reason: "wrong_code" };
   }
 

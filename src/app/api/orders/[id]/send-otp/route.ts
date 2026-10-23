@@ -62,6 +62,11 @@ export async function POST(
   // pour cette commande, on le RÉUTILISE au lieu d'en régénérer un — sinon un
   // renvoi (ou un double-clic / retry) invaliderait le code que le client a
   // peut-être déjà reçu. On ne prolonge pas l'expiration d'un code réutilisé.
+  // [T0A-1] Validité = 24 h (et non plus 10 min). En DZ l'acheteur répond le soir ;
+  // 10 min le faisait tomber dans `no_pending` (commande bloquée, vendeur jamais
+  // notifié). 24 h est aligné sur la fenêtre de session WhatsApp. Le brute-force
+  // d'un code 6 chiffres sur 24 h est contré par le plafond DURABLE d'essais
+  // (orders.otp_attempts, cf. verify-otp / confirm-order).
   const nowMs = Date.now();
   const activeCode =
     order.otp_code && order.otp_expires_at && new Date(order.otp_expires_at).getTime() > nowMs
@@ -71,7 +76,7 @@ export async function POST(
   const expiresAt =
     activeCode && order.otp_expires_at
       ? order.otp_expires_at
-      : new Date(nowMs + 10 * 60 * 1000).toISOString();
+      : new Date(nowMs + 24 * 60 * 60 * 1000).toISOString();
   const sentAt = new Date().toISOString();
 
   const { error: updateError } = await supabase
@@ -81,6 +86,21 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+  }
+
+  // [T0A-1] Nouveau code → remet à zéro le plafond d'essais (un code régénéré ne
+  // doit pas naître déjà « verrouillé » par les essais de l'ancien). On NE reset
+  // PAS sur réutilisation (le compteur suit le code tant qu'il est le même).
+  // Best-effort : si la migration 052 n'est pas appliquée, la colonne n'existe pas
+  // → l'update renvoie une erreur qu'on ignore (rien à reset de toute façon).
+  if (!activeCode) {
+    const { error: resetError } = await supabase
+      .from("orders")
+      .update({ otp_attempts: 0 })
+      .eq("id", id);
+    if (resetError) {
+      console.warn(`[send-otp] reset otp_attempts ignoré (migration 052 non appliquée ?) order=${id}:`, resetError.message);
+    }
   }
 
   // Contexte du message V1 : boutique (profil vendeur) + total + produit (optionnel).

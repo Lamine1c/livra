@@ -4,6 +4,7 @@ import { requireActiveSubscription, SUBSCRIPTION_EXPIRED_ERROR } from "@/lib/bil
 import { sendTunnelMessage } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { rateLimit } from "@/lib/rate-limit";
+import { registerOtpAttempt } from "@/lib/otp-attempts";
 import { z } from "zod";
 import { observeBody } from "@/lib/zod-observe";
 
@@ -31,12 +32,11 @@ export async function POST(
     return NextResponse.json({ error: "Code invalide" }, { status: 400 });
   }
 
-  // [N35W] Anti-brute-force (note low-sev de l'audit N34W) : le code fait 6 chiffres (10^6) et
-  // aucun compteur n'existait ici. Route authentifiée + scopée à la commande DU vendeur (pas
-  // d'énumération tierce), mais un vendeur pouvait forger une confirmation acheteur en tentant le
-  // code. On borne à 10 essais / 10 min par (vendeur, commande) — cohérent avec drivers/verify-otp
-  // (N21.3) et bien au-dessus d'un usage légitime (l'acheteur dicte le code une fois). L'expiry 10 min
-  // de l'OTP (send-otp) rend alors le brute-force infaisable.
+  // [N35W] Anti-brute-force (1re couche, EN MÉMOIRE) : le code fait 6 chiffres (10^6). Route
+  // authentifiée + scopée à la commande DU vendeur (pas d'énumération tierce), mais un vendeur
+  // pouvait forger une confirmation acheteur en tentant le code. Borne 10 essais / 10 min par
+  // (vendeur, commande). ⚠️ Sur Vercel cette borne est best-effort (Map par instance). Depuis
+  // [T0A-1] l'OTP vaut 24 h (plus 10 min) : la vraie garantie est le plafond DURABLE ci-dessous.
   if (!rateLimit(`order:verify-otp:${user.id}:${id}`, 10, 10 * 60_000)) {
     return NextResponse.json(
       { error: "Trop de tentatives. Réessaie dans quelques minutes." },
@@ -68,6 +68,17 @@ export async function POST(
 
   if (new Date(order.otp_expires_at) < new Date()) {
     return NextResponse.json({ error: "Code expiré. Renvoyez un nouveau code." }, { status: 400 });
+  }
+
+  // [T0A-1] 2e couche, DURABLE : plafond d'essais persisté sur la commande (migration 052).
+  // Incrémente à CHAQUE tentative (bon comme mauvais code) ; au-delà du plafond, on refuse —
+  // un nouveau code (send-otp) remet le compteur à zéro. Repli gracieux si 052 non appliquée.
+  const attempt = await registerOtpAttempt(supabase, id);
+  if (attempt.locked) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Renvoyez un nouveau code." },
+      { status: 429 }
+    );
   }
 
   if (order.otp_code !== code) {
