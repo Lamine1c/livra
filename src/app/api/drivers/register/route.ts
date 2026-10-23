@@ -54,6 +54,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // [HOTFIX 23/10] Le prénom part en TEXTE LIBRE depuis le numéro officiel LIVRA vers le numéro saisi :
+  // sans borne, n'importe qui pouvait y glisser un message de phishing (lien, faux support…).
+  // Lettres (latin + arabe), espaces, apostrophe, tiret — 30 caractères max.
+  if (!/^[\p{L}\s'\-]{1,30}$/u.test(prenom.trim())) {
+    return NextResponse.json({ error: "Prénom invalide (lettres uniquement, 30 caractères max)" }, { status: 400 });
+  }
+
   // 2. Normaliser le numéro
   const normalizedPhone = normalizePhoneNumber(whatsapp);
 
