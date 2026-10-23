@@ -41,6 +41,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Données invalides" }, { status: 422 });
   }
 
+  // [HOTFIX 23/10] OWNERSHIP. getAuthenticatedUser renvoie le client SERVICE (RLS off) : la RPC
+  // modify_order_content ne filtre que par id → sans ce check, n'importe quel compte pouvait réécrire
+  // le contenu et le COD de la commande d'un autre vendeur. On vérifie AVANT tout appel.
+  const { data: owned, error: ownErr } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (ownErr) return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+  if (!owned) return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
+
   // Appel ATOMIQUE de la fonction (RLS du vendeur → ownership + verrou + gardes dans la même transaction).
   const { data, error } = await supabase.rpc("modify_order_content", {
     p_order_id: id,

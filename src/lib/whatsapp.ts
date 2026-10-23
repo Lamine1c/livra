@@ -135,12 +135,12 @@ function buildDriverOtpMessage(prenom: string, otp: string): string {
     `سلام ${nom} 👋 هنا LIVRA.\n` +
     `هذا الكود باش تكمّل تسجيلك كسائق مع LIVRA :\n\n` +
     `✅ ${otp}\n\n` +
-    `رد على هاد الرسالة بالكود باش تفعّل حسابك. الكود يصلح 10 دقايق برك.\n\n` +
+    `دخّل هاد الكود في تطبيق LIVRA باش تفعّل حسابك. الكود يصلح 10 دقايق برك.\n\n` +
     `━━━━━━━━━━━━━━\n\n` +
     `Bonjour ${nom} 👋 C'est LIVRA.\n` +
     `Voici ton code pour finaliser ton inscription livreur :\n\n` +
     `✅ ${otp}\n\n` +
-    `Réponds à ce message avec ce code pour activer ton compte. Le code expire dans 10 minutes.`
+    `Entre ce code dans l'app LIVRA pour activer ton compte. Le code expire dans 10 minutes.`
   );
 }
 
