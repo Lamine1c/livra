@@ -62,6 +62,24 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // [T0A-2] Abonnement payé échu → 'expired', persisté (même règle que billing-guard).
+  // 'active' sans paid_until (fondateur / manuel / comped historique) = EXEMPT : on
+  // ne coupe jamais sur une absence de date, on laisse 'active'.
+  if (
+    status === "active" &&
+    vendor.paid_until &&
+    new Date(vendor.paid_until).getTime() <= Date.now()
+  ) {
+    status = "expired";
+    const { error: updateError } = await supabase
+      .from("vendors_waitlist")
+      .update({ subscription_status: "expired" })
+      .eq("id", vendor.id);
+    if (updateError) {
+      console.error("[billing/status] persist expired (paid_until) failed:", updateError);
+    }
+  }
+
   let days_left: number | null = null;
   if (status === "trial") {
     days_left = wholeDaysLeft(vendor.trial_ends_at);
