@@ -18,11 +18,21 @@ type PushPayload = {
 // — sert au nettoyage des tokens morts côté multi-device. `error` reste le message humain.
 type PushResult = { success: boolean; error?: string; expoError?: string };
 
+// [T0E] Options d'envoi (canal/priorité/son). Défauts = comportement historique (canal
+// "commandes-v1", priorité "high", son "default"). Un canal dédié (ex. "alerte-livreur")
+// permet un son/vibration distincts côté Android — le NOM du canal est un contrat avec l'app.
+export type PushOptions = {
+  channelId?: string;
+  priority?: "default" | "normal" | "high";
+  sound?: "default" | null;
+};
+
 export async function sendExpoPush(
   token: string | null | undefined,
   title: string,
   body: string,
-  data: Record<string, unknown> = {}
+  data: Record<string, unknown> = {},
+  opts?: PushOptions
 ): Promise<PushResult> {
   if (!token) {
     return { success: false, error: "No push token" };
@@ -37,13 +47,15 @@ export async function sendExpoPush(
     title,
     body,
     data,
-    sound: "default",
+    sound: opts?.sound !== undefined ? opts.sound : "default",
     // Android : priorité FCM haute + canal "commandes-v1" (importance MAX,
     // créé par l'app mobile) → heads-up/bannière hors app. Le canal "default"
     // hérité d'anciennes installs peut être resté en importance basse (son
     // sans bannière) et Android interdit de le remonter — d'où le canal neuf.
-    priority: "high",
-    channelId: "commandes-v1",
+    // [T0E] Un appelant peut surcharger le canal (ex. "alerte-livreur") ; canal
+    // inconnu du téléphone → Android retombe sur le défaut, rien ne casse.
+    priority: opts?.priority ?? "high",
+    channelId: opts?.channelId ?? "commandes-v1",
   };
 
   // Instrumentation de la chaîne push (diagnostic latence). Aucun PII loggé (ni
@@ -111,7 +123,8 @@ export async function sendExpoPushToOwner(
   owner: PushOwner,
   title: string,
   body: string,
-  data: Record<string, unknown> = {}
+  data: Record<string, unknown> = {},
+  opts?: PushOptions
 ): Promise<{ success: boolean; sent: number; error?: string }> {
   const supabase = createServiceClient();
 
@@ -139,7 +152,7 @@ export async function sendExpoPushToOwner(
   let sent = 0;
   const dead: string[] = [];
   for (const t of tokens) {
-    const r = await sendExpoPush(t, title, body, data);
+    const r = await sendExpoPush(t, title, body, data, opts);
     if (r.success) sent++;
     else if (r.expoError === "DeviceNotRegistered") dead.push(t);
   }

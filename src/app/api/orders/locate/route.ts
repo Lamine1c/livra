@@ -117,6 +117,15 @@ export async function POST(req: NextRequest) {
   const updateTooRecent =
     wasAlreadyLocated && !!prevLocatedAt && Date.now() - new Date(prevLocatedAt).getTime() < TEN_MIN_MS;
 
+  // [T0E] Le LIVREUR en course n'a pas le même besoin que le vendeur : si l'acheteur corrige son point
+  // quelques minutes après avoir confirmé (pendant que le livreur démarre vers l'ancienne adresse),
+  // l'anti-spam 10 min du vendeur AVALERAIT l'alerte → le livreur roule vers le mauvais endroit (gate
+  // device 24/10). On pousse le livreur à CHAQUE déplacement, avec un anti-RAFALE court de 60 s
+  // seulement (un pin qu'on fait glisser ne doit pas déclencher 10 notifs). Le vendeur garde ses 10 min.
+  const SIXTY_SEC_MS = 60 * 1000;
+  const driverUpdateTooRecent =
+    wasAlreadyLocated && !!prevLocatedAt && Date.now() - new Date(prevLocatedAt).getTime() < SIXTY_SEC_MS;
+
   if (orderBefore?.user_id && (!wasAlreadyLocated || !updateTooRecent)) {
     const { data: vendor } = await supabase
       .from("profiles")
@@ -142,13 +151,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // [N14] ALERTE LIVREUR — sur une RE-confirmation (le client a bougé), si la commande a une COURSE
-  // ACTIVE, prévenir aussi le livreur assigné : il navigue dans Google Maps EXTERNE (comgooglemaps://)
-  // et ne voit PAS le changement in-app → il doit relancer l'itinéraire depuis LIVRA (coords à jour).
-  // Même anti-spam que le vendeur (≥10 min via buyer_location_at → updateTooRecent). 1re confirmation :
-  // pas d'alerte (rien n'a « changé »). Aucune course active / pas de livreur → seul le vendeur reçoit.
+  // [N14→T0E] ALERTE LIVREUR — sur une RE-confirmation (le client a bougé), si la commande a une COURSE
+  // ACTIVE, prévenir le livreur assigné : il navigue dans Google Maps EXTERNE (comgooglemaps://) et ne
+  // voit PAS le changement in-app → il doit relancer l'itinéraire depuis LIVRA (coords à jour).
+  // [T0E] Anti-rafale 60 s SEULEMENT (plus l'anti-spam 10 min du vendeur) : chaque vrai déplacement
+  // pendant la course pousse le livreur. 1re confirmation : pas d'alerte (rien n'a « changé »). Aucune
+  // course active / pas de livreur → seul le vendeur reçoit. Push sur le canal Android DÉDIÉ
+  // "alerte-livreur" (importance MAX, son/vibration forts, créé par l'app mobile — nom = contrat).
   // Best-effort STRICT : échec loggé, ne bloque NI la réponse NI l'enregistrement déjà fait.
-  if (wasAlreadyLocated && !updateTooRecent) {
+  if (wasAlreadyLocated && !driverUpdateTooRecent) {
     // Course active liée à la commande + livreur assigné (deliveries.status='active', driver_id non null).
     const { data: activeDelivery } = await supabase
       .from("deliveries")
@@ -173,7 +184,9 @@ export async function POST(req: NextRequest) {
           title, body, {
             orderId: result.orderId,
             type: "buyer_location_updated_driver",
-          }
+          },
+          // [T0E] canal dédié haute urgence (son/vibration distincts). Inconnu du tel → repli défaut.
+          { channelId: "alerte-livreur" }
         );
         if (!r.success) console.error("[locate] driver alert push failed:", r.error);
       }
