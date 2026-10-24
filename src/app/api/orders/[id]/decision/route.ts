@@ -67,6 +67,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (action === "cancel") {
     const { error } = await supabase.from("orders").update({ status: "cancelled", updated_at: nowIso }).eq("id", id);
     if (error) return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+
+    // [T0D-2] Après « changé d'avis », l'acheteur a reçu « votre commande reste ouverte, le vendeur
+    // revient vers vous » (order_decision_pending). Si le vendeur annule pour de bon, sans ça l'acheteur
+    // attend un vendeur qui ne reviendra jamais. On l'informe via le TEMPLATE APPROUVÉ
+    // order_cancelled_mind_changed (« Compris {{1}}, on annule… {{2}} reste à votre service ») : il était
+    // faux quand on l'envoyait sur un simple refus, il devient VRAI quand le vendeur annule, et un
+    // template passe même hors fenêtre 24h. Template INTOUCHÉ, zéro soumission Meta. Best-effort STRICT :
+    // l'annulation est déjà persistée, un échec d'envoi ne la casse pas.
+    if (client?.phone) {
+      const { data: vendor } = await supabase.from("profiles").select("store_name, full_name").eq("id", order.user_id).maybeSingle();
+      const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
+      const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+      const r = await sendWhatsAppTemplate(client.phone, TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
+      if (!r.success) console.error(`[orders/decision] cancel notify acheteur échec order=${id}:`, r.error);
+    }
     return NextResponse.json({ ok: true, decision: "cancelled" });
   }
 
