@@ -106,7 +106,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .maybeSingle();
     const rate = discount_rate ?? (pr?.discount_rate as number | null | undefined) ?? null;
     if (rate == null) return NextResponse.json({ error: "Taux de remise manquant" }, { status: 400 });
-    const dateLimite = formatDzDate(Date.now() + ((pr?.validity_days as number | null | undefined) ?? 3) * 24 * 60 * 60 * 1000);
+    // [T0D-3] Échéance de l'offre : défaut 3 jours (décision Lamine 24/10 : l'acheteur DZ rate les
+    // fenêtres courtes). On garde l'instant précis (expiresMs) pour le persister et le DD-MM-YYYY (DZ)
+    // pour {{4}} du template — même date par construction.
+    const validityDays = (pr?.validity_days as number | null | undefined) ?? 3;
+    const expiresMs = Date.now() + validityDays * 24 * 60 * 60 * 1000;
+    const dateLimite = formatDzDate(expiresMs);
 
     const { data: vendor } = await supabase.from("profiles").select("store_name, full_name").eq("id", order.user_id).maybeSingle();
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
@@ -125,6 +130,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .update({ winback_sent_at: nowIso, winback_discount_rate: rate })
       .eq("id", id)
       .is("winback_sent_at", null);
+    // [T0D-3] Persiste l'échéance (refusal-reply refuse la remise sur un « oui » tardif). Écriture
+    // SÉPARÉE best-effort : si la colonne (056) n'est pas appliquée, l'erreur est ignorée → zéro
+    // régression (le gel du taux + winback_sent_at ci-dessus a déjà réussi, l'offre part normalement).
+    const { error: expErr } = await supabase
+      .from("orders")
+      .update({ winback_expires_at: new Date(expiresMs).toISOString() })
+      .eq("id", id);
+    if (expErr) console.warn(`[orders/decision] winback_expires_at non écrit (migration 056 non appliquée ?) order=${id}:`, expErr.message);
     return NextResponse.json({ ok: true, decision: "offer_sent", offer: `-${rate}%`, deadline: dateLimite });
   }
 

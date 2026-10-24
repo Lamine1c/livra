@@ -256,6 +256,16 @@ export function contactRequested(locale: string | null | undefined, vars: { refe
   return { title: "📞 Le client veut être contacté", body: `Le client demande à être rappelé — commande #${vars.reference}.` };
 }
 
+// [T0D-3] Vendeur — l'acheteur a dit « oui » à l'offre APRÈS son échéance → aucune remise appliquée.
+// Le vendeur sait ainsi que l'offre a expiré et peut recontacter l'acheteur s'il le souhaite.
+export function winbackExpired(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "⌛ العرض فات وقتو", body: `الزبون قبل العرض بعد ما فات وقتو — الطلبية ${vars.reference}. التخفيض ما تطبّقش. تقدر تعاود تتواصل معاه.` };
+  }
+  return { title: "⌛ Offre expirée", body: `Le client a accepté l'offre après son échéance — commande #${vars.reference}. La remise n'a pas été appliquée. Tu peux le recontacter.` };
+}
+
 // ── Vendeur — commande confirmée par le client (confirm-order, OTP WhatsApp) ──
 // LE moment où le vendeur doit agir : préparer le colis + expédier. Jusqu'ici il
 // n'était prévenu QUE d'une annulation, jamais d'une confirmation — asymétrie
