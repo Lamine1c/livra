@@ -129,9 +129,13 @@ export async function POST(
   // (flag MSG1_SPLIT_TEMPLATE_READY, défaut false → comportement actuel intact) ET
   // (b) des frais de livraison existent réellement (> 0). Sinon repli sur le template
   // 4-var approuvé (total seul) — JAMAIS une ligne « Livraison : 0 » mensongère.
-  // total_amount = prix produit (hors frais, cf. create-order.ts) ; on ajoute juste la
-  // ligne frais, sans recalcul, donc zéro risque arithmétique.
+  // [T0C-3] total_amount = montant À LA PORTE, frais INCLUS (décision T0C). Donc la ligne
+  // « produit » du split = total_amount − delivery_fee, la ligne « livraison » = delivery_fee ;
+  // les deux resomment au total annoncé. En 4-var (non split), {{4}} = total_amount (total seul).
   const deliveryFee = (order as { delivery_fee?: number | null }).delivery_fee ?? 0;
+  const productPriceTxt = new Intl.NumberFormat("en-US").format(
+    Math.max(0, Math.round(order.total_amount - deliveryFee))
+  );
   const splitReady = process.env.MSG1_SPLIT_TEMPLATE_READY === "true" && deliveryFee > 0;
 
   // MSG 1 = TEMPLATE approuvé. Business-initiated, hors fenêtre 24h → DOIT partir en
@@ -148,7 +152,7 @@ export async function POST(
         prenom,
         boutique,
         produitTxt,
-        totalTxt, // {{4}} = prix produit
+        productPriceTxt, // {{4}} = prix produit = total_amount − delivery_fee
         new Intl.NumberFormat("en-US").format(Math.round(deliveryFee)), // {{5}} = frais livraison
       ])
     : await sendWhatsAppTemplate(client.phone, TEMPLATES.order_confirmation_request, [
