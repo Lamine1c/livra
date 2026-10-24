@@ -290,6 +290,23 @@ ${SEP}
 Bonne nouvelle {{1}} 🎉 Votre offre chez {{2}} est confirmée. Nouveau montant à payer à la livraison : {{3}} DA.`,
   },
 
+  // ─── [T0D-3] « Oui » à l'offre APRÈS son échéance → texte libre (fenêtre ouverte par le tap acheteur) ───
+  // ⚠️ N'EST PAS un template Meta : rendu en TEXTE LIBRE (renderTemplateText + sendWhatsAppNotification).
+  // L'offre a expiré → pas de remise ; ton neutre, jamais « annulé », la boutique peut recontacter. FR+AR.
+  order_winback_expired: {
+    name: "order_winback_expired",
+    category: "UTILITY",
+    language: "fr",
+    variables: ["prénom", "boutique"],
+    body: `message en français suit
+
+سمحلنا يا {{1}}، العرض تاع {{2}} فات وقتو. ما كانش تخفيض دروك، بصّح المتجر يقدر يعاود يتواصل معاك 🙏
+
+${SEP}
+
+Désolé {{1}}, l'offre de {{2}} a expiré. La remise ne s'applique plus, mais la boutique peut vous recontacter 🙏`,
+  },
+
   // ─── [G5W] Commande modifiée par le vendeur (négociation) → nouveau COD (message de SESSION) ───
   // ⚠️ N'EST PAS un template Meta : texte libre (renderTemplateText + sendWhatsAppNotification), fenêtre
   // ouverte par un échange récent. {{3}} = nouveau montant COD (DA). Neutre (pas « offre »/« annulé »), FR+AR.

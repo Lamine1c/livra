@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhoneNumber, sendWhatsAppNotification, isOutOfWindow } from "@/lib/whatsapp";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
-import { winbackAccepted, winbackAcceptedLate, winbackDeclined, slotChosen, contactRequested } from "@/lib/push-messages";
+import { winbackAccepted, winbackAcceptedLate, winbackDeclined, slotChosen, contactRequested, winbackExpired } from "@/lib/push-messages";
 import {
   TEMPLATES,
   renderTemplateText,
@@ -68,7 +68,7 @@ export async function handleRefusalReply(
     // La commande RELANCÉE (winback_sent_at posé) la plus récente de ce numéro.
     const { data: order } = await supabase
       .from("orders")
-      .select("id, reference, user_id, decline_reason, status, total_amount, winback_discount_rate, original_total_amount, client:clients(full_name, phone)")
+      .select("id, reference, user_id, decline_reason, status, total_amount, delivery_fee, winback_discount_rate, original_total_amount, client:clients(full_name, phone)")
       .in("client_id", clientIds)
       .not("winback_sent_at", "is", null)
       .order("winback_sent_at", { ascending: false })
@@ -91,6 +91,13 @@ export async function handleRefusalReply(
       .maybeSingle();
     const locale = (vendor?.locale as string | null) ?? null;
 
+    // [T0D-3] Échéance de l'offre winback (colonne 056). Lecture SÉPARÉE et TOLÉRANTE : on ne l'ajoute
+    // PAS au SELECT principal (:71) pour ne pas le casser tant que 056 n'est pas appliquée. Si la colonne
+    // manque, la requête échoue silencieusement → winbackExpiresAt=null → aucun « oui » n'est refusé
+    // (comportement actuel, zéro régression).
+    const { data: expRow } = await supabase.from("orders").select("winback_expires_at").eq("id", orderId).maybeSingle();
+    const winbackExpiresAt = (expRow as { winback_expires_at?: string | null } | null)?.winback_expires_at ?? null;
+
     let msg: { title: string; body: string };
     let outcome: string;
 
@@ -100,43 +107,69 @@ export async function handleRefusalReply(
       const rate = order.winback_discount_rate as number | null;
       const status = order.status as string | null;
       const total = Number(order.total_amount ?? 0);
+      // [T0C-4] total_amount = frais INCLUS. La remise porte sur le SOUS-TOTAL PRODUITS, jamais sur
+      // les frais de livraison : nouveau = round((total − fee) × (1 − r/100)) + fee.
+      const fee = Number(order.delivery_fee ?? 0);
       const alreadyApplied = order.original_total_amount != null;
+      // [T0D-3] « oui » APRÈS l'échéance de l'offre = PAS de remise (l'acheteur l'a ratée).
+      const expired = !!winbackExpiresAt && Date.now() > new Date(winbackExpiresAt).getTime();
       let applied = false;
       let appliedDiscounted = 0;
+      let expiredHandled = false;
 
       if (rate != null && !alreadyApplied && status != null && PRE_SHIP_STATUSES.includes(status)) {
-        const discounted = Math.max(0, Math.round(total * (1 - rate / 100)));
-        // UPDATE atomique + BORNÉ : garde le COD d'origine (historique), applique le remisé, efface le
-        // refus. Le WHERE (statut pré-expédition + original_total_amount IS NULL) = idempotence + garde
-        // « jamais de remise après départ transporteur ».
-        const { data: rows } = await supabase
-          .from("orders")
-          .update({ original_total_amount: total, total_amount: discounted, decline_reason: null, updated_at: nowIso })
-          .eq("id", orderId)
-          .is("original_total_amount", null)
-          .in("status", PRE_SHIP_STATUSES)
-          .select("id");
-        applied = !!rows && rows.length > 0;
-
-        if (applied) {
-          appliedDiscounted = discounted;
-          // Prévenir l'ACHETEUR du NOUVEAU prix (session, fenêtre ouverte par son « Oui ») — texte libre,
-          // même patron que order_decision_pending. Hors fenêtre → rien (défensif), sinon loggé.
+        if (expired) {
+          // [T0D-3] Offre expirée : aucune remise, la commande reste EN L'ÉTAT (ni annulée ni reprise,
+          // decline_reason inchangé). L'acheteur reçoit un texte libre clair (fenêtre ouverte par son
+          // tap) ; le vendeur est notifié (msg winbackExpired, push plus bas). Hors fenêtre → rien.
+          expiredHandled = true;
           const client = (Array.isArray(order.client) ? order.client[0] : order.client) as { full_name?: string; phone?: string } | null;
           if (client?.phone) {
             const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
             const boutique = (vendor?.store_name as string | null) ?? (vendor?.full_name as string | null) ?? "votre vendeur";
-            const priceTxt = new Intl.NumberFormat("en-US").format(discounted);
-            const pr = await sendWhatsAppNotification(
+            const er = await sendWhatsAppNotification(
               client.phone,
-              renderTemplateText(TEMPLATES.order_price_updated, [prenom, boutique, priceTxt])
+              renderTemplateText(TEMPLATES.order_winback_expired, [prenom, boutique])
             );
-            if (!pr.success && !isOutOfWindow(pr.code)) console.error("[refusal-reply] msg nouveau prix échec:", pr.error);
+            if (!er.success && !isOutOfWindow(er.code)) console.error("[refusal-reply] msg offre expirée échec:", er.error);
+          }
+        } else {
+          const discounted = Math.max(0, Math.round((total - fee) * (1 - rate / 100))) + fee;
+          // UPDATE atomique + BORNÉ : garde le COD d'origine (historique), applique le remisé, efface le
+          // refus. Le WHERE (statut pré-expédition + original_total_amount IS NULL) = idempotence + garde
+          // « jamais de remise après départ transporteur ».
+          const { data: rows } = await supabase
+            .from("orders")
+            .update({ original_total_amount: total, total_amount: discounted, decline_reason: null, updated_at: nowIso })
+            .eq("id", orderId)
+            .is("original_total_amount", null)
+            .in("status", PRE_SHIP_STATUSES)
+            .select("id");
+          applied = !!rows && rows.length > 0;
+
+          if (applied) {
+            appliedDiscounted = discounted;
+            // Prévenir l'ACHETEUR du NOUVEAU prix (session, fenêtre ouverte par son « Oui ») — texte libre,
+            // même patron que order_decision_pending. Hors fenêtre → rien (défensif), sinon loggé.
+            const client = (Array.isArray(order.client) ? order.client[0] : order.client) as { full_name?: string; phone?: string } | null;
+            if (client?.phone) {
+              const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+              const boutique = (vendor?.store_name as string | null) ?? (vendor?.full_name as string | null) ?? "votre vendeur";
+              const priceTxt = new Intl.NumberFormat("en-US").format(discounted);
+              const pr = await sendWhatsAppNotification(
+                client.phone,
+                renderTemplateText(TEMPLATES.order_price_updated, [prenom, boutique, priceTxt])
+              );
+              if (!pr.success && !isOutOfWindow(pr.code)) console.error("[refusal-reply] msg nouveau prix échec:", pr.error);
+            }
           }
         }
       }
 
-      if (applied) {
+      if (expiredHandled) {
+        msg = winbackExpired(locale, { reference });
+        outcome = "winback_yes_expired";
+      } else if (applied) {
         msg = winbackAccepted(locale, { reference });
         outcome = `winback_accepted_discount_${rate}_total_${appliedDiscounted}`;
       } else {

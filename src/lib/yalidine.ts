@@ -100,6 +100,12 @@ export async function createYalidineParcel(
     from_wilaya_name: FROM_WILAYA,
     to_wilaya_name: toWilaya,
     to_commune_name: dest.commune,
+    // [T0C-2] price = total_amount = montant annoncé à l'acheteur, frais de livraison INCLUS
+    // (décision T0C). freeshipping = true TOUJOURS : Yalidine n'ajoute RIEN par-dessus ce montant.
+    // Par défaut (freeshipping=false) Yalidine ajoute son tarif au COD → l'acheteur paierait la
+    // livraison DEUX fois (une fois incluse dans total_amount, une fois ajoutée par Yalidine). Le
+    // vendeur règle le tarif Yalidine sur son compte marchand, comme aujourd'hui. L'acheteur paie à
+    // la porte exactement ce que LIVRA lui a annoncé — zéro surprise, c'est le cœur de la promesse.
     price: order.total_amount,
     do_insurance: false,
     declared_value: 0,
@@ -108,7 +114,7 @@ export async function createYalidineParcel(
     length: 30,
     weight: 1,
     product_list: buildProductList(order.items),
-    freeshipping: order.delivery_fee === 0,
+    freeshipping: true,
     is_stopdesk: !!opts?.stopDesk,
     has_exchange: false,
   };

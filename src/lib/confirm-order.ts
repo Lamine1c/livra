@@ -5,6 +5,7 @@ import { normalizePhoneNumber, sendTunnelMessage, sendOtpTunnelMessage, sendWhat
 import { TEMPLATES, renderTemplateText } from "@/lib/whatsapp-templates";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { orderDecisionNeeded, orderConfirmed } from "@/lib/push-messages";
+import { registerOtpAttempt } from "@/lib/otp-attempts";
 
 // Cœur provider-agnostic de l'auto-confirmation par réponse WhatsApp entrante.
 // Appelé par la route inbound (360dialog puis Meta direct — même format Cloud API).
@@ -50,6 +51,34 @@ type PendingOrderEnriched = {
 function enrichedClient(o: PendingOrderEnriched): { full_name: string; phone: string } | null {
   const c = Array.isArray(o.client) ? o.client[0] : o.client;
   return c ?? null;
+}
+
+// [T0D-1] Notifie le vendeur qu'une décision est attendue après un refus acheteur, avec une copy
+// SPÉCIFIQUE au motif (moins cher → remise · pas dispo → créneau · changé d'avis → appeler/annuler).
+// AVANT T0D : seul « changé d'avis » notifiait → les deux motifs RÉCUPÉRABLES (moins cher, pas dispo)
+// restaient muets, la relance dépendait du hasard. Best-effort : un échec de push ne casse jamais le
+// webhook. L'appelant GARANTIT l'idempotence (push uniquement quand l'UPDATE a fait basculer la 1re fois).
+async function notifyVendorDecision(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  orderId: string,
+  motif: "found_cheaper" | "not_available" | "changed_mind"
+): Promise<void> {
+  const { data: vendor } = await supabase
+    .from("profiles")
+    .select("expo_push_token, locale")
+    .eq("id", userId)
+    .single();
+  if (!vendor?.expo_push_token) return;
+  const { title, body } = orderDecisionNeeded(vendor.locale, {
+    reference: orderId.slice(0, 8).toUpperCase(),
+    motif,
+  });
+  const r = await sendExpoPushToOwner(
+    { type: "profile", id: userId, fallbackToken: vendor.expo_push_token },
+    title, body, { orderId, type: "order_decision_needed" }
+  );
+  if (!r.success) console.error(`[whatsapp/inbound] push vendeur (decision ${motif}) failed:`, r.error);
 }
 
 /**
@@ -105,6 +134,15 @@ export async function confirmOrderByInboundCode(
   const match = sameNumber.find((o) => o.otp_code === code);
   if (!match) {
     console.log(`[whatsapp/inbound] from=${masked} no-match (code incorrect, ${sameNumber.length} order(s) en attente)`);
+    // [T0A-1] Plafond DURABLE : chaque mauvais code incrémente le compteur de la
+    // commande la plus récente du numéro (migration 052). Au-delà du plafond, on
+    // se TAIT (pas de reply) pour ne pas devenir un oracle / spammer le numéro.
+    // Repli gracieux si 052 non appliquée (ne verrouille jamais).
+    const attempt = await registerOtpAttempt(supabase, sameNumber[0].id);
+    if (attempt.locked) {
+      console.log(`[whatsapp/inbound] from=${masked} wrong_code → plafond d'essais atteint, silence`);
+      return { matched: false, reason: "wrong_code" };
+    }
     // Fix « OTP silencieux » : le numéro A une commande en attente → c'est un vrai
     // client qui se trompe d'un chiffre. On le prévient (best-effort, fenêtre 24 h
     // Meta) qu'il peut renvoyer le bon code — sinon la commande meurt en silence,
@@ -112,6 +150,16 @@ export async function confirmOrderByInboundCode(
     // muets). Un échec d'envoi ne doit PAS faire échouer le webhook (Meta rejouerait).
     const wr = await sendTunnelMessage(phone, TEMPLATES.order_otp_wrong_code, []);
     if (!wr.success) console.error(`[whatsapp/inbound] from=${masked} wrong_code reply failed:`, wr.error);
+    return { matched: false, reason: "wrong_code" };
+  }
+
+  // [T0A-1] Code correct mais la commande est-elle déjà verrouillée par un
+  // brute-force antérieur ? On compte aussi la tentative gagnante ; si le plafond
+  // est franchi (≥ 10 essais avant celui-ci), on refuse — l'acheteur renverra un
+  // nouveau code (send-otp remet le compteur à zéro). Repli gracieux si 052 absente.
+  const winAttempt = await registerOtpAttempt(supabase, match.id);
+  if (winAttempt.locked) {
+    console.log(`[whatsapp/inbound] from=${masked} bon code mais plafond d'essais atteint → refus order=${match.id}`);
     return { matched: false, reason: "wrong_code" };
   }
 
@@ -273,12 +321,20 @@ export async function handleInboundReply(
 
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
-    const { error: updErr } = await supabase
+    // [T0D-1] Garde d'idempotence (comme la branche B) : l'UPDATE ne bascule que la 1re fois → le push
+    // vendeur ne part qu'une seule fois par refus (un re-clic ne re-notifie pas).
+    const { data: flipped, error: updErr } = await supabase
       .from("orders")
       .update({ decline_reason: "not_available", updated_at: nowIso })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .or("decline_reason.is.null,decline_reason.neq.not_available")
+      .select("id");
     if (updErr) {
       console.error(`[whatsapp/inbound] from=${masked} db-error (decline not_available) order=${order.id}:`, updErr.message);
+    }
+    // [T0D-1] Notif vendeur « pas dispo » → propose un créneau (motif récupérable).
+    if (!updErr && flipped && flipped.length > 0) {
+      await notifyVendorDecision(supabase, order.user_id, order.id, "not_available");
     }
     console.log(`[whatsapp/inbound] from=${masked} "pas dispo" → MSG 5 + decline_reason=not_available order=${order.id}`);
     return { action: "reschedule", orderId: order.id };
@@ -349,6 +405,7 @@ export async function handleInboundReply(
     if (vendor?.expo_push_token && flipped && flipped.length > 0) {
       const { title, body } = orderDecisionNeeded(vendor.locale, {
         reference: order.id.slice(0, 8).toUpperCase(),
+        motif: "changed_mind",
       });
       const pushResult = await sendExpoPushToOwner(
         { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
@@ -375,12 +432,18 @@ export async function handleInboundReply(
 
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
-    const { error: updErr } = await supabase
+    // [T0D-1] Garde d'idempotence + notif vendeur « moins cher » → propose une remise (motif récupérable).
+    const { data: flipped, error: updErr } = await supabase
       .from("orders")
       .update({ decline_reason: "found_cheaper", updated_at: nowIso })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .or("decline_reason.is.null,decline_reason.neq.found_cheaper")
+      .select("id");
     if (updErr) {
       console.error(`[whatsapp/inbound] from=${masked} db-error (decline found_cheaper) order=${order.id}:`, updErr.message);
+    }
+    if (!updErr && flipped && flipped.length > 0) {
+      await notifyVendorDecision(supabase, order.user_id, order.id, "found_cheaper");
     }
     console.log(`[whatsapp/inbound] from=${masked} "moins cher" → MSG 7 + decline_reason=found_cheaper order=${order.id}`);
     return { action: "objection", orderId: order.id };

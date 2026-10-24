@@ -67,6 +67,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (action === "cancel") {
     const { error } = await supabase.from("orders").update({ status: "cancelled", updated_at: nowIso }).eq("id", id);
     if (error) return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+
+    // [T0D-2] Après « changé d'avis », l'acheteur a reçu « votre commande reste ouverte, le vendeur
+    // revient vers vous » (order_decision_pending). Si le vendeur annule pour de bon, sans ça l'acheteur
+    // attend un vendeur qui ne reviendra jamais. On l'informe via le TEMPLATE APPROUVÉ
+    // order_cancelled_mind_changed (« Compris {{1}}, on annule… {{2}} reste à votre service ») : il était
+    // faux quand on l'envoyait sur un simple refus, il devient VRAI quand le vendeur annule, et un
+    // template passe même hors fenêtre 24h. Template INTOUCHÉ, zéro soumission Meta. Best-effort STRICT :
+    // l'annulation est déjà persistée, un échec d'envoi ne la casse pas.
+    if (client?.phone) {
+      const { data: vendor } = await supabase.from("profiles").select("store_name, full_name").eq("id", order.user_id).maybeSingle();
+      const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
+      const prenom = (client.full_name ?? "").split(" ")[0] ?? "";
+      const r = await sendWhatsAppTemplate(client.phone, TEMPLATES.order_cancelled_mind_changed, [prenom, boutique]);
+      if (!r.success) console.error(`[orders/decision] cancel notify acheteur échec order=${id}:`, r.error);
+    }
     return NextResponse.json({ ok: true, decision: "cancelled" });
   }
 
@@ -91,7 +106,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .maybeSingle();
     const rate = discount_rate ?? (pr?.discount_rate as number | null | undefined) ?? null;
     if (rate == null) return NextResponse.json({ error: "Taux de remise manquant" }, { status: 400 });
-    const dateLimite = formatDzDate(Date.now() + ((pr?.validity_days as number | null | undefined) ?? 3) * 24 * 60 * 60 * 1000);
+    // [T0D-3] Échéance de l'offre : défaut 3 jours (décision Lamine 24/10 : l'acheteur DZ rate les
+    // fenêtres courtes). On garde l'instant précis (expiresMs) pour le persister et le DD-MM-YYYY (DZ)
+    // pour {{4}} du template — même date par construction.
+    const validityDays = (pr?.validity_days as number | null | undefined) ?? 3;
+    const expiresMs = Date.now() + validityDays * 24 * 60 * 60 * 1000;
+    const dateLimite = formatDzDate(expiresMs);
 
     const { data: vendor } = await supabase.from("profiles").select("store_name, full_name").eq("id", order.user_id).maybeSingle();
     const boutique = vendor?.store_name ?? vendor?.full_name ?? "votre vendeur";
@@ -110,6 +130,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .update({ winback_sent_at: nowIso, winback_discount_rate: rate })
       .eq("id", id)
       .is("winback_sent_at", null);
+    // [T0D-3] Persiste l'échéance (refusal-reply refuse la remise sur un « oui » tardif). Écriture
+    // SÉPARÉE best-effort : si la colonne (056) n'est pas appliquée, l'erreur est ignorée → zéro
+    // régression (le gel du taux + winback_sent_at ci-dessus a déjà réussi, l'offre part normalement).
+    const { error: expErr } = await supabase
+      .from("orders")
+      .update({ winback_expires_at: new Date(expiresMs).toISOString() })
+      .eq("id", id);
+    if (expErr) console.warn(`[orders/decision] winback_expires_at non écrit (migration 056 non appliquée ?) order=${id}:`, expErr.message);
     return NextResponse.json({ ok: true, decision: "offer_sent", offer: `-${rate}%`, deadline: dateLimite });
   }
 

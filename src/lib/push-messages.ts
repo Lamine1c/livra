@@ -178,21 +178,34 @@ export function orderCancelled(
 // Règle Lamine 21/09 : un refus acheteur n'annule PLUS la commande. Elle reste vivante,
 // en attente d'une décision du vendeur (relancer/winback OU annuler lui-même). Cette notif
 // remplace l'ancienne « commande annulée » sur la branche « changé d'avis ».
+// [T0D-1] Copy SPÉCIFIQUE au motif : chaque refus appelle une action vendeur différente, et l'ancienne
+// copy unique (« relance-le (offre) ») était fausse sur « changé d'avis » (où decision refuse l'offre).
+//   found_cheaper  → proposer une remise
+//   not_available  → proposer un créneau
+//   changed_mind   → appeler ou annuler
+// motif absent → repli « changed_mind » (rétro-compat).
 export function orderDecisionNeeded(
   locale: string | null | undefined,
-  vars: { reference: string }
+  vars: { reference: string; motif?: "found_cheaper" | "not_available" | "changed_mind" }
 ): PushMessage {
   const l = normalizePushLocale(locale);
+  const motif = vars.motif ?? "changed_mind";
   if (l === "ar") {
-    return {
-      title: "⏳ قرار مطلوب",
-      body: `الزبون متردّد على الطلبية رقم ${vars.reference}. عاود اتصل بيه (عرض) ولا ألغيها — القرار ليك.`,
-    };
+    if (motif === "found_cheaper") {
+      return { title: "💰 الزبون لقى أرخص", body: `الزبون لقى أرخص على الطلبية رقم ${vars.reference}. اقترح عليه تخفيض باش ترجعو.` };
+    }
+    if (motif === "not_available") {
+      return { title: "📅 الزبون ماشي متوفّر", body: `الزبون ماشي متوفّر للطلبية رقم ${vars.reference}. اقترح عليه موعد آخر.` };
+    }
+    return { title: "⏳ قرار مطلوب", body: `الزبون بدّل رايو على الطلبية رقم ${vars.reference}. عيّطلو ولا ألغيها — القرار ليك.` };
   }
-  return {
-    title: "⏳ À toi de décider",
-    body: `Le client hésite sur la commande #${vars.reference}. Relance-le (offre) ou annule — à toi de choisir.`,
-  };
+  if (motif === "found_cheaper") {
+    return { title: "💰 Trouvé moins cher", body: `Le client a trouvé moins cher sur la commande #${vars.reference}. Propose-lui une remise pour le récupérer.` };
+  }
+  if (motif === "not_available") {
+    return { title: "📅 Client indisponible", body: `Le client n'était pas disponible pour la commande #${vars.reference}. Propose-lui un créneau.` };
+  }
+  return { title: "⏳ À toi de décider", body: `Le client a changé d'avis sur la commande #${vars.reference}. Appelle-le ou annule — à toi de choisir.` };
 }
 
 // ── [N50W] Vendeur — retour de l'acheteur APRÈS la relance (offre / créneaux) ──
@@ -241,6 +254,16 @@ export function contactRequested(locale: string | null | undefined, vars: { refe
     return { title: "📞 الزبون يحب اتصال", body: `الزبون يحب المتجر يتصل بيه — الطلبية ${vars.reference}.` };
   }
   return { title: "📞 Le client veut être contacté", body: `Le client demande à être rappelé — commande #${vars.reference}.` };
+}
+
+// [T0D-3] Vendeur — l'acheteur a dit « oui » à l'offre APRÈS son échéance → aucune remise appliquée.
+// Le vendeur sait ainsi que l'offre a expiré et peut recontacter l'acheteur s'il le souhaite.
+export function winbackExpired(locale: string | null | undefined, vars: { reference: string }): PushMessage {
+  const l = normalizePushLocale(locale);
+  if (l === "ar") {
+    return { title: "⌛ العرض فات وقتو", body: `الزبون قبل العرض بعد ما فات وقتو — الطلبية ${vars.reference}. التخفيض ما تطبّقش. تقدر تعاود تتواصل معاه.` };
+  }
+  return { title: "⌛ Offre expirée", body: `Le client a accepté l'offre après son échéance — commande #${vars.reference}. La remise n'a pas été appliquée. Tu peux le recontacter.` };
 }
 
 // ── Vendeur — commande confirmée par le client (confirm-order, OTP WhatsApp) ──
