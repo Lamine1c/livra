@@ -68,7 +68,7 @@ export async function handleRefusalReply(
     // La commande RELANCÉE (winback_sent_at posé) la plus récente de ce numéro.
     const { data: order } = await supabase
       .from("orders")
-      .select("id, reference, user_id, decline_reason, status, total_amount, winback_discount_rate, original_total_amount, client:clients(full_name, phone)")
+      .select("id, reference, user_id, decline_reason, status, total_amount, delivery_fee, winback_discount_rate, original_total_amount, client:clients(full_name, phone)")
       .in("client_id", clientIds)
       .not("winback_sent_at", "is", null)
       .order("winback_sent_at", { ascending: false })
@@ -100,12 +100,15 @@ export async function handleRefusalReply(
       const rate = order.winback_discount_rate as number | null;
       const status = order.status as string | null;
       const total = Number(order.total_amount ?? 0);
+      // [T0C-4] total_amount = frais INCLUS. La remise porte sur le SOUS-TOTAL PRODUITS, jamais sur
+      // les frais de livraison : nouveau = round((total − fee) × (1 − r/100)) + fee.
+      const fee = Number(order.delivery_fee ?? 0);
       const alreadyApplied = order.original_total_amount != null;
       let applied = false;
       let appliedDiscounted = 0;
 
       if (rate != null && !alreadyApplied && status != null && PRE_SHIP_STATUSES.includes(status)) {
-        const discounted = Math.max(0, Math.round(total * (1 - rate / 100)));
+        const discounted = Math.max(0, Math.round((total - fee) * (1 - rate / 100))) + fee;
         // UPDATE atomique + BORNÉ : garde le COD d'origine (historique), applique le remisé, efface le
         // refus. Le WHERE (statut pré-expédition + original_total_amount IS NULL) = idempotence + garde
         // « jamais de remise après départ transporteur ».
