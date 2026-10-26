@@ -32,6 +32,14 @@ export function waLink(token: string): string {
   return `https://wa.me/${WA_INBOUND_NUMBER}?text=` + encodeURIComponent(`LIVRA ${token}`);
 }
 
+// [T2-2] Le numéro WhatsApp de LIVRA lui-même ne peut être ni un acheteur ni un livreur : Meta refuse
+// (#100, destinataire = expéditeur) et le test casse sans message clair. Comparaison sur la forme
+// normalisée des DEUX côtés (un « 0652208485 »/« 652208485 » saisi doit matcher « 213652208485 »).
+export function isLivraWhatsAppNumber(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  return normalizePhoneNumber(phone) === normalizePhoneNumber(WA_INBOUND_NUMBER);
+}
+
 function hashOtp(otp: string, phone: string): string {
   return crypto.createHash("sha256").update(otp + phone).digest("hex");
 }

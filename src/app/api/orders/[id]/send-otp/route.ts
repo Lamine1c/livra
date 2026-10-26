@@ -52,7 +52,11 @@ export async function POST(
 
   const res = await sendOrderConfirmationOtp(supabase, id);
   if (!res.ok) {
-    return NextResponse.json({ error: res.error }, { status: res.status });
+    // [T2-2/T2-3] error_code (LIVRA_NUMBER / WA_UNREACHABLE) remonté tel quel pour un message mobile clair.
+    return NextResponse.json(
+      res.error_code ? { error_code: res.error_code, error: res.error } : { error: res.error },
+      { status: res.status }
+    );
   }
   return NextResponse.json({ maskedPhone: res.maskedPhone });
 }

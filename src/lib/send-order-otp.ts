@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateOTP, sendWhatsAppTemplate, normalizePhoneNumber } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
+import { isLivraWhatsAppNumber } from "@/lib/driver-registration";
 
 export type SendOrderOtpResult =
   | { ok: true; maskedPhone: string }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; error_code?: string };
 
 // [T1-3] Cœur de l'envoi MSG 1 (order_confirmation_request) + génération/persistance de l'OTP, avec
 // le `total_amount` COURANT lu en base au moment de l'envoi. Extrait de /api/orders/[id]/send-otp pour
@@ -35,6 +36,12 @@ export async function sendOrderConfirmationOtp(
     | null
     | undefined;
   if (!client?.phone) return { ok: false, status: 400, error: "Client introuvable" };
+
+  // [T2-2] Le numéro de LIVRA ne peut pas être celui de l'acheteur (Meta refuse #100 destinataire=expéditeur,
+  // le test cassait sans message clair). Refus AVANT toute écriture OTP → rien n'est généré/persisté.
+  if (isLivraWhatsAppNumber(client.phone)) {
+    return { ok: false, status: 400, error_code: "LIVRA_NUMBER", error: "Ce numéro est celui de LIVRA, mets le numéro du client" };
+  }
 
   // Idempotence : réutilise un code ACTIF (non expiré, non vérifié) au lieu d'en régénérer un — sinon
   // un renvoi (double-clic / auto-envoi winback après un envoi vendeur) invaliderait le code déjà reçu.

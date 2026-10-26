@@ -6,7 +6,7 @@ import {
   normalizePhoneNumber,
   sendDriverOtpWhatsApp,
 } from "@/lib/whatsapp";
-import { generateWaToken, waTokenExpiry, waLink } from "@/lib/driver-registration";
+import { generateWaToken, waTokenExpiry, waLink, isLivraWhatsAppNumber } from "@/lib/driver-registration";
 import { z } from "zod";
 import { observeBody } from "@/lib/zod-observe";
 
@@ -63,6 +63,15 @@ export async function POST(req: NextRequest) {
 
   // 2. Normaliser le numéro
   const normalizedPhone = normalizePhoneNumber(whatsapp);
+
+  // [T2-2] Le numéro de LIVRA ne peut pas s'inscrire comme livreur (Meta refuse #100 destinataire=expéditeur,
+  // le test cassait sans message clair). Refus AVANT tout upsert, pour les DEUX flux (wa_flow et legacy).
+  if (isLivraWhatsAppNumber(normalizedPhone)) {
+    return NextResponse.json(
+      { error_code: "LIVRA_NUMBER", error: "Ce numéro est celui de LIVRA, utilise ton propre numéro WhatsApp" },
+      { status: 400 }
+    );
+  }
 
   const supabase = createServiceClient();
 
