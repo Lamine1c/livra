@@ -32,6 +32,14 @@ export function waLink(token: string): string {
   return `https://wa.me/${WA_INBOUND_NUMBER}?text=` + encodeURIComponent(`LIVRA ${token}`);
 }
 
+// [T2-2] Le numéro WhatsApp de LIVRA lui-même ne peut être ni un acheteur ni un livreur : Meta refuse
+// (#100, destinataire = expéditeur) et le test casse sans message clair. Comparaison sur la forme
+// normalisée des DEUX côtés (un « 0652208485 »/« 652208485 » saisi doit matcher « 213652208485 »).
+export function isLivraWhatsAppNumber(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  return normalizePhoneNumber(phone) === normalizePhoneNumber(WA_INBOUND_NUMBER);
+}
+
 function hashOtp(otp: string, phone: string): string {
   return crypto.createHash("sha256").update(otp + phone).digest("hex");
 }
@@ -92,7 +100,11 @@ type PendingReg = {
 export async function handleDriverInboundRegistration(
   supabase: SupabaseClient,
   fromPhone: string,
-  body: string
+  body: string,
+  // [T1-2] tokenOnly : ne retrouver l'inscription QUE par token LIVRA (jamais par numéro). Utilisé
+  // pour donner au token LIVRA la préséance sur l'OTP acheteur (appel AVANT hasActiveBuyerOtp). Le
+  // fallback PAR NUMÉRO reste réservé à l'appel normal (après la préséance acheteur).
+  opts: { tokenOnly?: boolean } = {}
 ): Promise<{ handled: boolean }> {
   const incoming = normalizePhoneNumber(fromPhone);
   const nowIso = new Date().toISOString();
@@ -113,7 +125,7 @@ export async function handleDriverInboundRegistration(
       .maybeSingle();
     reg = (data as PendingReg | null) ?? null;
   }
-  if (!reg) {
+  if (!reg && !opts.tokenOnly) {
     const { data } = await supabase
       .from("driver_otps")
       .select(cols)
@@ -123,7 +135,7 @@ export async function handleDriverInboundRegistration(
       .maybeSingle();
     reg = (data as PendingReg | null) ?? null;
   }
-  if (!reg) return { handled: false }; // pas une inscription → tunnel acheteur
+  if (!reg) return { handled: false }; // pas une inscription (ce token) → tunnel acheteur
 
   // 2. Anti-spam durable : max 3 envois / numéro / heure (fenêtre fixe).
   const windowStartMs = reg.wa_send_window_start ? new Date(reg.wa_send_window_start).getTime() : 0;

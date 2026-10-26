@@ -138,15 +138,16 @@ export async function POST(req: NextRequest) {
       supabase.from("drivers").select("prenom").eq("id", driverId).single(),
       supabase.from("profiles").select("expo_push_token, locale").eq("id", order.user_id).single(),
     ]);
-    if (vendorPush?.expo_push_token) {
+    // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+    {
       const reference = order.reference ?? orderId.slice(0, 8).toUpperCase();
-      const { title, body: pushBody } = driverCancelledDelivery(vendorPush.locale, {
+      const { title, body: pushBody } = driverCancelledDelivery(vendorPush?.locale, {
         driverName: driver?.prenom ?? "Le livreur",
         reference,
-        reasonLabel: refusalReasonLabel(vendorPush.locale, reason),
+        reasonLabel: refusalReasonLabel(vendorPush?.locale, reason),
       });
       const pushResult = await sendExpoPushToOwner(
-        { type: "profile", id: order.user_id, fallbackToken: vendorPush.expo_push_token },
+        { type: "profile", id: order.user_id, fallbackToken: vendorPush?.expo_push_token ?? null },
         title, pushBody, { orderId, type: "delivery_cancelled_by_driver" }
       );
       if (!pushResult.success) {

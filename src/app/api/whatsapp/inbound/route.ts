@@ -195,6 +195,16 @@ export async function POST(req: NextRequest) {
           continue; // le tunnel classique NE voit jamais cette réponse
         }
 
+        // [T1-2] Token LIVRA PRIORITAIRE sur l'OTP acheteur. Depuis T0A l'OTP acheteur vit 24h →
+        // un livreur qui a AUSSI une commande en cours ne recevait pas son code d'inscription
+        // pendant 24h (vécu au gate : « LIVRA D7DGN81 » resté sans réponse). Si le corps matche un
+        // token LIVRA correspondant à une inscription EN ATTENTE (non expirée) → inscription livreur
+        // D'ABORD, quel que soit l'OTP acheteur. Sans token (ou token inconnu) → handled=false, on
+        // retombe sur la préséance acheteur ci-dessous (le fallback PAR NUMÉRO reste derrière elle).
+        // Message sans token « LIVRA … » → zéro requête DB (early return sur l'absence de match).
+        const tokenReg = await handleDriverInboundRegistration(supabase, m.from, m.body, { tokenOnly: true });
+        if (tokenReg.handled) continue;
+
         // N6 · WAME-INVERSE — préséance (décision Claudy) : un OTP ACHETEUR actif pour ce numéro
         // gagne toujours (tunnel acheteur). Sinon on tente la branche INSCRIPTION LIVREUR (message
         // « LIVRA <token> » → envoi du code). handled=true → traité côté livreur, on NE retombe PAS

@@ -215,8 +215,8 @@ async function handleEmailReceived(
           .select("expo_push_token, locale")
           .eq("id", userId)
           .single();
-        const token = profile?.expo_push_token as string | undefined;
-        if (!token) return;
+        // [T2-4] Plus de garde legacy : on tente le multi-device (push_tokens) même colonne NULL.
+        const token = (profile?.expo_push_token as string | null | undefined) ?? null;
         const l = normalizePushLocale(profile?.locale as string | null | undefined);
         const title = l === "ar" ? "📧 تم اكتشاف متجر" : "📧 Boutique détectée";
         const body =

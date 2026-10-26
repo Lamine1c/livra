@@ -77,11 +77,12 @@ export async function POST(
     .eq("id", delivery.driver_id)
     .maybeSingle();
 
-  if (driver?.expo_push_token) {
+  // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+  {
     const reference = order.reference ?? `#${id.slice(0, 8).toUpperCase()}`;
-    const { title, body } = deliveryCancelled(driver.locale, { reference });
+    const { title, body } = deliveryCancelled(driver?.locale, { reference });
     const pushResult = await sendExpoPushToOwner(
-      { type: "driver", id: delivery.driver_id, fallbackToken: driver.expo_push_token },
+      { type: "driver", id: delivery.driver_id, fallbackToken: driver?.expo_push_token ?? null },
       title, body, { orderId: id, deliveryId: delivery.id, type: "delivery_cancelled" }
     );
     if (!pushResult.success) {

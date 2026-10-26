@@ -11,9 +11,10 @@ import { TEMPLATES } from "@/lib/whatsapp-templates";
 // Auth : JWT vendeur + ownership user_id (client RLS). Idempotence : 1 seul ENVOI par commande (winback_sent_at).
 //
 // Motifs / actions :
-//  - `found_cheaper` → action "offer" : envoie order_winback_offer (TEMPLATE approuvé, 4 var, ZÉRO
-//    resoumission Meta). {{3}}=offre (« -10% »/« -15% », choix vendeur), {{4}}=date limite (validity_days).
-//    Un template délivre EN ET HORS fenêtre 24h → toujours envoyé.
+//  - `found_cheaper` OU `changed_mind` → action "offer" : envoie order_winback_offer (TEMPLATE approuvé,
+//    4 var, ZÉRO resoumission Meta). {{3}}=offre (« -10% »/« -15% », choix vendeur), {{4}}=date limite
+//    (validity_days). Un template délivre EN ET HORS fenêtre 24h → toujours envoyé. [T1-4] changed_mind
+//    accepté depuis le 26/10 (le vendeur décide) ; repli des défauts sur found_cheaper (pas de prepared_response dédiée).
 //  - `not_available` → action "slots" : 3 boutons INTERACTIFS (Demain/Après-demain/Contactez) via
 //    sendWhatsAppInteractiveButtons (message de SESSION). HORS FENÊTRE 24h → on N'ENVOIE RIEN et AUCUN
 //    repli template (décision Lamine) : on répond `{ok:false, reason:"out_of_window"}` → le mobile invite
@@ -92,18 +93,38 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Marque l'ENVOI (idempotence) — appelée après un envoi réussi, garde .is(null) contre les races.
   const markSent = () => supabase.from("orders").update({ winback_sent_at: nowIso }).eq("id", id).is("winback_sent_at", null);
 
-  // ─── OFFER (found_cheaper) → order_winback_offer (template, délivre in/out fenêtre) ───
+  // ─── OFFER (found_cheaper OU changed_mind) → order_winback_offer (template, délivre in/out fenêtre) ───
   if (action === "offer") {
-    if (reason !== "found_cheaper") return NextResponse.json({ error: "Action incohérente avec le motif de refus" }, { status: 409 });
+    // [T1-4] Décision Lamine 26/10 : « le vendeur décide, une vente sauvée vaut plus qu'une règle ».
+    // L'offre −% est désormais autorisée AUSSI sur « changé d'avis » (changed_mind), pas seulement sur
+    // « moins cher » (found_cheaper). Le template order_winback_offer est NEUTRE (offre spéciale, aucune
+    // mention de concurrence/prix) → convient aux deux motifs sans resoumission Meta.
+    if (reason !== "found_cheaper" && reason !== "changed_mind") {
+      return NextResponse.json({ error: "Action incohérente avec le motif de refus" }, { status: 409 });
+    }
 
-    // Défauts pré-remplis du vendeur (prepared_responses) ; le body peut écraser le taux.
-    const { data: pr } = await supabase
+    // [T1-4] Défauts pré-remplis du vendeur (prepared_responses) ; le body peut écraser le taux. On lit
+    // la réponse préparée de CE motif ; si rien (cas changed_mind, qui n'a pas de prepared_response dédiée
+    // — l'enum de /vendor/prepared-responses ne couvre que not_available/found_cheaper), on retombe sur
+    // les défauts found_cheaper.
+    const { data: prForReason } = await supabase
       .from("prepared_responses")
       .select("discount_rate, validity_days")
       .eq("user_id", order.user_id)
-      .eq("trigger_reason", "found_cheaper")
+      .eq("trigger_reason", reason)
       .eq("active", true)
       .maybeSingle();
+    let pr = prForReason;
+    if (!pr && reason !== "found_cheaper") {
+      const { data: prFallback } = await supabase
+        .from("prepared_responses")
+        .select("discount_rate, validity_days")
+        .eq("user_id", order.user_id)
+        .eq("trigger_reason", "found_cheaper")
+        .eq("active", true)
+        .maybeSingle();
+      pr = prFallback;
+    }
     const rate = discount_rate ?? (pr?.discount_rate as number | null | undefined) ?? null;
     if (rate == null) return NextResponse.json({ error: "Taux de remise manquant" }, { status: 400 });
     // [T0D-3] Échéance de l'offre : défaut 3 jours (décision Lamine 24/10 : l'acheteur DZ rate les

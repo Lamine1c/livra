@@ -51,3 +51,47 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+// [T1-1] Déconnexion mobile → efface le token Expo pour que le compte ne reçoive plus de notifs.
+// MÊME auth que le POST (getAuthenticatedUser). Body optionnel { token? } : si fourni, n'efface
+// que si le token stocké == ce token (un autre appareil garde le sien) ; sinon efface le token du
+// compte authentifié. Idempotent → 200 { ok: true } même si rien à effacer.
+export async function DELETE(req: NextRequest) {
+  const { user, error: authError } = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json({ error: authError ?? "Non authentifié" }, { status: 401 });
+  }
+
+  // Body facultatif : un DELETE peut arriver sans corps.
+  let body: { token?: unknown } = {};
+  try {
+    const raw = await req.text();
+    if (raw.trim()) body = JSON.parse(raw);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  observeBody("profile/push-token:DELETE", z.object({ token: z.string().nullable().optional() }).passthrough(), body);
+
+  const token = typeof body.token === "string" ? body.token.trim() : null;
+
+  const supabase = createServiceClient();
+
+  // Colonne unique (source fallback) : efface uniquement si elle vaut CE token (ou si aucun token fourni).
+  let profileUpdate = supabase.from("profiles").update({ expo_push_token: null }).eq("id", user.id);
+  if (token) profileUpdate = profileUpdate.eq("expo_push_token", token);
+  const { error } = await profileUpdate;
+  if (error) {
+    console.error("[push-token] DELETE update failed:", error);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+
+  // Multi-device : retire la ligne de CE token (ou toutes celles du compte). Table absente → ignoré.
+  let del = supabase.from("push_tokens").delete().eq("owner_type", "profile").eq("owner_id", user.id);
+  if (token) del = del.eq("token", token);
+  const { error: ptErr } = await del;
+  if (ptErr && !/42P01|PGRST205|does not exist|Could not find the table/i.test(`${ptErr.code ?? ""} ${ptErr.message ?? ""}`)) {
+    console.error("[push-token] DELETE push_tokens:", ptErr.message);
+  }
+
+  return NextResponse.json({ ok: true });
+}

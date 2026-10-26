@@ -162,12 +162,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Push notif to vendor — delivery completed
-    if (vendor?.expo_push_token) {
-      const { title, body } = orderDelivered(vendor.locale, {
+    // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+    {
+      const { title, body } = orderDelivered(vendor?.locale, {
         reference: orderId.slice(0, 8).toUpperCase(),
       });
       const pushResult = await sendExpoPushToOwner(
-        { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
+        { type: "profile", id: order.user_id, fallbackToken: vendor?.expo_push_token ?? null },
         title, body, { orderId, type: "delivery_completed" }
       );
       if (!pushResult.success) {

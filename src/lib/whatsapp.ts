@@ -92,6 +92,19 @@ export function isOutOfWindow(code?: number): boolean {
   return code != null && OUT_OF_WINDOW_CODES.has(code);
 }
 
+// [T2-3] Codes Meta signalant que le DESTINATAIRE ne peut pas recevoir de WhatsApp (≠ fenêtre fermée) :
+//  - 131026 « Message Undeliverable » : code CANONIQUE — le numéro n'est pas sur WhatsApp, ou l'acheteur
+//    n'a pas accepté les CGU WhatsApp, ou l'appareil est injoignable (doc Meta Cloud API error codes).
+//  - 131030 « Recipient phone number not in allowed list » : destinataire hors liste autorisée (numéro de
+//    prod en mode dev/sandbox) → également « ne reçoit pas » dans cette config.
+// On NE mappe PAS #100 (« Invalid parameter » générique : mapper tout 100 mislabellerait une erreur de
+// template/variable en « numéro injoignable »). Le seul cas #100 lié au destinataire — envoi au numéro
+// de LIVRA (recipient = sender) — est déjà bloqué EN AMONT par T2-2, donc n'atteint jamais ce chemin.
+const WA_UNREACHABLE_CODES = new Set([131026, 131030]);
+export function isUnreachableRecipient(code?: number): boolean {
+  return code != null && WA_UNREACHABLE_CODES.has(code);
+}
+
 async function sendMetaText(to: string, message: string): Promise<{ ok: boolean; error?: string; code?: number }> {
   return postToMeta(buildTextPayload(to, message), "text");
 }
@@ -103,11 +116,12 @@ export async function sendWhatsAppTemplate(
   phone: string,
   template: WhatsAppTemplate,
   variables: string[]
-): Promise<{ success: boolean; error?: string; wamid?: string }> {
+): Promise<{ success: boolean; error?: string; code?: number; wamid?: string }> {
   const to = normalizePhoneNumber(phone);
   const payload = buildTemplatePayload(to, template, variables);
   const result = await postToMeta(payload, `template:${template.name}`);
-  return { success: result.ok, error: result.error, wamid: result.wamid };
+  // [T2-3] `code` (code d'erreur Meta) remonté pour distinguer « numéro injoignable » (422) d'un échec 502.
+  return { success: result.ok, error: result.error, code: result.code, wamid: result.wamid };
 }
 
 // ─── SEND OTP INSCRIPTION LIVREUR (message texte libre) ──
