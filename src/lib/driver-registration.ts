@@ -92,7 +92,11 @@ type PendingReg = {
 export async function handleDriverInboundRegistration(
   supabase: SupabaseClient,
   fromPhone: string,
-  body: string
+  body: string,
+  // [T1-2] tokenOnly : ne retrouver l'inscription QUE par token LIVRA (jamais par numéro). Utilisé
+  // pour donner au token LIVRA la préséance sur l'OTP acheteur (appel AVANT hasActiveBuyerOtp). Le
+  // fallback PAR NUMÉRO reste réservé à l'appel normal (après la préséance acheteur).
+  opts: { tokenOnly?: boolean } = {}
 ): Promise<{ handled: boolean }> {
   const incoming = normalizePhoneNumber(fromPhone);
   const nowIso = new Date().toISOString();
@@ -113,7 +117,7 @@ export async function handleDriverInboundRegistration(
       .maybeSingle();
     reg = (data as PendingReg | null) ?? null;
   }
-  if (!reg) {
+  if (!reg && !opts.tokenOnly) {
     const { data } = await supabase
       .from("driver_otps")
       .select(cols)
@@ -123,7 +127,7 @@ export async function handleDriverInboundRegistration(
       .maybeSingle();
     reg = (data as PendingReg | null) ?? null;
   }
-  if (!reg) return { handled: false }; // pas une inscription → tunnel acheteur
+  if (!reg) return { handled: false }; // pas une inscription (ce token) → tunnel acheteur
 
   // 2. Anti-spam durable : max 3 envois / numéro / heure (fenêtre fixe).
   const windowStartMs = reg.wa_send_window_start ? new Date(reg.wa_send_window_start).getTime() : 0;
