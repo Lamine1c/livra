@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateOTP, sendWhatsAppTemplate, normalizePhoneNumber } from "@/lib/whatsapp";
+import { generateOTP, sendWhatsAppTemplate, normalizePhoneNumber, isUnreachableRecipient } from "@/lib/whatsapp";
 import { TEMPLATES } from "@/lib/whatsapp-templates";
 import { isLivraWhatsAppNumber } from "@/lib/driver-registration";
 
@@ -108,7 +108,14 @@ export async function sendOrderConfirmationOtp(
         totalTxt,
       ]);
 
-  if (!result.success) return { ok: false, status: 502, error: result.error ?? "Échec envoi WhatsApp" };
+  if (!result.success) {
+    // [T2-3] Numéro qui ne reçoit pas WhatsApp (code Meta dédié) → 422 WA_UNREACHABLE (message mobile clair) ;
+    // tout autre échec reste un 502 générique.
+    if (isUnreachableRecipient(result.code)) {
+      return { ok: false, status: 422, error_code: "WA_UNREACHABLE", error: "Ce numéro ne peut pas recevoir WhatsApp" };
+    }
+    return { ok: false, status: 502, error: result.error ?? "Échec envoi WhatsApp" };
+  }
 
   const normalized = normalizePhoneNumber(client.phone);
   const masked = "+" + normalized.slice(0, 5) + "XXXXX" + normalized.slice(-2);
