@@ -158,13 +158,14 @@ export async function POST(req: NextRequest) {
       .eq("id", order.user_id)
       .single();
 
-    if (vendorPush?.expo_push_token) {
-      const { title, body } = deliveryStarted(vendorPush.locale, {
+    // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+    {
+      const { title, body } = deliveryStarted(vendorPush?.locale, {
         driverName: driverPrenom,
         reference: orderId.slice(0, 8).toUpperCase(),
       });
       const pushResult = await sendExpoPushToOwner(
-        { type: "profile", id: order.user_id, fallbackToken: vendorPush.expo_push_token },
+        { type: "profile", id: order.user_id, fallbackToken: vendorPush?.expo_push_token ?? null },
         title, body, { orderId, type: "delivery_started" }
       );
       if (!pushResult.success) {

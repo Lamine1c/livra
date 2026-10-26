@@ -204,9 +204,10 @@ export async function handleRefusalReply(
       outcome = "contact_requested";
     }
 
-    if (vendor?.expo_push_token) {
+    // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+    {
       const r = await sendExpoPushToOwner(
-        { type: "profile", id: order.user_id as string, fallbackToken: vendor.expo_push_token as string },
+        { type: "profile", id: order.user_id as string, fallbackToken: (vendor?.expo_push_token as string | null | undefined) ?? null },
         msg.title,
         msg.body,
         { orderId, type: "refusal_reply" }

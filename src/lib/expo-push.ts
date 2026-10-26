@@ -147,7 +147,13 @@ export async function sendExpoPushToOwner(
   if (tokens.length === 0 && owner.fallbackToken) tokens = [owner.fallbackToken];
   // Dédup (le legacy peut aussi être présent dans push_tokens une fois 043 appliquée).
   tokens = Array.from(new Set(tokens));
-  if (tokens.length === 0) return { success: false, sent: 0, error: "No push token" };
+  if (tokens.length === 0) {
+    // [T2-4] Plus de silence : un owner sans AUCUN token (ni multi-device ni legacy) est loggé une ligne.
+    // id masqué (8 1ers car. de l'UUID) — jamais de PII. Remplace les gardes `if (x?.expo_push_token)`
+    // supprimés aux sites d'appel (ils court-circuitaient le lookup multi-device).
+    console.warn(`[expo-push] aucun token pour owner ${owner.type}:${owner.id.slice(0, 8)}… → push ignoré`);
+    return { success: false, sent: 0, error: "No push token" };
+  }
 
   let sent = 0;
   const dead: string[] = [];

@@ -69,13 +69,13 @@ async function notifyVendorDecision(
     .select("expo_push_token, locale")
     .eq("id", userId)
     .single();
-  if (!vendor?.expo_push_token) return;
-  const { title, body } = orderDecisionNeeded(vendor.locale, {
+  // [T2-4] Plus de garde legacy : on tente le multi-device (push_tokens) même si la colonne est NULL.
+  const { title, body } = orderDecisionNeeded(vendor?.locale, {
     reference: orderId.slice(0, 8).toUpperCase(),
     motif,
   });
   const r = await sendExpoPushToOwner(
-    { type: "profile", id: userId, fallbackToken: vendor.expo_push_token },
+    { type: "profile", id: userId, fallbackToken: vendor?.expo_push_token ?? null },
     title, body, { orderId, type: "order_decision_needed" }
   );
   if (!r.success) console.error(`[whatsapp/inbound] push vendeur (decision ${motif}) failed:`, r.error);
@@ -196,12 +196,13 @@ export async function confirmOrderByInboundCode(
     .select("expo_push_token, locale")
     .eq("id", match.user_id)
     .single();
-  if (vendor?.expo_push_token) {
-    const { title, body: pushBody } = orderConfirmed(vendor.locale, {
+  // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+  {
+    const { title, body: pushBody } = orderConfirmed(vendor?.locale, {
       reference: match.id.slice(0, 8).toUpperCase(),
     });
     const pushResult = await sendExpoPushToOwner(
-      { type: "profile", id: match.user_id, fallbackToken: vendor.expo_push_token },
+      { type: "profile", id: match.user_id, fallbackToken: vendor?.expo_push_token ?? null },
       title, pushBody, { orderId: match.id, type: "order_confirmed" }
     );
     if (!pushResult.success) console.error(`[whatsapp/inbound] from=${masked} push vendeur (confirmed) failed:`, pushResult.error);
@@ -402,13 +403,14 @@ export async function handleInboundReply(
 
     // Push vendeur « décision attendue » — UNE SEULE FOIS (gaté sur flipped, comme l'insight) :
     // un re-clic acheteur ne re-spamme pas le vendeur.
-    if (vendor?.expo_push_token && flipped && flipped.length > 0) {
-      const { title, body } = orderDecisionNeeded(vendor.locale, {
+    // [T2-4] Garde legacy `vendor?.expo_push_token` retirée ; on conserve l'idempotence (flipped).
+    if (flipped && flipped.length > 0) {
+      const { title, body } = orderDecisionNeeded(vendor?.locale, {
         reference: order.id.slice(0, 8).toUpperCase(),
         motif: "changed_mind",
       });
       const pushResult = await sendExpoPushToOwner(
-        { type: "profile", id: order.user_id, fallbackToken: vendor.expo_push_token },
+        { type: "profile", id: order.user_id, fallbackToken: vendor?.expo_push_token ?? null },
         title, body, { orderId: order.id, type: "order_decision_needed" }
       );
       if (!pushResult.success) console.error("[whatsapp/inbound] expo push (decision_needed) failed:", pushResult.error);

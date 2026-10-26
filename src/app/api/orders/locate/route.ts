@@ -133,13 +133,14 @@ export async function POST(req: NextRequest) {
       .eq("id", orderBefore.user_id)
       .single();
 
-    if (vendor?.expo_push_token) {
+    // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+    {
       const reference = result.orderId.slice(0, 8).toUpperCase();
       const { title, body } = wasAlreadyLocated
-        ? buyerLocationUpdated(vendor.locale, { reference })
-        : buyerLocationConfirmed(vendor.locale, { reference });
+        ? buyerLocationUpdated(vendor?.locale, { reference })
+        : buyerLocationConfirmed(vendor?.locale, { reference });
       const pushResult = await sendExpoPushToOwner(
-        { type: "profile", id: orderBefore.user_id, fallbackToken: vendor.expo_push_token },
+        { type: "profile", id: orderBefore.user_id, fallbackToken: vendor?.expo_push_token ?? null },
         title, body, {
           orderId: result.orderId,
           type: wasAlreadyLocated ? "buyer_location_updated" : "buyer_location_confirmed",
@@ -177,10 +178,13 @@ export async function POST(req: NextRequest) {
         .eq("id", activeDelivery.driver_id)
         .maybeSingle();
 
-      if (driver?.expo_push_token) {
-        const { title, body } = buyerLocationUpdatedDriver(driver.locale as string | null);
+      // [T2-4] Garde legacy retirée (bloc scopé) : l'alerte livreur passe par le multi-device même si
+      // la colonne legacy est NULL (c'était LE trou signalé en T2-1 : un 2e appareil déconnecté mettait
+      // drivers.expo_push_token à NULL et le 1er appareil, encore dans push_tokens, ne recevait plus rien).
+      {
+        const { title, body } = buyerLocationUpdatedDriver((driver?.locale as string | null) ?? null);
         const r = await sendExpoPushToOwner(
-          { type: "driver", id: activeDelivery.driver_id, fallbackToken: driver.expo_push_token },
+          { type: "driver", id: activeDelivery.driver_id, fallbackToken: driver?.expo_push_token ?? null },
           title, body, {
             orderId: result.orderId,
             type: "buyer_location_updated_driver",

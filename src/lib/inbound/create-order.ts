@@ -157,9 +157,10 @@ export async function createInboundOrder(
     .select("expo_push_token, locale")
     .eq("id", userId)
     .single();
-  if (profile?.expo_push_token) {
-    const { title, body } = inboundOrder(profile.locale, { clientName: input.buyer.full_name });
-    const pushToken = profile.expo_push_token as string;
+  // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+  {
+    const { title, body } = inboundOrder(profile?.locale, { clientName: input.buyer.full_name });
+    const pushToken = (profile?.expo_push_token as string | null | undefined) ?? null;
     const orderId = order.id as string;
     after(async () => {
       const r = await sendExpoPushToOwner(

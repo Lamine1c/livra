@@ -73,11 +73,12 @@ export async function createOrderFromLead(
     .eq("id", userId)
     .single();
 
-  if (profile?.expo_push_token) {
-    const { title, body } = metaLead(profile.locale, {
+  // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
+  {
+    const { title, body } = metaLead(profile?.locale, {
       clientName: lead.name ?? "Nouveau client",
     });
-    const pushToken = profile.expo_push_token;
+    const pushToken = profile?.expo_push_token ?? null;
     const orderId = order.id;
     after(async () => {
       const r = await sendExpoPushToOwner(
