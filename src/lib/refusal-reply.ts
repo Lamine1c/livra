@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhoneNumber, sendWhatsAppNotification, isOutOfWindow } from "@/lib/whatsapp";
 import { sendExpoPushToOwner } from "@/lib/expo-push";
 import { winbackAccepted, winbackAcceptedLate, winbackDeclined, slotChosen, contactRequested, winbackExpired } from "@/lib/push-messages";
+import { sendOrderConfirmationOtp } from "@/lib/send-order-otp";
 import {
   TEMPLATES,
   renderTemplateText,
@@ -100,6 +101,9 @@ export async function handleRefusalReply(
 
     let msg: { title: string; body: string };
     let outcome: string;
+    // [T1-3] Déclenche l'auto-envoi de l'OTP de confirmation (MSG 1) uniquement sur un winback ACCEPTÉ
+    // et commande NON expédiée (remise appliquée OU pas de changement de prix). Reste false sinon.
+    let autoSendOtp = false;
 
     if (payload === WINBACK_YES_PAYLOAD) {
       // [G3W] L'acheteur ACCEPTE l'offre → appliquer la remise GELÉE (winback_discount_rate) au COD,
@@ -172,6 +176,7 @@ export async function handleRefusalReply(
       } else if (applied) {
         msg = winbackAccepted(locale, { reference });
         outcome = `winback_accepted_discount_${rate}_total_${appliedDiscounted}`;
+        autoSendOtp = true; // remise appliquée, pré-expédition par construction → on confirme direct
       } else {
         // Commande déjà partie (shipped+) OU déjà appliquée OU pas de taux gelé : la vente reprend
         // (on efface le refus) MAIS on NE TOUCHE PAS au COD. Le vendeur est prévenu de régulariser
@@ -180,6 +185,7 @@ export async function handleRefusalReply(
         const shipped = status != null && !PRE_SHIP_STATUSES.includes(status);
         msg = shipped ? winbackAcceptedLate(locale, { reference }) : winbackAccepted(locale, { reference });
         outcome = shipped ? "winback_accepted_shipped_no_discount" : "winback_accepted_no_price_change";
+        autoSendOtp = !shipped; // non expédiée → la vente reprend, on confirme ; shipped → surtout pas
       }
     } else if (payload === SLOT_TOMORROW_PAYLOAD || payload === SLOT_DAY_AFTER_PAYLOAD) {
       // Créneau choisi (pas de remise) : la commande REPART, efface le refus (statut intact).
@@ -207,6 +213,16 @@ export async function handleRefusalReply(
       );
       if (!r.success) console.error("[refusal-reply] push vendeur échec:", r.error);
     }
+
+    // [T1-3] Le « oui » à l'offre DÉCLENCHE l'OTP de confirmation (MSG 1) avec le total_amount COURANT,
+    // au lieu que le vendeur retape « Envoyer la demande » (qui renvoyait l'ANCIEN prix). Le helper pose
+    // otp_sent_at → le mobile sait « code déjà envoyé » et masque le bouton d'envoi. Best-effort : un
+    // échec d'envoi ne casse PAS la reprise de la vente déjà persistée (remise/decline_reason).
+    if (autoSendOtp) {
+      const otpRes = await sendOrderConfirmationOtp(supabase, orderId);
+      if (!otpRes.ok) console.error(`[refusal-reply] auto-envoi OTP échec order=${orderId}:`, otpRes.error);
+    }
+
     console.log(`[whatsapp/inbound] refusal_reply outcome=${outcome} order=${orderId}`);
   } catch (e) {
     console.error("[refusal-reply] exception (best-effort, ignorée):", e);
