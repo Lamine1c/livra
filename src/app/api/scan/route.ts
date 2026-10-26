@@ -137,6 +137,9 @@ export async function GET(req: NextRequest) {
       buyer_phone: client?.phone ?? null,
       buyer_address: dest.address,
       buyer_wilaya: dest.wilaya,
+      // [T1-5] V8-3 n'affichait que la wilaya → on expose AUSSI la commune (même source qui fait foi :
+      // snapshot ship_commune sinon clients.commune, via orderDeliveryAddress). Rien d'autre changé.
+      buyer_commune: dest.commune,
     },
     status_history: statusHistory ?? [],
     vendorName: vendor?.store_name ?? vendor?.full_name ?? "Vendeur LIVRA",
