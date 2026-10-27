@@ -50,6 +50,16 @@ export function isRefusalReplyPayload(payload: string | null | undefined): boole
   return payload != null && REFUSAL_PAYLOADS.has(payload);
 }
 
+// [T3-3] Date calendaire ALGER (UTC+1, pas de DST) à J+days, au format ISO YYYY-MM-DD (colonne `date`).
+// Même convention de fuseau que les autres agrégats du repo (décalage +1h puis Date.UTC).
+function algDatePlusDays(days: number): string {
+  const alg = new Date(Date.now() + 60 * 60 * 1000);
+  const ms = Date.UTC(alg.getUTCFullYear(), alg.getUTCMonth(), alg.getUTCDate()) + days * 24 * 60 * 60 * 1000;
+  const d = new Date(ms);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+}
+
 // Toujours "consommé" (return, jamais de fall-through vers le tunnel) : ces payloads n'ont de sens que
 // pour la boucle de refus. Best-effort : ne throw jamais (l'appelant est le webhook, hors chemin critique).
 export async function handleRefusalReply(
@@ -104,6 +114,8 @@ export async function handleRefusalReply(
     // [T1-3] Déclenche l'auto-envoi de l'OTP de confirmation (MSG 1) uniquement sur un winback ACCEPTÉ
     // et commande NON expédiée (remise appliquée OU pas de changement de prix). Reste false sinon.
     let autoSendOtp = false;
+    // [T3-3] Créneau choisi par l'acheteur « pas dispo » à persister sur la commande. null = aucun choix.
+    let availability: { choice: "tomorrow" | "day_after" | "contact"; date: string | null } | null = null;
 
     if (payload === WINBACK_YES_PAYLOAD) {
       // [G3W] L'acheteur ACCEPTE l'offre → appliquer la remise GELÉE (winback_discount_rate) au COD,
@@ -191,6 +203,8 @@ export async function handleRefusalReply(
       // Créneau choisi (pas de remise) : la commande REPART, efface le refus (statut intact).
       await supabase.from("orders").update({ decline_reason: null, updated_at: nowIso }).eq("id", orderId);
       const slot = payload === SLOT_TOMORROW_PAYLOAD ? "tomorrow" : "day_after";
+      // [T3-3] Mémorise le créneau + la date réelle (Alger) → le vendeur le retrouve sur la commande.
+      availability = { choice: slot, date: algDatePlusDays(slot === "tomorrow" ? 1 : 2) };
       msg = slotChosen(locale, { reference, slot });
       outcome = `slot_${slot}`;
     } else if (payload === WINBACK_NO_PAYLOAD) {
@@ -200,8 +214,23 @@ export async function handleRefusalReply(
       outcome = "winback_declined_cancelled";
     } else {
       // SLOT_CONTACT : commande EN ATTENTE, pas d'annulation, decline_reason inchangé.
+      // [T3-3] Mémorise le choix « contacter la boutique » (aucune date).
+      availability = { choice: "contact", date: null };
       msg = contactRequested(locale, { reference });
       outcome = "contact_requested";
+    }
+
+    // [T3-3] Persiste le créneau acheteur (colonnes migration 057, NON appliquée) : écriture SÉPARÉE et
+    // TOLÉRANTE comme winback_expires_at (T0D-3) — colonne absente → erreur ignorée, zéro régression ;
+    // le reste du flow (decline_reason/statut/push) a déjà été persisté au-dessus.
+    if (availability) {
+      const { error: availErr } = await supabase
+        .from("orders")
+        .update({ buyer_availability_choice: availability.choice, buyer_availability_date: availability.date })
+        .eq("id", orderId);
+      if (availErr) {
+        console.warn(`[refusal-reply] buyer_availability non écrit (migration 057 non appliquée ?) order=${orderId}:`, availErr.message);
+      }
     }
 
     // [T2-4] Garde legacy retirée (bloc scopé) : multi-device tenté même si la colonne est NULL.
