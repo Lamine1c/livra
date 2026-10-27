@@ -39,12 +39,18 @@ export async function GET(req: NextRequest) {
   // [T3-2] Même helper réutilisé par /api/driver/today (zéro duplication).
   const active = await getActiveCourse(supabase, driver.id);
 
+  // [T3-1b] CONTRAT IMPOSÉ par le mobile (déjà codé, commit mobile e0954e0) : il lit `me.order` (même
+  // objet que le `order` de /api/scan, `order.id` = activeOrderId) et `me.vendorName` AU PREMIER NIVEAU.
+  // On expose donc order/vendorName/status_history à plat (plus de clé `activeCourse`). Les champs
+  // existants (id, prenom, hasActiveDelivery, activeDeliveryId, activeOrderId) restent inchangés.
   return NextResponse.json({
     id: driver.id,
     prenom: driver.prenom,
     hasActiveDelivery: !!active,
     activeDeliveryId: active?.deliveryId ?? null,
     activeOrderId: active?.orderId ?? null,
-    activeCourse: active?.activeCourse ?? null,
+    order: active?.activeCourse?.order ?? null,
+    vendorName: active?.activeCourse?.vendorName ?? null,
+    status_history: active?.activeCourse?.status_history ?? [],
   });
 }
