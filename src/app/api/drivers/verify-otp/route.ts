@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
 
   // 2. Normaliser le numéro
   const normalizedPhone = normalizePhoneNumber(whatsapp);
+  // [T3-4] L'appareil qui PROUVE l'OTP maintenant = celui à lier au livreur (c'est le téléphone qu'il a
+  // en main et avec lequel il scannera). AVANT, on liait `record.device_id` (celui du staging) → un
+  // livreur inscrit sur le tél A qui se reconnecte par OTP sur le tél B restait lié à A → /api/scan (qui
+  // résout par `drivers.device_id`) répondait UNREGISTERED sur B. On lie donc le device DU body.
+  const deviceId = device_id.trim();
 
   // [N21.3] Anti-brute-force : l'OTP livreur fait 6 chiffres et cet endpoint n'est PAS authentifié
   // → sans limite, il est énumérable. On borne à 10 essais / 10 min par numéro (tout essai compte :
@@ -92,7 +97,9 @@ export async function POST(req: NextRequest) {
     whatsapp: normalizedPhone,
     couleur_casque: record.couleur_casque,
     wilaya: record.wilaya,
-    device_id: record.device_id,
+    // [T3-4] device du BODY (celui qui prouve l'OTP), pas record.device_id (staging). Le téléphone
+    // courant devient l'appareil du livreur ; le précédent perd l'accès (changement de tél = normal en DZ).
+    device_id: deviceId,
     whatsapp_verified: true,
     whatsapp_verified_at: now,
     last_scan_at: now,
@@ -125,7 +132,7 @@ export async function POST(req: NextRequest) {
     const { data: byDevice } = await supabase
       .from("drivers")
       .select("id, terms_accepted_at")
-      .eq("device_id", record.device_id)
+      .eq("device_id", deviceId) // [T3-4] le device courant (body), pas le staging
       .maybeSingle();
     if (byDevice?.id) {
       existingId = byDevice.id as string;

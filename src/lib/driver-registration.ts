@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateOTP, normalizePhoneNumber, sendDriverOtpWhatsApp } from "@/lib/whatsapp";
+import { generateOTP, normalizePhoneNumber, sendDriverOtpWhatsApp, sendWhatsAppNotification } from "@/lib/whatsapp";
 
 // N6 · WAME-INVERSE — inscription livreur par wa.me (le livreur écrit à LIVRA).
 // L'inscription en attente vit dans `driver_otps` (staging, onConflict whatsapp) + 4 colonnes
@@ -16,6 +16,7 @@ const ANTISPAM_WINDOW_MS = 60 * 60 * 1000; // par numéro / heure (fenêtre fixe
 const TOKEN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const TOKEN_LEN = 7; // dans [6..8] imposé par le contrat
 const TOKEN_RE = /LIVRA\s*([A-Z0-9]{6,8})/i;
+const CODE_RE = /^\s*(\d{4,6})\s*$/; // [T3-5] message = juste un code (4-6 chiffres)
 
 export function generateWaToken(): string {
   const bytes = crypto.randomBytes(TOKEN_LEN);
@@ -48,6 +49,51 @@ function hashOtp(otp: string, phone: string): string {
 function mask(phone: string): string {
   const n = normalizePhoneNumber(phone);
   return n.length < 7 ? "***" : n.slice(0, 5) + "XXXXX" + n.slice(-2);
+}
+
+// [T3-5] Un livreur RE-TAPE son code d'inscription dans WhatsApp (au lieu de l'app LIVRA). S'il est AUSSI
+// acheteur avec un OTP actif, son code tombait dans le tunnel ACHETEUR → il recevait « ce code ne
+// correspond pas » (vécu au gate, numéro +1 qui est livreur ET client). On intercepte ce SEUL cas :
+//   message = 4-6 chiffres · inscription livreur EN ATTENTE pour ce numéro (driver_otps) · le nombre ==
+//   SON code livreur (match du hash sel-par-numéro, le même qu'à register/verify-otp).
+// → réponse livreur « tape-le dans l'app » (texte libre, fenêtre 24h ouverte par son message), JAMAIS le
+// tunnel acheteur. Tout autre nombre (OTP acheteur, etc.) → handled=false (comportement actuel inchangé).
+// Doit tourner MÊME quand un OTP acheteur est actif (c'est tout le bug). Best-effort : ne throw jamais.
+export async function handleDriverOtpEchoed(
+  supabase: SupabaseClient,
+  fromPhone: string,
+  body: string
+): Promise<{ handled: boolean }> {
+  const m = body.match(CODE_RE);
+  if (!m) return { handled: false };
+  const code = m[1];
+  const incoming = normalizePhoneNumber(fromPhone);
+
+  // Inscription livreur en attente pour CE numéro (driver_otps = staging, unique par whatsapp).
+  const { data: reg } = await supabase
+    .from("driver_otps")
+    .select("otp_hash, prenom")
+    .eq("whatsapp", incoming)
+    .maybeSingle();
+  const otpHash = (reg as { otp_hash?: string | null } | null)?.otp_hash ?? null;
+  if (!otpHash) return { handled: false }; // pas d'inscription en attente → tunnel acheteur
+
+  // Le nombre tapé est-il SON code livreur ? Sinon (ex. OTP acheteur) → on laisse le tunnel acheteur gérer.
+  if (hashOtp(code, incoming) !== otpHash) return { handled: false };
+
+  const prenom = (reg as { prenom?: string | null }).prenom ?? "";
+  const r = await sendWhatsAppNotification(incoming, buildDriverCodeInAppMessage(prenom));
+  if (!r.success) console.error(`[driver-wame] redirection code-in-app ${mask(incoming)} échec:`, r.error);
+  return { handled: true };
+}
+
+function buildDriverCodeInAppMessage(prenom: string): string {
+  const nom = prenom?.trim() || "";
+  return (
+    `سلام ${nom} 👋 هاد الكود يتكتب في تطبيق LIVRA، ماشي هنا 🙂\n\n` +
+    `━━━━━━━━━━━━━━\n\n` +
+    `Bonjour ${nom} 👋 Ce code se tape dans l'app LIVRA, pas ici 🙂`
+  );
 }
 
 // Préséance acheteur : ce numéro a-t-il une commande en attente d'OTP ? (mêmes critères que

@@ -2,7 +2,7 @@ import { NextRequest, after } from "next/server";
 import { verifyWebhookSignature } from "@/lib/meta";
 import { handleInboundReply } from "@/lib/confirm-order";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { hasActiveBuyerOtp, handleDriverInboundRegistration, isKnownDriver } from "@/lib/driver-registration";
+import { hasActiveBuyerOtp, handleDriverInboundRegistration, isKnownDriver, handleDriverOtpEchoed } from "@/lib/driver-registration";
 import { isRefusalReplyPayload, handleRefusalReply } from "@/lib/refusal-reply";
 
 // Idempotence : "claim" un message id Meta (wamid). Retourne true si NOUVEAU
@@ -204,6 +204,14 @@ export async function POST(req: NextRequest) {
         // Message sans token « LIVRA … » → zéro requête DB (early return sur l'absence de match).
         const tokenReg = await handleDriverInboundRegistration(supabase, m.from, m.body, { tokenOnly: true });
         if (tokenReg.handled) continue;
+
+        // [T3-5] Le livreur re-tape son CODE d'inscription dans WhatsApp (au lieu de l'app). S'il est AUSSI
+        // acheteur (OTP actif), ce code tombait dans le tunnel acheteur → « ce code ne correspond pas ».
+        // On intercepte UNIQUEMENT si le nombre == son code livreur en attente → on le redirige vers l'app.
+        // Doit passer AVANT la préséance acheteur (c'est justement un numéro livreur+acheteur). Tout autre
+        // nombre (OTP acheteur réel) → handled=false → tunnel acheteur intact.
+        const otpEcho = await handleDriverOtpEchoed(supabase, m.from, m.body);
+        if (otpEcho.handled) continue;
 
         // N6 · WAME-INVERSE — préséance (décision Claudy) : un OTP ACHETEUR actif pour ce numéro
         // gagne toujours (tunnel acheteur). Sinon on tente la branche INSCRIPTION LIVREUR (message
