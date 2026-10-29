@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Link } from "@/i18n/navigation";
 import Footer from "@/components/site/Footer";
 
 export const metadata: Metadata = {
@@ -103,7 +104,7 @@ export default function DeleteAccountPage() {
             <p style={bodyText}>{"Vous pouvez demander la suppression de données spécifiques (par exemple votre historique de commandes) sans supprimer votre compte, par email à "}
               <a href="mailto:support@golivra.app?subject=Suppression%20de%20donn%C3%A9es" style={linkStyle}>support@golivra.app</a>
               {" avec pour objet « Suppression de données ». Voir aussi notre "}
-              <a href="/privacy" style={linkStyle}>politique de confidentialité</a>{"."}
+              <Link href="/privacy" style={linkStyle}>politique de confidentialité</Link>{"."}
             </p>
           </div>
         </article>
